@@ -1,0 +1,23 @@
+Project Proposal: Weather-Based Mood Tracking Platform
+
+1. Goal:
+The goal of my website is to empower users to better understand and manage their emotional well-being. I aim to provide a user-friendly platform for tracking daily moods and most importantly correlating mood fluctuations with weather conditions. Through weather & mood data/trends, historical insights,  and coping solutions, I intend to support users in improving their mood and fostering a positive online community.
+
+2. User Demographics:
+The target users encompass a broad demographic, including individuals who are interested in monitoring and enhancing their emotional well-being. This may include people of various ages, backgrounds, and professions. I believe that emotional well-being is a universal concern, so the more diverse the user base the better!
+
+3. Data Usage:
+Our platform will utilize data from multiple sources, including:
+Weather data: Weather conditions, temperature, and location-based information from WeatherAPI.com
+User profiles: User account information, preferences, and historical mood data.
+Community engagement data: User interactions, comments, and discussions.
+User-generated mood data & mood trend analytics: Emotions, mood descriptions, and timestamps. Data visualizations and insights based on user mood history. (website article sources and documentation)
+
+4. Project Approach: 
+a. Database Schema: - The database will consist of several tables, including user profiles, moods, weather types, temperatures, recommendations or coping strategies(solutions), main personal issues due to weather, and community interactions. Users will be able to create accounts, log their moods, and receive personalized recommendations.
+b. API Integration: - anticipate potential challenges with API integration, such as ensuring reliable access to weather data and handling API rate limits. I will implement error handling and caching mechanisms to mitigate these issues.
+c. Data Security: - Sensitive user information, including passwords, email addresses, & personal psychological information will be securely hashed and stored in the database. I plan to implement encryption protocols to protect user privacy.
+d. Functionality: - Key functionalities of the platform will include user registration and authentication, mood logging, weather data retrieval, mood trend analysis, personalized recommendations, and a community forum for users to interact.
+e. User Flow: - The user flow will involve account creation, weather forcasting, mood tracking, viewing mood trends, receiving recommendations, and participating in community discussions. Users can easily navigate between these features.
+f. Additional Features and Stretch Goals: - To make the site more than CRUD (Create, Read, Update, Delete), we will implement features such as mood trend visualizations and mood correlation with weather. Stretch goals include mobile app development and integration with wearable devices for real-time mood tracking.
+
