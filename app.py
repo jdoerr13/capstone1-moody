@@ -101,15 +101,21 @@ def get_weather_forecast(location):
 
 @app.route('/history', methods=['GET', 'POST'])
 def history():
-    historical_weather_data = None
-
     if request.method == 'POST':
         location = request.form.get('location')
         date = request.form.get('date')
+
         if location and date:
             historical_weather_data = get_historical_weather(location, date)
+            if historical_weather_data:
+                return render_template('history.html', historical_weather_data=historical_weather_data)
+            else:
+                flash("Failed to fetch historical weather data. Please try again later.", 'error')
+        else:
+            flash("Please enter both location and date.", 'error')
 
-    return render_template('history.html', historical_weather_data=historical_weather_data)
+    return render_template('history.html', historical_weather_data=None)
+
 
 
 

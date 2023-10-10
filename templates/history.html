@@ -44,7 +44,7 @@
     
                 // Send an AJAX request to fetch historical weather data
                 $.ajax({
-                    url: '/history', // Correct Flask route for historical weather data
+                    url: '/history',
                     method: 'POST',
                     data: {
                         location: location,
@@ -60,6 +60,7 @@
             });
         });
     </script>
+    
     
 </body>
 </html>
