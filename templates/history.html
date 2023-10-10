@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Historical Weather</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Get Historical Weather</h1>
+
+        <form id="historical-weather-form">
+            <div class="mb-3">
+                <label for="location" class="form-label">Enter Location (City, State):</label>
+                <input type="text" id="location" name="location" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="date" class="form-label">Enter Date (YYYY-MM-DD):</label>
+                <input type="text" id="date" name="date" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Get Historical Weather</button>
+        </form>
+
+        <div id="historical-weather-data" class="mt-4">
+            {% if historical_weather_data %}
+                <h2>Historical Weather:</h2>
+                <pre>{{ historical_weather_data | tojson(indent=4) }}</pre>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            $('#historical-weather-form').submit(function(e) {
+                e.preventDefault(); // Prevent the default form submission
+    
+                // Get the entered location and date
+                var location = $('#location').val();
+                var date = $('#date').val();
+    
+                // Send an AJAX request to fetch historical weather data
+                $.ajax({
+                    url: '/history', // Correct Flask route for historical weather data
+                    method: 'POST',
+                    data: {
+                        location: location,
+                        date: date
+                    },
+                    success: function(data) {
+                        $('#historical-weather-data').html(data);
+                    },
+                    error: function() {
+                        alert('Failed to fetch historical weather data. Please try again later.');
+                    }
+                });
+            });
+        });
+    </script>
+    
+</body>
+</html>
