@@ -1,10 +1,28 @@
 from datetime import datetime
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref, registry
+
+mapper_registry = registry()
 
 bcrypt = Bcrypt()
 db = SQLAlchemy()
+
+
+
+# Association table for friends
+user_friends = db.Table(
+    'user_friends',
+    db.Column('user_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True),
+    db.Column('friend_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True)
+)
+
+# Association table for friend requests
+user_friend_requests = db.Table(
+    'user_friend_requests',
+    db.Column('sender_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True),
+    db.Column('receiver_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True)
+)
 
 
 class User(db.Model):
@@ -17,6 +35,36 @@ class User(db.Model):
     registration_date = db.Column(db.DateTime, nullable=False)
 
     user_history = db.relationship('UserHistory', back_populates='user', lazy='dynamic')
+    # Relationship for friends
+    friends = db.relationship('User', secondary=user_friends, primaryjoin=(user_friends.c.user_id == user_id), secondaryjoin=(user_friends.c.friend_id == user_id), backref=db.backref('user_friends', lazy='dynamic'))
+
+    # Relationship for friend requests
+    friend_requests = db.relationship('User', secondary=user_friend_requests, primaryjoin=(user_friend_requests.c.sender_id == user_id), secondaryjoin=(user_friend_requests.c.receiver_id == user_id), backref=db.backref('user_friend_requests', lazy='dynamic'))
+    
+    @classmethod
+    def signup(cls, username, email, password, registration_date):
+        """Sign up user.
+
+        Hashes password and adds user to the system.
+        """
+        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
+
+        user = User(
+            username=username,
+            email=email,
+            password=hashed_pwd,
+            registration_date=registration_date,
+        )
+        db.session.add(user)
+        return user
+
+
+    @classmethod
+    def authenticate(cls, username, password):
+        user = cls.query.filter_by(username=username).first()
+        if user and bcrypt.check_password_hash(user.password, password):
+            return user
+        return None
 
 class Diagnosis(db.Model): #table stores information about main issues or diagnoses and is related to Coping Solutions.
     __tablename__ = 'diagnosis'
@@ -40,7 +88,7 @@ class UserHistory(db.Model):
 
     user = db.relationship('User', back_populates='user_history')
     weather = db.relationship('Weather', back_populates='user_history')
-    mood = db.relationship('Mood', back_populates='user_history')
+    mood = db.relationship('Mood', back_populates='user_history_moods')
     symptom = db.relationship('Symptoms', foreign_keys=[symptom_id])
     diagnosis = db.relationship('Diagnosis', foreign_keys=[diagnosis_id])
 
@@ -86,6 +134,7 @@ class Mood(db.Model): #table stores mood-related data and is related to Coping S
     solution_id = db.Column(db.Integer, db.ForeignKey('coping_solutions.solution_id'), nullable=False)
 
     solution = db.relationship('CopingSolution', back_populates='moods')
+    user_history_moods = db.relationship('UserHistory', backref='mood_moods', lazy=True)
 
 class Symptoms(db.Model): # table contains information about other symptoms and is related to Coping Solutions.
     __tablename__ = 'symptoms'
@@ -115,4 +164,7 @@ def connect_db(app):
     db.app = app
     db.init_app(app)
     app.app_context().push()
+
+  # Ensure that SQLAlchemy is properly configured
+    mapper_registry.configure(db.metadata)
     db.create_all()

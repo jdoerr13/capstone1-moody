@@ -2,14 +2,15 @@ import requests
 import os
 from flask import Flask, render_template, request, flash, redirect, session, g, jsonify, url_for
 from flask_debugtoolbar import DebugToolbarExtension
-# from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 # from sqlalchemy import or_
-# from forms import UserAddForm, LoginForm, MessageForm, UserProfileForm
-from models import db, connect_db
+from forms import LoginForm, SignupForm
+from models import db, connect_db, User, Diagnosis, UserHistory, Weather, Mood, Symptoms, CopingSolution
 from datetime import datetime  # Import the datetime module
+from flask_bcrypt import Bcrypt
+from flask_sqlalchemy import SQLAlchemy
 
-
-# CURR_USER_KEY = "curr_user"
+CURR_USER_KEY = "curr_user"
 
 app = Flask(__name__)
 
@@ -28,9 +29,87 @@ app.debug = True
 connect_db(app)
 app.app_context().push()
 # db.drop_all()
-# db.create_all()
+db.create_all()
+
+##############################################################################
+# User signup/login/logout
+@app.before_request
+def add_user_to_g():
+    """If we're logged in, add curr user to Flask global.""" 
+    if CURR_USER_KEY in session:
+        g.user = User.query.get(session[CURR_USER_KEY])
+    else:
+        g.user = None
+
+def do_login(user):
+    """Log in user."""
+    session[CURR_USER_KEY] = user.user_id
+
+def do_logout():
+    """Logout user."""
+    if CURR_USER_KEY in session:
+        del session[CURR_USER_KEY]
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    form = SignupForm()
+
+    if form.validate_on_submit():
+        try:
+            user = User.signup(
+                username=form.username.data,
+                email=form.email.data,
+                password=form.password.data,
+                registration_date=datetime.utcnow(),
+            )
+            db.session.add(user)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash("Username or email already taken", 'danger')
+            return render_template('signup.html', form=form)
+
+        do_login(user)  # Log in the user using do_login
+        flash('Welcome! You have successfully signed up.', 'success')
+        return redirect('/')
+    
+    return render_template('signup.html', form=form)
 
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+
+        # Authenticate user
+        user = User.authenticate(username, password)
+        if user:
+            do_login(user)  # Use the do_login function
+            flash(f'Hello, {user.username}!', 'success')
+            return redirect('/')
+        else:
+            flash('Invalid credentials. Please try again.', 'danger')
+
+    return render_template('login.html', form=form)
+
+
+@app.route('/logout')
+def logout():
+    """Logout user."""
+    try:
+        session.pop(CURR_USER_KEY)
+        flash("You have been logged out", "success")
+    except KeyError:
+        flash("You are not logged in", "danger")
+
+    return redirect("/")
+
+
+
+#_____________GETTING INFO FROM API_____________________________________
 @app.route('/current', methods=['GET', 'POST'])
 def current():
     current_weather_data = None
@@ -156,3 +235,24 @@ def get_historical_weather(location, date):
 
 
 
+#________HOMEPAGE & USER PROFILES___________________
+@app.route('/')
+def homepage():
+    if g.user:
+        # Retrieve user history
+        user_history = UserHistory.query.filter_by(user_id=g.user.user_id).all()
+
+        # Retrieve information about friends (assuming you have a friends relationship)
+        friends = g.user.friends  # Modify this according to your model structure
+
+        # You can retrieve weather-related information here if needed
+        # For example, you can make API calls to get weather data
+        
+        return render_template(
+            'home.html',
+            user_history=user_history,
+            # friends=friends,
+            user=g.user
+        )
+    else:
+        return render_template('home-anon.html')

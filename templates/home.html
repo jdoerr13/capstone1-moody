@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <title>Home Page</title>
+    <!-- Add your CSS links or stylesheets here -->
+</head>
+<body>
+    <header>
+        <!-- Add your header content here, e.g., navigation links, user profile info -->
+        <h1>Welcome, {{ user.username }}!</h1>
+    </header>
+
+    <section>
+        <h2>Your User History</h2>
+        <ul>
+            {% for history_item in user_history %}
+                <li>{{ history_item.date }} - {{ history_item.activity }}</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section>
+        <h2>Your Friends</h2>
+        <ul>
+            {% for friend in friends %}
+                <li>{{ friend.username }}</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section>
+        <h2>Weather Information</h2>
+        <!-- Add weather-related information here, e.g., links to current weather, forecast, etc. -->
+        <a href="/current">Current Weather</a>
+        <a href="/forecast">Weather Forecast</a>
+        <a href="/history">Historical Weather</a>
+    </section>
+
+    <!-- Add other sections or content as needed -->
+
+    <footer>
+        <!-- Add your footer content here, e.g., copyright information, contact details -->
+    </footer>
+{% endblock %}
