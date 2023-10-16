@@ -13,7 +13,7 @@ bcrypt = Bcrypt()
 # Register the mapper
 mapper_registry = registry()
 
-# Define the user_group_association table for many-to-many relationship
+# Define the user_group_association table for many-to-many relationship- SHOW THE GROUPS THE USER IS IN
 user_group_association = db.Table(
     'user_group_association',
     db.Column('user_id', db.Integer, db.ForeignKey('users.user_id')),
@@ -21,7 +21,7 @@ user_group_association = db.Table(
     extend_existing=True,
 )
 
-# Association table for friends - Allows many-to-many relationships between users in the application.
+# Association table for friends - Allows many-to-many relationships between users in the application. SHOWS FRIENDS
 user_friends = db.Table(  
     'user_friends',
     db.Column('user_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True),
@@ -75,7 +75,7 @@ class User(db.Model):
     groups = db.relationship(
         'Group',
         secondary=user_group_association,
-        back_populates='users',  # Updated back_populates name
+        back_populates='members',  # Updated back_populates name
     )
 
     
@@ -110,12 +110,6 @@ class Group(db.Model):
     group_name = db.Column(db.String(80), nullable=False, unique=True)
     description = db.Column(db.Text)
 
-    # Define the users property and set up the many-to-many relationship
-    users = db.relationship(
-        'User',
-        secondary=user_group_association,
-        back_populates='groups'
-    )
       # Define the many-to-many relationship with the User model
     members = db.relationship(
         'User',

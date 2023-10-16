@@ -369,7 +369,7 @@ def edit_profile():
 
     
 
-#_______________________Assessments__________________________________
+#_______________________Assessments & Journal__________________________________
 @app.route('/mood_symptom', methods=['GET', 'POST'])
 def mood_symptom():
     form = MoodSymptomAssessmentForm()
@@ -407,16 +407,22 @@ def join_group(group_id):
         return jsonify(success=False, message='Not logged in')
 
     group = Group.query.get(group_id)
-    if group:
-        # Add the group to the user's groups and save the relationship
-        g.user.groups.append(group)
-        db.session.commit()
-        flash(f'You have successfully joined the group "{group.group_name}".', 'success')
-        print(f'Joined group {group.group_name} with ID {group_id}')
-        return jsonify(success=True, message='Joined the group', group_id=group_id, user=g.user)
 
+    if group:
+        # Check if the user is already a member
+        if g.user in group.members:
+            flash(f'Welcome back to the group "{group.group_name}".', 'success')
+        else:
+            # Add the user to the group's members and save the relationship
+            g.user.groups.append(group)
+            db.session.commit()
+            flash(f'Welcome to the group "{group.group_name}".', 'success')
+            print(f'Joined group {group.group_name} with ID {group_id}')
+        return jsonify(success=True, message='Joined the group', group_id=group_id, user=g.user)
+    
     flash('Group not found', 'danger')
     return jsonify(success=False, message='Group not found')
+
 
 
 @app.route('/leave_group/<int:group_id>', methods=['POST'])
@@ -465,8 +471,6 @@ def group(group_id):
 # csrf_token=csrf.generate_csrf()
 
 
-
-
 # Group creation, response creation, and post deletion routes
 @app.route('/create_group_post/<int:group_id>', methods=['POST'])
 def create_group_post(group_id):
@@ -477,6 +481,7 @@ def create_group_post(group_id):
             db.session.add(new_post)
             db.session.commit()
     return redirect(url_for('group', group_id=group_id))
+
 
 @app.route('/create_response/<int:group_id>/<int:post_id>', methods=['POST'])
 def create_response(group_id, post_id):

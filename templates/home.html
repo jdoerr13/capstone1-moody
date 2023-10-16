@@ -8,9 +8,10 @@
 </head>
 <body>
     <header>
-    <!-- Add your header content here, e.g., navigation links, user profile info -->
+    <!--  header content here, ex: navigation links, user profile info -->
     <!-- Display the user's profile picture (assuming it's stored as 'image_url') -->
     <img src="{{ user.image_url }}" alt="Profile Picture" class="profile-icon">
+
     <!-- Display the user's location and current weather -->
         <h1>Welcome, {{ user.username }}!</h1>
         <p>Your location: {{ location }}</p>
@@ -55,16 +56,15 @@
             <a href="{{ url_for('friends_groups') }}" class="btn btn-primary">Friends & Groups</a>
         </ul>
         <h4>My Groups</h4>
-        <ul>
-            {% for group in user_groups %}
-            <div class="group">
-                <p><a href="{{ url_for('group', group_id=group.group_id) }}" class="group-link">{{ group.group_name }}</a></p>
-                <button class="leave-group-button" data-group-id="{{ group.id }}">Leave Group</button>
-
-            </div>
-            {% endfor %}
-        </ul>
-        
+            <ul>
+                {% for group in user_groups %}
+<!-- wrap the group element in a container for easier removal -->
+                <div class="group" data-group-id="{{ group.group_id }}">
+                    <p><a href="{{ url_for('group', group_id=group.group_id) }}" class="group-link">{{ group.group_name }}</a></p>
+                    <button class="leave-group-button" data-group-id="{{ group.group_id }}">Leave Group</button>
+                </div>
+                {% endfor %}
+            </ul>
     </section>
 
     <section>
@@ -80,21 +80,22 @@
         <!-- Add link to more fun astronomy information here -->
         <a href="/astronomy">Astronomy Data</a>
     </section>
-    <script>
-     $('.leave-group-button').click(function() {
-    var groupId = $(this).data('group-id');
-    
-    console.log('Group ID:', groupId);  // Log the group ID
 
-    $.post('/leave_group/' + groupId, function(data) {
-        console.log('Response:', data);  // Log the response
-        if (data.success) {
-            // Hide the group element
-            $('.group[data-group-id="' + groupId + '"]').hide();
-        }
-    });
-});
-  
+    <script>
+            $(document).ready(function() {
+                // Attach a click event handler to all "leave group" buttons
+                $('.leave-group-button').click(function() {
+                    let groupId = $(this).data('group-id');
+
+                    // Make an AJAX request to the server to leave the group
+                    $.post('/leave_group/' + groupId, function(data) {
+                        if (data.success) {
+                            // Remove the group element from the "my groups" list
+                            $(`.group[data-group-id="${groupId}"]`).remove();
+                        }
+                    });
+                });
+            });
         </script>
 
 
