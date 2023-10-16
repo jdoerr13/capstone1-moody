@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section>
+        <h2>Your Friends (Moodies) & Groups</h2>
+
+        <!-- Search Bar -->
+        <form action="{{ url_for('friends_groups') }}" method="post">
+            <input type="text" name="query" placeholder="Search for users">
+            <button type="submit">Search</button>
+        </form>
+
+        <!-- Search Results -->
+        <ul>
+            {% for user in users %}
+                <li>
+                    <a href="{{ url_for('user_profile', user_id=user.user_id) }}">{{ user.username }}</a>
+                    <a href="{{ url_for('send_friend_request', user_id=user.user_id) }}">Send Friend Request</a>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <!-- List of Groups -->
+        <h2>Friend's Groups</h2>
+        <ul>
+            {% for group in groups %}
+                <li>
+                    <strong>{{ group.group_name }}</strong><br>
+                    {{ group.description }}
+                    <a href="#" class="join-group" data-group-id="{{ group.group_id }}">Join Group</a>
+                </li>
+            {% endfor %}
+        </ul>
+
+        
+        <a href="{{ url_for('homepage') }}">Back to Home</a>
+    </section>
+
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.join-group').forEach(function(joinLink) {
+        joinLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            const group_id = this.getAttribute('data-group-id');
+
+            // Send a POST request to join the group
+            fetch(`/join_group/${group_id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+            })
+            .then(() => {
+                // Redirect to the group page
+                window.location.href = `/group/${group_id}`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while joining the group.');
+            });
+        });
+    });
+});
+
+      </script>
+      
+
+
+{% endblock %}

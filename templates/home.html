@@ -2,30 +2,69 @@
 
 {% block content %}
     <title>Home Page</title>
+            
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Add your CSS links or stylesheets here -->
 </head>
 <body>
     <header>
-        <!-- Add your header content here, e.g., navigation links, user profile info -->
+    <!-- Add your header content here, e.g., navigation links, user profile info -->
+    <!-- Display the user's profile picture (assuming it's stored as 'image_url') -->
+    <img src="{{ user.image_url }}" alt="Profile Picture" class="profile-icon">
+    <!-- Display the user's location and current weather -->
         <h1>Welcome, {{ user.username }}!</h1>
+        <p>Your location: {{ location }}</p>
+        {% if current_weather_data %}
+        <div class="mt-4">
+            <h2>Current Weather for {{ current_weather_data['location']['name'] }}, {{ current_weather_data['location']['region'] }}, {{ current_weather_data['location']['country'] }}</h2>
+            <h4>Current Time: {{ current_weather_data['location']['localtime'] }}</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Temperature:</h4>
+                    <p>{{ current_weather_data['current']['temp_f'] }}°F</p>
+                    <p>{{ current_weather_data['current']['temp_c'] }}°C</p>
+                </div>
+                <div class="col-md-6">
+                    <h4>Feels Like:</h4>
+                    <p>{{ current_weather_data['current']['feelslike_f'] }}°F</p>
+                    <p>{{ current_weather_data['current']['feelslike_c'] }}°C</p>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <p>No weather data available for the current location.</p>
+    {% endif %}
+    <!-- button to navigate to the profile editing page -->
+    <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Edit Profile</a>
     </header>
 
     <section>
-        <h2>Your User History</h2>
+        <h2>Your Wellness Companion & Moody Journal</h2>
         <ul>
             {% for history_item in user_history %}
                 <li>{{ history_item.date }} - {{ history_item.activity }}</li>
             {% endfor %}
         </ul>
+        <!-- button to navigate to the mood_symptom form -->
+        <a href="{{ url_for('mood_symptom') }}" class="btn btn-primary">Take Mood Assessment</a>
     </section>
 
     <section>
-        <h2>Your Friends</h2>
+        <h2>Friends (Moodies) & Groups</h2>
         <ul>
-            {% for friend in friends %}
-                <li>{{ friend.username }}</li>
+            <a href="{{ url_for('friends_groups') }}" class="btn btn-primary">Friends & Groups</a>
+        </ul>
+        <h4>My Groups</h4>
+        <ul>
+            {% for group in user_groups %}
+            <div class="group">
+                <p><a href="{{ url_for('group', group_id=group.group_id) }}" class="group-link">{{ group.group_name }}</a></p>
+                <button class="leave-group-button" data-group-id="{{ group.id }}">Leave Group</button>
+
+            </div>
             {% endfor %}
         </ul>
+        
     </section>
 
     <section>
@@ -36,9 +75,31 @@
         <a href="/history">Historical Weather</a>
     </section>
 
-    <!-- Add other sections or content as needed -->
+    <section>
+        <h2>AstroMoodology</h2>
+        <!-- Add link to more fun astronomy information here -->
+        <a href="/astronomy">Astronomy Data</a>
+    </section>
+    <script>
+     $('.leave-group-button').click(function() {
+    var groupId = $(this).data('group-id');
+    
+    console.log('Group ID:', groupId);  // Log the group ID
+
+    $.post('/leave_group/' + groupId, function(data) {
+        console.log('Response:', data);  // Log the response
+        if (data.success) {
+            // Hide the group element
+            $('.group[data-group-id="' + groupId + '"]').hide();
+        }
+    });
+});
+  
+        </script>
+
 
     <footer>
-        <!-- Add your footer content here, e.g., copyright information, contact details -->
+        <!-- Add footer content here, e.g., copyright information, contact details -->
     </footer>
 {% endblock %}
+

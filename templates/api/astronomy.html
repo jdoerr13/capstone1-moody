@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<head>
+    <title>Astronomy Data</title>
+</head>
+<body>
+    <h1>Astronomy Data</h1>
+
+    <form method="POST" action="/astronomy">
+        <label for="location">Enter a Location:</label>
+        <input type="text" name="location" id="location" required>
+        <label for="date">Date (Optional):</label>
+        <input type="date" name="date" id="date">
+        <button type="submit">Get Astronomy Data</button>
+    </form>
+
+    {% if date %}
+    <h2>On this Date: {{ date }}</h2>
+{% endif %}
+    {% if astronomy_data %}
+    <h2>Astronomy Data for {{ astronomy_data.location.name }}</h2>
+    <p>Sunrise: {{ astronomy_data.astronomy.astro.sunrise }}</p>
+    <p>Sunset: {{ astronomy_data.astronomy.astro.sunset }}</p>
+    <p>Moonrise: {{ astronomy_data.astronomy.astro.moonrise }}</p>
+    <p>Moonset: {{ astronomy_data.astronomy.astro.moonset }}</p>
+    <p>Moon Phase: {{ astronomy_data.astronomy.astro.moon_phase }}</p>
+    <p>Moon Illumination: {{ astronomy_data.astronomy.astro.moon_illumination }}</p>
+
+
+{% endif %}
+
+
+    
+    
+</body>
+{% endblock %}

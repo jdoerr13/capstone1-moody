@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section>
+        <h2>{{ group.group_name }}</h2>
+        <p>{{ group.description }}</p>
+
+        <!-- Create Post Form -->
+        <h3>Share Your Thoughts</h3>
+        <form id="post-form" method="post" action="{{ url_for('create_group_post', group_id=group.group_id) }}">
+            <input type="text" id="post-content" name="post_content" placeholder="Share your thoughts">
+            <button type="submit">Post</button>
+        </form>
+
+        <!-- Discussion Forum -->
+        <div id="discussion">
+            {% for post in posts %}
+                <div class="post">
+                    <p>{{ post.user.username }} says:</p>
+                    <p>{{ post.post_content }}</p>
+                    <p>Posted on: {{ post.timestamp }}</p>
+                    {% if post.user_id == g.user.user_id %}
+                        <form method="post" action="{{ url_for('delete_post', post_id=post.id) }}">
+                            <button type="submit" class="delete-post-button">Delete</button>
+                        </form>
+                    
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Coping Solutions / Resources -->
+        <h2>Coping Solutions / Resources</h2>
+        <ul>
+            <li><a href="#">Resource 1</a></li>
+            <li><a href="#">Resource 2</a></li>
+            <!-- Add more resource links here -->
+        </ul>
+
+        <!-- Friends Search Bar and Section -->
+        <h2>Find Friends</h2>
+        <form id="searchForm" method="get">
+            <input type="text" id="query" name="query" placeholder="Search for users">
+            <button type="submit">Search</button>
+        </form>
+
+        <!-- Search Results -->
+        <ul id="searchResults"></ul>
+    </section>
+    <a href="{{ url_for('homepage') }}">Back to Home</a>
+</div>
+<script>
+    // Function to add a post to the discussion forum
+    function addPostToDiscussion(username, content, timestamp, post_id) {
+        const post = document.createElement("div");
+        post.className = "post";
+        post.innerHTML = `<p>${username} says:</p><p>${content}</p><p>Posted on ${timestamp}</p>`;
+
+        if (g.user && post_id === g.user.user_id) {
+            const deleteForm = document.createElement("form");
+            deleteForm.method = "post";
+            deleteForm.action = `/delete_post/${post_id}`;
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "submit";
+            deleteButton.className = "delete-post-button";
+            deleteButton.textContent = "Delete";
+
+            deleteForm.appendChild(deleteButton);
+
+            post.appendChild(deleteForm);
+            post.innerHTML += '<p>My Post</p>';
+        }
+
+        document.getElementById("discussion").appendChild(post);
+    }
+
+    // Function to create a new post
+    async function createNewPost(content) {
+        try {
+            const groupId = {{ group.group_id }}; // Add this line to get the group ID
+            const response = await fetch(`/create_group_post/${groupId}`, {
+                method: "POST",
+                body: new URLSearchParams({ post_content: content }),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            });
+
+            if (response.ok) {
+                const postData = await response.json();
+                addPostToDiscussion(postData.username, postData.content, postData.timestamp, postData.post_id);
+                document.getElementById("post-content").value = "";
+            }
+        } catch (error) {
+            console.error("Error creating a new post:", error);
+        }
+    }
+
+    // Check if local storage has posts and display them
+    const storedPosts = JSON.parse(localStorage.getItem("discussionPosts")) || [];
+    storedPosts.forEach((post) => {
+        addPostToDiscussion(post.username, post.content, post.timestamp, post.userId);
+    });
+
+    document.getElementById("post-form").addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const content = document.getElementById("post-content").value;
+
+        if (!content) {
+            return;
+        }
+
+        await createNewPost(content);
+    });
+</script>
+{% endblock %}
