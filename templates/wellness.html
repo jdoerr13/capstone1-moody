@@ -45,7 +45,7 @@
 
 
 <script>
-    // import Popper from 'popper.js';
+    import Popper from 'popper.js';
     document.addEventListener('DOMContentLoaded', function () {
         const journalForm = document.getElementById("journalForm");
         const journalEntryInput = document.getElementById("journalEntry");
@@ -124,59 +124,47 @@
             }
         });
     });
-
-    document.addEventListener('DOMContentLoaded', function () {
-  var calendarEl = document.getElementById('calendar');
-  var calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'dayGridMonth', // Display a month view
-    events: [  // Define your events here
-      {
-        title: 'Event 1',
-        start: '2023-10-17'
-      },
-      {
-        title: 'Event 2',
-        start: '2023-10-20'
-      }
-      // Add more events as needed
-    ]
-    // You can customize the calendar further based on your requirements
-  });
-  calendar.render(); // Render the calendar
-});
-
-document.addEventListener('DOMContentLoaded', function () {
-    let isFullMonth = false; // A flag to track the current view
-
-    var calendarEl = document.getElementById('calendar');
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: 'dayGridWeek', // Start with the week view
-      height: '300px',
-      events: [  // Define your events here
-        {
-          title: 'Event 1',
-          start: '2023-10-17'
-        },
-        {
-          title: 'Event 2',
-          start: '2023-10-20'
-        }
-        // Add more events as needed
-      ]
-      // You can customize the calendar further based on your requirements
-    });
-    calendar.render(); // Render the calendar
-
-    // Function to toggle the view between the week and full month
-    function toggleView() {
-      isFullMonth = !isFullMonth;
-      const newView = isFullMonth ? 'dayGridMonth' : 'dayGridWeek';
-      calendar.changeView(newView);
-      document.getElementById('toggleView').textContent = isFullMonth ? 'See Current Week' : 'See Full Month';
-    }
-
-    // Attach the toggleView function to the button's click event
-    document.getElementById('toggleView').addEventListener('click', toggleView);
-  });
 </script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize the FullCalendar
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth', // Display a month view
+            events: Object.values(weatherData).map(function (weather) {
+                if (weather.location) {
+                    return {
+                        title: weather.location.name + ' Weather',
+                        start: weather.date,
+                        description: 'Condition: ' + weather.day.condition.text + ', Temperature: ' + weather.day.avgtemp_c + '°C',
+                    };
+                } else {
+                    return null; // Handle the case when location is not available
+                }
+            }).filter(function (event) {
+                return event !== null;
+            }),
+        });
+    
+        // Render the calendar
+        calendar.render();
+    
+        // Function to toggle between week and month views
+        let isFullMonth = false;
+        function toggleView() {
+            isFullMonth = !isFullMonth;
+            const newView = isFullMonth ? 'dayGridMonth' : 'dayGridWeek';
+            calendar.changeView(newView);
+            document.getElementById('toggleView').textContent = isFullMonth ? 'See Current Week' : 'See Full Month';
+        }
+    
+        // Attach the toggleView function to the button's click event
+        document.getElementById('toggleView').addEventListener('click', toggleView);
+    });
+    </script>
+    
+
+
 {% endblock %}

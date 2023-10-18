@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 # from sqlalchemy import or_
 from forms import LoginForm, SignupForm, MoodSymptomAssessmentForm, ProfileEditForm, JournalEntryForm
 from models import db, connect_db, User, Diagnosis, UserHistory, Weather, Mood, Symptoms, CopingSolution, Group, GroupPost, JournalEntry
-from datetime import datetime  # Import the datetime module
+from datetime import datetime, timedelta  # Import the datetime module
 from flask_bcrypt import Bcrypt
 # from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -160,16 +160,20 @@ def get_current_weather(location):
 @app.route('/forecast', methods=['GET', 'POST'])
 def forecast():
     forecast_data = None
+    selected_date = None
 
     if request.method == 'POST':
         location = request.form.get('location')
-        forecast_data = get_weather_forecast(location)
+        selected_date = request.form.get('date')  # Get the selected date
+        forecast_data = get_today_weather(location, selected_date)
 
-    return render_template('api/forecast.html', forecast_data=forecast_data, user=g.user)
+    return render_template('api/forecast.html', forecast_data=forecast_data, selected_date=selected_date, user=g.user)
 
-def get_weather_forecast(location):
+
+
+def get_weather_forecast(location, date):
     url = "https://weatherapi-com.p.rapidapi.com/forecast.json"
-    querystring = {"q": location, "days": "3"}  # Use the user-provided location and request a 3-day forecast
+    querystring = {"q": location, "days": "3"}
     headers = {
         "X-RapidAPI-Key": "eb3fa9d2eamsh622acd4eaa00bf3p19fc73jsn647406a37c4e",
         "X-RapidAPI-Host": "weatherapi-com.p.rapidapi.com"
@@ -344,33 +348,6 @@ def homepage():
     else:
         return render_template('home-anon.html')
     
-    # Add a new route for profile editing
-# @app.route('/edit_profile', methods=['GET', 'POST'])
-# def edit_profile():
-#     if CURR_USER_KEY not in session:
-#         flash('You must be logged in to edit your profile.', 'warning')
-#         return redirect(url_for('login'))
-
-#     form = ProfileEditForm()
-
-#     # Populate the form with the user's current data
-#     form.username.data = g.user.username
-#     form.email.data = g.user.email
-#     form.bio.data = g.user.bio
-#     form.location.data = g.user.location  # Set location to the current user's location
-#     form.image_url.data = g.user.image_url
-
-#     # Get the current user and pass it to the template
-#     user = g.user
-
-#     if form.validate_on_submit():
-#         # Update the user's location in the database
-#         g.user.location = form.location.data
-#         db.session.commit()
-#         flash('Your profile has been updated.', 'success')
-#         return redirect(url_for('homepage'))
-
-#     return render_template('edit_profile.html', form=form, user=user)
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
@@ -701,7 +678,6 @@ def delete_post(post_id):
 def wellness():
     form = JournalEntryForm()
 
-    # Check if user is logged in
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
         user_id = g.user.user_id
@@ -710,17 +686,14 @@ def wellness():
         user_id = None
 
     if form.validate_on_submit() and user_id:
-        # Check if an entry for the selected date already exists
         existing_entry = JournalEntry.query.filter_by(
             user_id=user_id,
             date=form.date.data,
         ).first()
 
         if existing_entry:
-            # Update the existing entry
             existing_entry.entry = form.entry.data
         else:
-            # Create a new entry
             new_entry = JournalEntry(
                 user_id=user_id,
                 date=form.date.data,
@@ -730,13 +703,38 @@ def wellness():
 
         db.session.commit()
 
-    # Fetch journal entries for the current user if logged in
     user_journal_entries = []
     if user_id:
         user_journal_entries = JournalEntry.query.filter_by(user_id=user_id).all()
 
-    return render_template('wellness.html', form=form, user_journal_entries=user_journal_entries)
+    # Fetch weather data for a week (adjust the date range as needed)
+    start_date = datetime.now().date()
+    end_date = start_date + timedelta(days=6)
+    weather_data = {}
 
+    current_date = start_date
+    while current_date <= end_date:
+        weather_data[current_date] = get_today_weather(g.user.location, current_date)
+        current_date += timedelta(days=1)
+
+    # Fetch weather data for the current date
+    current_date = datetime.now().date()
+    weather_data[current_date] = get_today_weather(g.user.location, current_date)
+
+    return render_template('wellness.html', form=form, user_journal_entries=user_journal_entries, weather_data=weather_data)
+
+
+# Define the get_today_weather function
+def get_today_weather(location, selected_date):
+    forecast_data = get_weather_forecast(location, selected_date)
+
+    if forecast_data:
+        # Extract data for the selected date
+        for day in forecast_data['forecast']['forecastday']:
+            if day['date'] == selected_date:
+                return day
+    else:
+        return None
 
 
 @app.route('/save_journal_entry', methods=['POST'])
