@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, DateField, SelectField, TextAreaField, RadioField, SelectMultipleField, widgets, BooleanField, SubmitField, SelectMultipleField
+from wtforms import StringField, PasswordField, DateField, SelectField, TextAreaField, RadioField, SelectMultipleField, widgets, BooleanField, SubmitField, SelectMultipleField, HiddenField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError, InputRequired, Optional
 from models import User, bcrypt
 from flask import g
@@ -35,6 +35,10 @@ class SignupForm(FlaskForm):
         if User.query.filter_by(email=field.data).first():
             raise ValidationError('Email is already registered.')
 
+class JournalEntryForm(FlaskForm):
+    entry_id = HiddenField('Entry ID')  # Hidden field for the entry ID
+    date = DateField('Date', validators=[DataRequired()])
+    entry = TextAreaField('Journal Entry', validators=[DataRequired()])
 
 class MoodSymptomAssessmentForm(FlaskForm):
     weather_today = SelectMultipleField('How is the weather today?(select all that apply)', choices=[
@@ -63,6 +67,34 @@ class MoodSymptomAssessmentForm(FlaskForm):
         ('relaxed', 'Relaxed'),
         ('stressed', 'Stressed')
     ])
+    stress_level = SelectField('On a scale of 1-10, how would you rate your stress level today?', choices=[
+        ('1', '1 - Very low'),
+        ('2', '2'),
+        ('3', '3'),
+        ('4', '4'),
+        ('5', '5'),
+        ('6', '6'),
+        ('7', '7'),
+        ('8', '8'),
+        ('9', '9'),
+        ('10', '10 - Very high')
+    ])
+
+
+    positive_affect_rating = SelectField('On a scale of 1-10, how would you rate your positive affect today?', choices=[
+        ('1', '1 - Very low'),
+        ('2', '2'),
+        ('3', '3'),
+        ('4', '4'),
+        ('5', '5'),
+        ('6', '6'),
+        ('7', '7'),
+        ('8', '8'),
+        ('9', '9'),
+        ('10', '10 - Very high')
+    ])
+
+    positive_affect_threshold = RadioField('Do you think positive affect has a higher threshold for significant changes in response to weather compared to negative affect?', choices=[('yes', 'Yes'), ('no', 'No'), ('not_sure', 'Not sure')])
 
     climate_anxiety = RadioField('Have you ever dealt with climate change anxiety?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
@@ -72,11 +104,9 @@ class MoodSymptomAssessmentForm(FlaskForm):
 
     primary_purpose = SelectField('What is your primary purpose for joining this app?', choices=[('meet_friends', 'Meet Friends'), ('learn_more_about_myself', 'Learn More About Myself'), ('improve_moods', 'Improve My Moods'), ('just_curious', 'Just Curious')], validators=[InputRequired()])
 
-    geographic_location = SelectField('Do you live in the same geographic location your entire life, or have you relocated to different places?', choices=[('lifelong_resident', 'Lifelong Resident'), ('relocated', 'Relocated')], validators=[InputRequired()])
+    mood_variation_weather = RadioField('Do you notice mood variations on different types of weather days, such as "nice days" and "poor weather days"?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    impact_relocation = RadioField('If you have relocated, have you noticed changes in your mood related to the novel weather conditions in your new location?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
-
-    relocate_changes = TextAreaField('If you answered "Yes" to the previous question, please describe.', validators=[Length(max=1000)])
+    variations = TextAreaField('If you answered "Yes" to the previous question, what weather condition(s) affect you positively & negatively?', validators=[Length(max=1000)])
 
     weather_mood_beliefs = RadioField('Do you believe that your mood is influenced by specific weather conditions?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
@@ -84,7 +114,6 @@ class MoodSymptomAssessmentForm(FlaskForm):
 
     behavioral_changes = TextAreaField('If you answered "Yes" to the previous question, please describe some specific behavioral changes you\'ve noticed in response to certain weather conditions.', validators=[Length(max=1000)])
 
-    sunshine_mood = RadioField('Do you find that sunshine has a significant impact on your mood?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
     experienced_sad = RadioField('Do you usually feel down on rainy or cloudy days?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
@@ -92,11 +121,10 @@ class MoodSymptomAssessmentForm(FlaskForm):
 
     seasonal_affective_disorder = RadioField('Have you ever experienced symptoms related to Seasonal Affective Disorder (SAD)?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    mood_variation_weather = RadioField('Do you notice mood variations on different types of weather days, such as "nice days" and "poor weather days"?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+
 
     mood_variations_specific = RadioField('Have you observed mood changes linked to specific weather variables (e.g., temperature, humidity, precipitation)?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    influence_sunshine = RadioField('Do you believe that sunshine has a positive impact on your mood?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
     mood_description = TextAreaField('Please describe your current mood in more detail (optional)')
 
@@ -120,24 +148,6 @@ class MoodSymptomAssessmentForm(FlaskForm):
         ('daily', 'Daily')
     ])
 
-    stress_level = SelectField('On a scale of 1-10, how would you rate your stress level today?', choices=[
-        ('1', '1 - Very low'),
-        ('2', '2'),
-        ('3', '3'),
-        ('4', '4'),
-        ('5', '5'),
-        ('6', '6'),
-        ('7', '7'),
-        ('8', '8'),
-        ('9', '9'),
-        ('10', '10 - Very high')
-    ])
-
-    additional_comments = TextAreaField('Do you have any additional comments or observations about your mood or symptoms? (optional)')
-
-
-
- 
 
     importance_of_survey_time = SelectField('How important do you think it is to complete mood surveys at the same time each day for accurate assessment?', choices=[
         ('very important', 'Very Important'),
@@ -166,38 +176,12 @@ class MoodSymptomAssessmentForm(FlaskForm):
 
     experienced_geographic_changes = RadioField('Have you experienced substantial mood changes based on your geographic location?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    indigenous_residents_effect = RadioField('Do you think that indigenous residents are less affected by weather-induced mood changes compared to non-indigenous residents?', choices=[('yes', 'Yes'), ('no', 'No'), ('not_sure', 'Not sure')])
+    geographic_location = SelectField('Do you live in the same geographic location your entire life, or have you relocated to different places?', choices=[('lifelong_resident', 'Lifelong Resident'), ('relocated', 'Relocated')], validators=[InputRequired()])
 
-    sunshine_mood_change = RadioField('Have you ever noticed a change in your mood due to the presence or absence of sunshine?', choices=[('yes', 'Yes'), ('no', 'No')])
+    impact_relocation = RadioField('If you have relocated, have you noticed changes in your mood related to the novel weather conditions in your new location?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    sunshine_effect_on_mood = SelectField('How do you think sunshine affects your mood?', choices=[
-        ('positively', 'Positively'),
-        ('negatively', 'Negatively'),
-        ('no_impact', 'No impact')
-    ])
+    relocate_changes = TextAreaField('If you answered "Yes" to the previous question, please describe.', validators=[Length(max=1000)])
 
-    gender_mood_influence = RadioField('Does your gender influence your mood in response to weather conditions?', choices=[('yes', 'Yes'), ('no', 'No'), ('not_sure', 'Not sure')])
-
-    positive_affect_rating = SelectField('On a scale of 1-10, how would you rate your positive affect today?', choices=[
-        ('1', '1 - Very low'),
-        ('2', '2'),
-        ('3', '3'),
-        ('4', '4'),
-        ('5', '5'),
-        ('6', '6'),
-        ('7', '7'),
-        ('8', '8'),
-        ('9', '9'),
-        ('10', '10 - Very high')
-    ])
-
-    positive_affect_threshold = RadioField('Do you think positive affect has a higher threshold for significant changes in response to weather compared to negative affect?', choices=[('yes', 'Yes'), ('no', 'No'), ('not_sure', 'Not sure')])
-
-    mood_measurement_approach = RadioField('How do you think we should measure mood in response to weather?', choices=[
-        ('single_affect', 'Single-affect approach (e.g., measuring positive or negative affect separately)'),
-        ('addition_subtraction', 'Addition-by-subtraction model (e.g., measuring mood by considering changes in both positive and negative affect)'),
-        ('other', 'Other')
-    ])
 
     other_factors_influence_mood = SelectMultipleField('What other factors, apart from weather, do you believe influence your mood on a daily basis?', choices=[
         ('academic_or_work', 'Academic or work-related factors'),
@@ -242,9 +226,12 @@ class MoodSymptomAssessmentForm(FlaskForm):
 
     emotional_support = RadioField('Do you seek emotional support from friends or family when your mood is affected by the weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    emotional_support_description = TextAreaField('If you seek emotional support related to weather, please describe who you turn to and why.', validators=[Length(max=1000)])
+    emotional_support_description = TextAreaField('If you seek emotional support related to weather, please describe who you turn to and why.(optional)', validators=[Length(max=1000)])
 
-    expectations_beliefs = TextAreaField('Do you have beliefs or expectations about how specific weather conditions affect your mood?', validators=[Length(max=1000)])
+    expectations_beliefs = TextAreaField('Do you have beliefs or expectations about how specific weather conditions affect your mood?(optional)', validators=[Length(max=1000)])
+
+    additional_comments = TextAreaField('Do you have any additional comments or observations about your mood or symptoms? (optional)')
+
 
 class ProfileEditForm(FlaskForm):
     """Form for editing user profile."""
@@ -255,10 +242,12 @@ class ProfileEditForm(FlaskForm):
     location = StringField('Location (City, State)', validators=[Optional()], default="Default City, State")
     image_url = StringField('Profile Picture', validators=[Optional()])
     
-    password = PasswordField('Password', validators=[Length(min=6), DataRequired()])
+    current_password = PasswordField('Current Password', validators=[DataRequired()])
+ 
 
     def validate_password(self, field):
-            # Check if the entered password matches the user's current password
+        # Check if the entered password matches the user's current password
         user = User.query.get_or_404(g.user.user_id)  # Assuming g.user is the current user
+
         if not bcrypt.check_password_hash(user.password, field.data):
             raise ValidationError('Incorrect password')

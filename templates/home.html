@@ -12,6 +12,9 @@
     <!-- Display the user's profile picture (assuming it's stored as 'image_url') -->
     <img src="{{ user.image_url }}" alt="Profile Picture" class="profile-icon">
 
+
+
+
     <!-- Display the user's location and current weather -->
         <h1>Welcome, {{ user.username }}!</h1>
         <p>Your location: {{ location }}</p>
@@ -39,6 +42,9 @@
     <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Edit Profile</a>
     </header>
 
+
+
+
     <section>
         <h2>Your Wellness Companion & Moody Journal</h2>
         <ul>
@@ -48,7 +54,13 @@
         </ul>
         <!-- button to navigate to the mood_symptom form -->
         <a href="{{ url_for('mood_symptom') }}" class="btn btn-primary">Take Mood Assessment</a>
+        <!-- Button to navigate to the Wellness page -->
+        <a href="{{ url_for('wellness') }}" class="btn btn-primary">Wellness Page</a>
     </section>
+
+
+
+
 
     <section>
         <h2>Friends (Moodies) & Groups</h2>
@@ -67,6 +79,8 @@
             </ul>
     </section>
 
+
+
     <section>
         <h2>Weather Information</h2>
         <!-- Add weather-related information here, e.g., links to current weather, forecast, etc. -->
@@ -80,6 +94,8 @@
         <!-- Add link to more fun astronomy information here -->
         <a href="/astronomy">Astronomy Data</a>
     </section>
+
+
 
     <script>
             $(document).ready(function() {

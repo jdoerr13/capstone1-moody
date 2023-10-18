@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <title>Friend's Profile</title>
+
+    <h1>{{ user.username }}'s Profile:</h1>
+
+    <p>Location: {{ location }}</p>
+    {% if current_weather_data %}
+    <div class="mt-4">
+        <h2>Current Weather for {{ current_weather_data['location']['name'] }}, {{ current_weather_data['location']['region'] }}, {{ current_weather_data['location']['country'] }}</h2>
+        <h4>Current Time: {{ current_weather_data['location']['localtime'] }}</h4>
+        <div class="row">
+            <div class="col-md-6">
+                <h4>Temperature:</h4>
+                <p>{{ current_weather_data['current']['temp_f'] }}°F</p>
+                <p>{{ current_weather_data['current']['temp_c'] }}°C</p>
+            </div>
+            <div class="col-md-6">
+                <h4>Feels Like:</h4>
+                <p>{{ current_weather_data['current']['feelslike_f'] }}°F</p>
+                <p>{{ current_weather_data['current']['feelslike_c'] }}°C</p>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <p>No weather data available for the current location.</p>
+{% endif %}
+
+ <!-- Display user's bio if available -->
+ {% if user.bio %}
+ <h2>Bio:</h2>
+ <p>{{ user.bio }}</p>
+{% endif %}
+
+    <h2>Groups</h2>
+    <ul>
+        {% for group in user_groups %}
+            <li>{{ group.group_name }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Friends</h2>
+    <ul>
+        {% for friend in friends %}
+            <li>
+                <a href="{{ url_for('friends_profile', user_id=friend.user_id) }}">{{ friend.username }}</a>
+            </li>       
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('homepage') }}" class="btn btn-primary mt-3">Back to Homepage</a>
+</div>
+{% endblock %}

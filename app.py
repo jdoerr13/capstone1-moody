@@ -4,8 +4,8 @@ from flask import Flask, render_template, request, flash, redirect, session, g, 
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 # from sqlalchemy import or_
-from forms import LoginForm, SignupForm, MoodSymptomAssessmentForm, ProfileEditForm
-from models import db, connect_db, User, Diagnosis, UserHistory, Weather, Mood, Symptoms, CopingSolution, Group, GroupPost
+from forms import LoginForm, SignupForm, MoodSymptomAssessmentForm, ProfileEditForm, JournalEntryForm
+from models import db, connect_db, User, Diagnosis, UserHistory, Weather, Mood, Symptoms, CopingSolution, Group, GroupPost, JournalEntry
 from datetime import datetime  # Import the datetime module
 from flask_bcrypt import Bcrypt
 # from flask_sqlalchemy import SQLAlchemy
@@ -14,6 +14,8 @@ from flask_migrate import Migrate
 
 CURR_USER_KEY = "curr_user"
 app = Flask(__name__)
+
+app.secret_key = 'your_secret_key_here'
 
 
 # Initialize Flask-Migrate- USED WITH ANY UPDATE TO THE MODELS FOR DB MOODY
@@ -343,6 +345,33 @@ def homepage():
         return render_template('home-anon.html')
     
     # Add a new route for profile editing
+# @app.route('/edit_profile', methods=['GET', 'POST'])
+# def edit_profile():
+#     if CURR_USER_KEY not in session:
+#         flash('You must be logged in to edit your profile.', 'warning')
+#         return redirect(url_for('login'))
+
+#     form = ProfileEditForm()
+
+#     # Populate the form with the user's current data
+#     form.username.data = g.user.username
+#     form.email.data = g.user.email
+#     form.bio.data = g.user.bio
+#     form.location.data = g.user.location  # Set location to the current user's location
+#     form.image_url.data = g.user.image_url
+
+#     # Get the current user and pass it to the template
+#     user = g.user
+
+#     if form.validate_on_submit():
+#         # Update the user's location in the database
+#         g.user.location = form.location.data
+#         db.session.commit()
+#         flash('Your profile has been updated.', 'success')
+#         return redirect(url_for('homepage'))
+
+#     return render_template('edit_profile.html', form=form, user=user)
+
 @app.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
     if CURR_USER_KEY not in session:
@@ -350,24 +379,142 @@ def edit_profile():
         return redirect(url_for('login'))
 
     form = ProfileEditForm()
-    # Initialize the form location field with the user's current location
-    form.location.data = g.user.location
-    # Get the current user and pass it to the template
-    user = g.user
 
-    if form.validate_on_submit():
-        # Update the user's location in the database
-        g.user.location = form.location.data
+    if request.method == 'POST' and form.validate_on_submit():
+        # Update the user's profile data in the database
+        user = g.user  # Get the current user
+        form.populate_obj(user)  # Populate the user object with form data
         db.session.commit()
         flash('Your profile has been updated.', 'success')
         return redirect(url_for('homepage'))
 
+    # Populate the form with the user's data
+    user = g.user
+    form.process(obj=user)  # Populate the form fields with user data
 
     return render_template('edit_profile.html', form=form, user=user)
 
 
 
-    
+#_______Friends_________
+
+@app.route('/friends_profile/<int:user_id>')
+def friends_profile(user_id):
+    # Find the user by user_id
+    user = User.query.get(user_id)
+
+    if user:
+        # Retrieve the user's location (if available)
+        location = user.location
+
+        # Retrieve weather information for the user's location (if needed)
+        # You can add your logic here.
+
+        # Retrieve the groups the user is in
+        user_groups = user.groups
+
+        # Retrieve the user's friends
+        friends = user.friends
+
+        current_weather_data = None
+
+        # If the user has a location, fetch the current weather data
+        if location:
+            current_weather_data = get_current_weather(location)
+            
+        return render_template('friends_profile.html', user=user, location=location, user_groups=user_groups, friends=friends, current_weather_data=current_weather_data)
+    else:
+        # Handle the case where the user is not found
+        return "User not found"
+
+@app.route('/send_friend_request/<int:user_id>', methods=['POST'])
+def send_friend_request(user_id):
+    if not g.user:
+        # flash('Not logged in', 'error')
+        return jsonify({'success': False, 'message': 'Not logged in'})
+
+    if user_id == g.user.user_id:
+        flash('Cannot send a friend request to yourself', 'error')
+        return jsonify({'success': False, 'message': 'Cannot send a friend request to yourself'})
+
+    recipient = User.query.get(user_id)
+
+    if recipient:
+        # Check if the recipient is already a friend
+        if recipient in g.user.friends:
+            # flash('You are already friends with this user', 'error')
+            return jsonify({'success': False, 'message': 'You are already friends with this user'})
+
+        # Check if the friend request already exists
+        if g.user in recipient.friend_requests:
+            # flash('Friend request already sent', 'error')
+            return jsonify({'success': False, 'message': 'Friend request already sent'})
+
+        # Add the sender to the recipient's friend requests
+        recipient.friend_requests.append(g.user)
+        db.session.commit()
+        # flash('Friend request sent successfully', 'success')
+        return jsonify({'success': True, 'message': 'Friend request sent successfully'})
+    else:
+        # flash('User not found', 'error')
+        return jsonify({'success': False, 'message': 'User not found'})
+
+
+
+
+@app.route('/accept_friend_request/<int:sender_id>', methods=['POST'])
+def accept_friend_request(sender_id):
+    if not g.user:
+        return jsonify(success=False, message='Not logged in')
+
+    sender = User.query.get(sender_id)
+
+    if sender:
+        # Check if the sender has sent a friend request to the current user
+        if sender in g.user.friend_requests:
+            # Remove the friend request
+            g.user.friend_requests.remove(sender)
+            # Add the sender to the current user's list of friends
+            g.user.friends.append(sender)
+            db.session.commit()
+            return jsonify(success=True, message='Friend request accepted')
+        else:
+            return jsonify(success=False, message='Friend request not found')
+    else:
+        return jsonify(success=False, message='User not found')
+
+
+# remove a friend
+@app.route('/remove_friend/<int:friend_id>', methods=['POST'])
+def remove_friend(friend_id):
+    if not g.user:
+        # Check if the user is logged in
+        flash('Not logged in', 'error')
+        return redirect(url_for('friends_groups')) 
+
+    friend = User.query.get(friend_id)
+    if friend:
+        # Check if the friend exists
+        if friend in g.user.friends:
+            # Remove the friend from the user's friends list
+            g.user.friends.remove(friend)
+            db.session.commit()
+            flash('Friend removed successfully', 'success')
+        else:
+            flash('User is not your friend', 'error')
+    else:
+        flash('Friend not found', 'error')
+
+    return redirect(url_for('friends_groups'))  
+
+
+
+
+
+
+
+
+
 
 #_______________________Assessments & Journal__________________________________
 @app.route('/mood_symptom', methods=['GET', 'POST'])
@@ -382,21 +529,48 @@ def mood_symptom():
     return render_template('mood_symptom_form.html', form=form, user=g.user)
 
 
-#_______________________Friends & Groups______________________________________
+#View function for 
 
+
+#_______________________Friends & Groups______________________________________
 @app.route('/friends_groups', methods=['GET', 'POST'])
 def friends_groups():
     # List all available groups
     groups = Group.query.all()
 
-    # Search for users
-    users = []
+    # Initialize the users variable to None
+    users = None
+
+    # Fetch the user's friend requests received
+    friend_requests_received = g.user.friend_requests  # Assuming you have a 'friend_requests' relationship
+
     if request.method == 'POST':
         query = request.form.get('query')
         if query:
+            # Use a case-insensitive filter to search for users by username
             users = User.query.filter(User.username.ilike(f'%{query}%')).all()
 
-    return render_template('friends_groups/friends_groups.html', groups=groups, users=users, user=g.user)
+    # If no users are found, return all users
+    if users is None:
+        users = User.query.all()
+
+    # Fetch the user's groups
+    user_groups = g.user.groups
+
+    # Create a dictionary to store whether the user is a member of each group
+    group_membership = {group.group_id: g.user in group.members for group in groups}
+
+    return render_template(
+        'friends_groups/friends_groups.html',
+        groups=groups,
+        users=users,
+        user=g.user,
+        group_membership=group_membership,
+        friend_requests_received=friend_requests_received  # Pass friend requests to the template
+    )
+
+
+
 
 
 @app.route('/join_group/<int:group_id>', methods=['GET', 'POST'])
@@ -410,15 +584,21 @@ def join_group(group_id):
 
     if group:
         # Check if the user is already a member
-        if g.user in group.members:
-            flash(f'Welcome back to the group "{group.group_name}".', 'success')
+        is_member = g.user in group.members
+
+        if is_member:
+            flash(f'Member: Let\'s chat with the group "{group.group_name}".', 'success')
         else:
             # Add the user to the group's members and save the relationship
             g.user.groups.append(group)
             db.session.commit()
             flash(f'Welcome to the group "{group.group_name}".', 'success')
             print(f'Joined group {group.group_name} with ID {group_id}')
-        return jsonify(success=True, message='Joined the group', group_id=group_id, user=g.user)
+
+        # Determine the message to send to the frontend
+        message = 'Joined the group' if not is_member else 'Already a member'
+
+        return jsonify(success=True, message=message, group_id=group_id, user=g.user)
     
     flash('Group not found', 'danger')
     return jsonify(success=False, message='Group not found')
@@ -435,9 +615,6 @@ def leave_group(group_id):
                 db.session.commit()
                 return jsonify(success=True, message='Left the group', group_id=group_id)
     return jsonify(success=False, message='Failed to leave the group')
-
-
-
 
 
 @app.route('/group/<int:group_id>', methods=['GET', 'POST'])
@@ -471,6 +648,23 @@ def group(group_id):
 # csrf_token=csrf.generate_csrf()
 
 
+
+@app.route('/get_group_members/<int:group_id>', methods=['GET'])
+def get_group_members(group_id):
+    # Query the database to retrieve group members for the given group_id
+    group = Group.query.get(group_id)
+
+    if group is not None:
+        members = group.members
+        member_data = [{'username': member.username} for member in members]
+        return jsonify(member_data)
+
+    return jsonify([])  # Return an empty list if the group is not found
+
+
+
+
+#_____GROUP POSTS_________
 # Group creation, response creation, and post deletion routes
 @app.route('/create_group_post/<int:group_id>', methods=['POST'])
 def create_group_post(group_id):
@@ -482,7 +676,6 @@ def create_group_post(group_id):
             db.session.commit()
     return redirect(url_for('group', group_id=group_id))
 
-
 @app.route('/create_response/<int:group_id>/<int:post_id>', methods=['POST'])
 def create_response(group_id, post_id):
     if g.user:
@@ -493,6 +686,7 @@ def create_response(group_id, post_id):
             db.session.commit()
     return redirect(url_for('group', group_id=group_id))
 
+
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
 def delete_post(post_id):
     post = GroupPost.query.get(post_id)
@@ -501,9 +695,140 @@ def delete_post(post_id):
         db.session.commit()
     return redirect(url_for('group', group_id=post.group_id))
 
+#________________WELLNESS- JOURNAL__________________________________
+
+@app.route('/wellness', methods=['GET', 'POST'])
+def wellness():
+    form = JournalEntryForm()
+
+    # Check if user is logged in
+    if CURR_USER_KEY in session:
+        g.user = User.query.get(session[CURR_USER_KEY])
+        user_id = g.user.user_id
+    else:
+        g.user = None
+        user_id = None
+
+    if form.validate_on_submit() and user_id:
+        # Check if an entry for the selected date already exists
+        existing_entry = JournalEntry.query.filter_by(
+            user_id=user_id,
+            date=form.date.data,
+        ).first()
+
+        if existing_entry:
+            # Update the existing entry
+            existing_entry.entry = form.entry.data
+        else:
+            # Create a new entry
+            new_entry = JournalEntry(
+                user_id=user_id,
+                date=form.date.data,
+                entry=form.entry.data,
+            )
+            db.session.add(new_entry)
+
+        db.session.commit()
+
+    # Fetch journal entries for the current user if logged in
+    user_journal_entries = []
+    if user_id:
+        user_journal_entries = JournalEntry.query.filter_by(user_id=user_id).all()
+
+    return render_template('wellness.html', form=form, user_journal_entries=user_journal_entries)
 
 
-#________________USER__________________________________
+
+@app.route('/save_journal_entry', methods=['POST'])
+def save_journal_entry():
+    try:
+        data = request.get_json()
+        entry_text = data.get('entry')
+        user_id = session.get(CURR_USER_KEY)
+
+        new_entry = JournalEntry(
+            user_id=user_id,
+            date=datetime.utcnow().date(),
+            entry=entry_text
+        )
+
+        db.session.add(new_entry)
+        db.session.commit()
+
+        return jsonify(success=True, message='Journal entry saved successfully')
+    except Exception as e:
+        print(str(e))
+        db.session.rollback()
+        return jsonify(success=False, message='Failed to save journal entry')
+    
+@app.route('/fetch_journal_entries', methods=['GET'])
+def fetch_journal_entries():
+    # Get the user ID (assuming it's stored in session)
+    user_id = session.get(CURR_USER_KEY)
+
+    # Fetch journal entries for today's date and the current user (if logged in)
+    today = datetime.today().strftime('%Y-%m-%d')
+    id=JournalEntry.id
+    entries = JournalEntry.query.filter_by(date=today, user_id=user_id, id=id).all()
+
+    # Return the journal entries as JSON
+    return jsonify([entry.serialize() for entry in entries])
+
+@app.route('/edit_journal_entry/<int:id>', methods=['GET', 'POST'])
+def edit_journal_entry(id):
+    # Get the user's ID
+    user_id = session.get(CURR_USER_KEY)
+
+    # Fetch the journal entry for the specified ID and user
+    journal_entry = JournalEntry.query.get(id)
+
+    if not journal_entry or journal_entry.user_id != user_id:
+        # Handle the case where the entry doesn't exist or doesn't belong to the user
+        flash("Journal entry not found or unauthorized access.", "danger")
+        return redirect(url_for('wellness'))  # Redirect to the wellness page or show an error message
+
+    form = JournalEntryForm(obj=journal_entry)
+
+    if form.validate_on_submit():
+        # Update the journal entry with the submitted data
+        form.populate_obj(journal_entry)  # Update the journal entry from the form data
+        db.session.commit()
+        flash("Journal entry updated successfully.", "success")
+        return redirect(url_for('wellness'))  # Redirect back to the wellness page after editing
+
+    return render_template('edit_journal.html', form=form, id=journal_entry.id, date=journal_entry.date, entry=journal_entry)
+
+                           
+                   
+
+
+
+@app.route('/delete_journal_entry/<int:id>', methods=['POST'])
+def delete_journal_entry(id):
+    if request.method == 'POST':
+        entry_id = request.form.get('id')
+
+        print(f"Deleting entry with id: {entry_id}")
+
+        entry = JournalEntry.query.get(entry_id)
+            
+        if entry:
+                # Check if the entry belongs to the logged-in user to prevent unauthorized deletion
+            if entry.user_id == session.get(CURR_USER_KEY):
+                    print("Entry found and user authorized for deletion.")
+                    db.session.delete(entry)
+                    db.session.commit()
+                    print("Entry deleted.")
+                    return redirect(url_for('wellness'))
+            else:
+                    print("User is not authorized for deletion.")
+        else:
+                print("Entry not found.")
+
+    print("Invalid request or entry not deleted.")
+    return redirect(url_for('wellness'))
+
+#___________WELLNESS - CALENDAR_______________________
 
 
 

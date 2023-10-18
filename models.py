@@ -34,6 +34,28 @@ user_friend_requests = db.Table(
     db.Column('sender_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True),
     db.Column('receiver_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True)
 )
+class JournalEntry(db.Model):
+    __tablename__ = 'journal_entries'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    date = db.Column(db.Date, nullable=False, default=datetime.utcnow().date)
+    entry = db.Column(db.Text, nullable=False)
+
+    user = db.relationship('User', backref=db.backref('journal_entries', lazy=True))
+
+    def __init__(self, user_id, date, entry):
+        self.user_id = user_id
+        self.date = date
+        self.entry = entry
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'date': self.date.strftime('%Y-%m-%d'),  # Format the date as a string
+            'entry': self.entry,
+        }   
 
 # User model
 class User(db.Model):
@@ -46,7 +68,7 @@ class User(db.Model):
     registration_date = db.Column(db.DateTime, nullable=False)
     image_url = db.Column(db.String(255))  # Add the image_url column
     location = db.Column(db.String(255))
-
+    bio = db.Column(db.Text)  # Add the bio column as a text field
     # Add a field for the user's profile picture URL
     image_url = db.Column(db.String(255))  # This field will store the profile picture URL
 

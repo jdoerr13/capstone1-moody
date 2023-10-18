@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section id="moodyJournal">
+    <h2>Moody Journal</h2>
+    <form id="journalForm">
+        <label for="journalEntry">Write your journal entry:</label>
+        <textarea id="journalEntry" name="journal_entry" rows="4" cols="50"></textarea>
+        <button type="submit">Save Journal Entry</button>
+    </form>
+
+    <h3>Journal Box</h3>
+    <div id="journalEntries">
+        <ul>
+            {% for entry in user_journal_entries %}
+                <li><a href="{{ url_for('edit_journal_entry', date=entry.date, id=entry.id) }}">{{ entry.date }}, {{ entry.id }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+<h2>Moody Calendar</h2>
+<div id="calendar">
+    <section id="moodyCalendar">
+       
+    </section>
+</div>
+<div id="calendar">
+    <button id="toggleView">See Full Month</button>
+  </div>
+  
+
+
+
+    <section id="dailyGoals">
+        <h2>Daily Goals for Mood Improvement</h2>
+        <ul>
+            <li>Exercise for at least 30 minutes</li>
+            <li>Practice mindfulness meditation</li>
+            <li>Reach out to a friend or family member</li>
+            <!-- Add more goals here -->
+        </ul>
+    </section>
+
+
+<script>
+    // import Popper from 'popper.js';
+    document.addEventListener('DOMContentLoaded', function () {
+        const journalForm = document.getElementById("journalForm");
+        const journalEntryInput = document.getElementById("journalEntry");
+        const journalEntriesDiv = document.getElementById("journalEntries");
+
+        // Function to display journal entries
+        function displayJournalEntries(entries) {
+            journalEntriesDiv.innerHTML = "";  // Clear the existing entries
+
+            if (entries.length > 0) {
+                const ul = document.createElement("ul");
+
+                entries.forEach(entry => {
+                    const li = document.createElement("li");
+                    const link = document.createElement("a");
+                    link.href = `/edit_journal_entry/${entry.date}`;
+                    link.textContent = entry.date;  // Display the date
+                    li.appendChild(link);
+                    ul.appendChild(li);
+                });
+
+                journalEntriesDiv.appendChild(ul);
+            } else {
+                journalEntriesDiv.innerHTML = '<p>No journal entries available.</p>';
+            }
+        }
+
+        // Function to fetch and display journal entries
+        async function fetchAndDisplayJournalEntries() {
+            try {
+                const response = await fetch('/fetch_journal_entries', {
+                    method: 'GET',
+                });
+
+                if (response.ok) {
+                    const entries = await response.json();
+                    displayJournalEntries(entries);
+                } else {
+                    console.error('Failed to fetch journal entries:', response.statusText);
+                    displayJournalEntries([]);
+                }
+            } catch (error) {
+                console.error('Error fetching journal entries:', error);
+                displayJournalEntries([]);
+            }
+        }
+
+        // Fetch and display journal entries when the page loads
+        fetchAndDisplayJournalEntries();
+
+        // Handle form submission
+        journalForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const journalEntry = journalEntryInput.value.trim();
+
+            if (journalEntry) {
+                try {
+                    const response = await fetch('/save_journal_entry', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ entry: journalEntry }),
+                    });
+
+                    if (response.ok) {
+                        // Entry saved successfully, so fetch and display journal entries again
+                        fetchAndDisplayJournalEntries();
+                        journalEntryInput.value = "";
+                    } else {
+                        console.error('Failed to save journal entry:', response.statusText);
+                    }
+                } catch (error) {
+                    console.error('Error saving journal entry:', error);
+                }
+            }
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+  var calendarEl = document.getElementById('calendar');
+  var calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth', // Display a month view
+    events: [  // Define your events here
+      {
+        title: 'Event 1',
+        start: '2023-10-17'
+      },
+      {
+        title: 'Event 2',
+        start: '2023-10-20'
+      }
+      // Add more events as needed
+    ]
+    // You can customize the calendar further based on your requirements
+  });
+  calendar.render(); // Render the calendar
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    let isFullMonth = false; // A flag to track the current view
+
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridWeek', // Start with the week view
+      height: '300px',
+      events: [  // Define your events here
+        {
+          title: 'Event 1',
+          start: '2023-10-17'
+        },
+        {
+          title: 'Event 2',
+          start: '2023-10-20'
+        }
+        // Add more events as needed
+      ]
+      // You can customize the calendar further based on your requirements
+    });
+    calendar.render(); // Render the calendar
+
+    // Function to toggle the view between the week and full month
+    function toggleView() {
+      isFullMonth = !isFullMonth;
+      const newView = isFullMonth ? 'dayGridMonth' : 'dayGridWeek';
+      calendar.changeView(newView);
+      document.getElementById('toggleView').textContent = isFullMonth ? 'See Current Week' : 'See Full Month';
+    }
+
+    // Attach the toggleView function to the button's click event
+    document.getElementById('toggleView').addEventListener('click', toggleView);
+  });
+</script>
+{% endblock %}
