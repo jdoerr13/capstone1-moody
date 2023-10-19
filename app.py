@@ -44,6 +44,14 @@ app.app_context().push()
 db.create_all()
 
 ##############################################################################
+# @app.route('/path-to-your-script.js')
+# def serve_js_as_module():
+#     response = app.send_static_file('path-to-your-script.js')
+#     response.headers['Content-Type'] = 'application/javascript; charset=utf-8'
+#     response.headers['X-Content-Type-Options'] = 'nosniff'
+#     return response
+
+
 # User signup/login/logout
 @app.before_request
 def add_user_to_g():
@@ -498,10 +506,10 @@ def remove_friend(friend_id):
 def mood_symptom():
     form = MoodSymptomAssessmentForm()
 
-    if form.validate_on_submit():
+    if request.method == 'POST' and form.validate_on_submit():
         # Process the form data here (e.g., save to a database)
         # Redirect to a success page or perform other actions
-        return render_template('mood_symptom_form.html', form=form)
+        return redirect(url_for('success_page'))  # Replace 'success_page' with your actual success page route
 
     return render_template('mood_symptom_form.html', form=form, user=g.user)
 
@@ -707,34 +715,11 @@ def wellness():
     if user_id:
         user_journal_entries = JournalEntry.query.filter_by(user_id=user_id).all()
 
-    # Fetch weather data for a week (adjust the date range as needed)
-    start_date = datetime.now().date()
-    end_date = start_date + timedelta(days=6)
-    weather_data = {}
+    # Fetch weather data for the current user's location
+    user_location = g.user.location
 
-    current_date = start_date
-    while current_date <= end_date:
-        weather_data[current_date] = get_today_weather(g.user.location, current_date)
-        current_date += timedelta(days=1)
+    return render_template('wellness.html', form=form, user_journal_entries=user_journal_entries, user_location=user_location)
 
-    # Fetch weather data for the current date
-    current_date = datetime.now().date()
-    weather_data[current_date] = get_today_weather(g.user.location, current_date)
-
-    return render_template('wellness.html', form=form, user_journal_entries=user_journal_entries, weather_data=weather_data)
-
-
-# Define the get_today_weather function
-def get_today_weather(location, selected_date):
-    forecast_data = get_weather_forecast(location, selected_date)
-
-    if forecast_data:
-        # Extract data for the selected date
-        for day in forecast_data['forecast']['forecastday']:
-            if day['date'] == selected_date:
-                return day
-    else:
-        return None
 
 
 @app.route('/save_journal_entry', methods=['POST'])
@@ -744,6 +729,8 @@ def save_journal_entry():
         entry_text = data.get('entry')
         user_id = session.get(CURR_USER_KEY)
 
+        print("Received data:", data)
+
         new_entry = JournalEntry(
             user_id=user_id,
             date=datetime.utcnow().date(),
@@ -751,7 +738,12 @@ def save_journal_entry():
         )
 
         db.session.add(new_entry)
+
+# Before the commit, print the entry to check if it's correctly populated
+        print("New entry:", new_entry)
+
         db.session.commit()
+        print("Journal entry saved successfully")
 
         return jsonify(success=True, message='Journal entry saved successfully')
     except Exception as e:
@@ -797,10 +789,7 @@ def edit_journal_entry(id):
     return render_template('edit_journal.html', form=form, id=journal_entry.id, date=journal_entry.date, entry=journal_entry)
 
                            
-                   
-
-
-
+                
 @app.route('/delete_journal_entry/<int:id>', methods=['POST'])
 def delete_journal_entry(id):
     if request.method == 'POST':

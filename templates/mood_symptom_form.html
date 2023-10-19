@@ -2,42 +2,43 @@
 
 {% block content %}
     <title>Mood and Symptom Assessment</title>
-        <!-- Add the Back to Profile button -->
-        <div class="form-group">
-            <a href="/" class="btn btn-secondary">Back to Profile</a>
-        </div>
+    <!-- Add the Back to Profile button -->
+    <div class="form-group">
+        <a href="/" class="btn btn-secondary">Back to Profile</a>
+    </div>
     <style>
         /* Add your custom CSS styles here */
         .form-group {
             margin-bottom: 10px;
         }
     </style>
-</head>
-<body>
     <h1>Mood and Symptom Assessment</h1>
     <form method="POST" action="">
         {{ form.hidden_tag() }}
 
         {% for field in form if not field.type == "HiddenField" %}
-            <div class="form-group">
-                {{ field.label }}
-                {% if field.type == "SelectMultipleField" %}
-                    {% for option, label in field.choices %}
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="{{ field.name }}" id="{{ field.name ~ '_' ~ option }}" value="{{ option }}">
-                            <label class="form-check-label" for="{{ field.name ~ '_' ~ option }}">{{ label }}</label>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    {{ field(class="form-control") }}
-                {% endif %}
-            </div>
+        <div class="form-group">
+            {{ field.label }}
+            {% if field.type == 'SelectMultipleField' and field.choices %}
+                {% for choice in field.choices %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="{{ field.name }}" id="{{ field.name ~ '_' ~ choice[0] }}" value="{{ choice[0] }}">
+                        <label class="form-check-label" for="{{ field.name ~ '_' ~ choice[0] }}">{{ choice[1] }}</label>
+                    </div>
+                {% endfor %}
+            {% else %}
+                {{ field(class="form-control") }}
+            {% endif %}
+        </div>
         {% endfor %}
 
         <div>
             <button type="submit" class="btn btn-primary">Submit</button>
         </div>
     </form>
-    {% endblock %}
+</body>
+{% endblock %}
+
+
 
 

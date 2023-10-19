@@ -10,7 +10,7 @@
         <button type="submit">Save Journal Entry</button>
     </form>
 
-    <h3>Journal Box</h3>
+    <h3>Journal Box (Date, Total Entries)</h3>
     <div id="journalEntries">
         <ul>
             {% for entry in user_journal_entries %}
@@ -21,28 +21,86 @@
 </section>
 
 <h2>Moody Calendar</h2>
+
 <div id="calendar">
-    <section id="moodyCalendar">
-       
-    </section>
+    <section id="moodyCalendar"></section>
 </div>
 <div id="calendar">
     <button id="toggleView">See Full Month</button>
-  </div>
-  
+</div>
+<div id="journalMessage"></div>
 
 
 
-    <section id="dailyGoals">
-        <h2>Daily Goals for Mood Improvement</h2>
-        <ul>
-            <li>Exercise for at least 30 minutes</li>
-            <li>Practice mindfulness meditation</li>
-            <li>Reach out to a friend or family member</li>
-            <!-- Add more goals here -->
-        </ul>
-    </section>
+<section id="dailyGoals">
+    <h2>Daily Goals for Mood Improvement</h2>
+    <ul id="goalsList">
+        <!-- Your goals with checkboxes and delete buttons will be added here dynamically -->
+    </ul>
+    <input type="text" id="newGoal" placeholder="Add a new goal">
+    <button id="addGoal">Add Goal</button>
+   
+</section>
 
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const goalsList = document.getElementById('goalsList');
+    const newGoalInput = document.getElementById('newGoal');
+    const addGoalButton = document.getElementById('addGoal');
+    const deleteCompletedGoalsButton = document.getElementById('deleteCompletedGoals');
+
+    addGoalButton.addEventListener('click', function () {
+        const newGoalText = newGoalInput.value.trim();
+        if (newGoalText) {
+            addGoal(newGoalText);
+            newGoalInput.value = '';
+        }
+    });
+
+    deleteCompletedGoalsButton.addEventListener('click', function () {
+        deleteCompletedGoals();
+    });
+
+    function addGoal(goalText) {
+        const listItem = document.createElement('li');
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+
+        const goalLabel = document.createElement('label');
+        goalLabel.textContent = goalText;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', function () {
+            deleteGoal(listItem);
+        });
+
+        listItem.appendChild(checkbox);
+        listItem.appendChild(goalLabel);
+        listItem.appendChild(deleteButton);
+
+        goalsList.appendChild(listItem);
+    }
+
+    function deleteCompletedGoals() {
+        const checkboxes = document.querySelectorAll('#goalsList input[type="checkbox"]');
+        checkboxes.forEach(function (checkbox) {
+            if (checkbox.checked) {
+                const listItem = checkbox.parentElement;
+                deleteGoal(listItem);
+            }
+        });
+    }
+
+    function deleteGoal(listItem) {
+        goalsList.removeChild(listItem);
+    }
+});
+
+</script>
+    <script src="https://unpkg.com/popper"></script>
 
 <script>
     import Popper from 'popper.js';
@@ -126,31 +184,68 @@
     });
 </script>
 
+<script type="module" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
+<script type="module">
+    document.addEventListener('DOMContentLoaded', async function () {
         // Initialize the FullCalendar
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth', // Display a month view
-            events: Object.values(weatherData).map(function (weather) {
-                if (weather.location) {
-                    return {
-                        title: weather.location.name + ' Weather',
-                        start: weather.date,
-                        description: 'Condition: ' + weather.day.condition.text + ', Temperature: ' + weather.day.avgtemp_c + '°C',
-                    };
-                } else {
-                    return null; // Handle the case when location is not available
+            initialView: 'dayGridWeek', // Display a week view by default
+            events: [
+                {
+                    title: 'Loading Weather...',
+                    start: new Date(),
+                    allDay: true,
+                    rendering: 'background', // Show it as a background event
+                    id: 'loading-weather' // Add an ID to identify this event
                 }
-            }).filter(function (event) {
-                return event !== null;
-            }),
+            ],
+                // Set a fixed height for the calendar
+                height: 275, // You can adjust the value to your preference
         });
-    
+
         // Render the calendar
         calendar.render();
-    
+
+        // Get the user's location from the template
+        var userLocation = '{{ user_location }}';
+
+        // Fetch weather data using Axios
+        const options = {
+            method: 'GET',
+            url: 'https://weatherapi-com.p.rapidapi.com/forecast.json',
+            params: {
+                q: userLocation, // Use the user's location
+                days: '3',
+                units: 'imperial', // Use 'imperial' for Fahrenheit
+            },
+            headers: {
+                'X-RapidAPI-Key': 'eb3fa9d2eamsh622acd4eaa00bf3p19fc73jsn647406a37c4e',
+                'X-RapidAPI-Host': 'weatherapi-com.p.rapidapi.com',
+            }
+        };
+        try {
+            const response = await axios.request(options);
+            console.log(response.data);
+
+            // Extract and format weather data for today
+            const today = new Date();
+            const weatherData = response.data.forecast.forecastday;
+            const todayWeather = weatherData.find((day) => day.date === today.toISOString().split('T')[0]);
+
+            // Update the calendar event with today's weather
+            if (todayWeather) {
+                const temperatureF = todayWeather.day.avgtemp_f + '°F'; // Temperature in Fahrenheit
+                calendar.getEventById('loading-weather').setProp('title', todayWeather.day.condition.text + '\n' + temperatureF);
+            } else {
+                calendar.getEventById('loading-weather').setProp('title', 'Weather data not available for today.');
+            }
+        } catch (error) {
+            console.error('Error fetching weather data:', error);
+            calendar.getEventById('loading-weather').setProp('title', 'Failed to load weather data.');
+        }
+
         // Function to toggle between week and month views
         let isFullMonth = false;
         function toggleView() {
@@ -159,12 +254,30 @@
             calendar.changeView(newView);
             document.getElementById('toggleView').textContent = isFullMonth ? 'See Current Week' : 'See Full Month';
         }
-    
+
         // Attach the toggleView function to the button's click event
         document.getElementById('toggleView').addEventListener('click', toggleView);
-    });
-    </script>
+                // Function to display the message
+                function displayJournalMessage(journalEntryRegistered) {
+            const messageElement = document.getElementById('journalMessage');
+            if (journalEntryRegistered) {
+                messageElement.textContent = 'Great Job Today';
+            } else {
+                messageElement.textContent = 'Complete Journal Entry';
+            }
+        }
+
+        // Check if a journal entry for today is registered
+        const today = new Date();
+        const formattedToday = today.toISOString().split('T')[0];
+        const isJournalEntryRegistered = user_journal_entries.some(entry => entry.date === formattedToday);
+
+        // Display the appropriate message
+        displayJournalMessage(isJournalEntryRegistered);
     
+    });
+</script>
+
 
 
 {% endblock %}

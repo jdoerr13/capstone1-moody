@@ -4,7 +4,7 @@ from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationE
 from models import User, bcrypt
 from flask import g
 from datetime import datetime
-
+from wtforms.widgets import ListWidget, CheckboxInput
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 
@@ -40,21 +40,25 @@ class JournalEntryForm(FlaskForm):
     date = DateField('Date', validators=[DataRequired()])
     entry = TextAreaField('Journal Entry', validators=[DataRequired()])
 
+# class DailyMoodForm(FlaskForm):
+
 class MoodSymptomAssessmentForm(FlaskForm):
-    weather_today = SelectMultipleField('How is the weather today?(select all that apply)', choices=[
-    ('sunny', 'Sunny'),
-    ('cloudy', 'Cloudy'),
-    ('rainy', 'Rainy'),
-    ('windy', 'Windy'),
-    ('partly_cloudy', 'Partly Cloudy'),
-    ('stormy', 'Stormy'),
-    ('foggy', 'Foggy'),
-    ('snowy', 'Snowy'),
-    ('hot', 'Hot'),
-    ('cold', 'Cold')
-], validators=[InputRequired()])
-    
-    mood_today = SelectMultipleField('How are you feeling today?(select all that apply)', choices=[
+    weather_today = SelectMultipleField('1. How is the weather today? (Select all that apply)', 
+                                       choices=[
+                                           ('sunny', 'Sunny'),
+                                           ('cloudy', 'Cloudy'),
+                                           ('rainy', 'Rainy'),
+                                           ('windy', 'Windy'),
+                                           ('partly_cloudy', 'Partly Cloudy'),
+                                           ('stormy', 'Stormy'),
+                                           ('foggy', 'Foggy'),
+                                           ('snowy', 'Snowy'),
+                                           ('hot', 'Hot'),
+                                           ('cold', 'Cold')
+                                       ],
+                                       widget=ListWidget(prefix_label=False), option_widget=CheckboxInput())
+
+    mood_today = SelectMultipleField('2. How are you feeling today? (Select all that apply)', choices=[
         ('happy', 'Happy'),
         ('sad', 'Sad'),
         ('angry', 'Angry'),
@@ -67,7 +71,8 @@ class MoodSymptomAssessmentForm(FlaskForm):
         ('relaxed', 'Relaxed'),
         ('stressed', 'Stressed')
     ])
-    stress_level = SelectField('On a scale of 1-10, how would you rate your stress level today?', choices=[
+    
+    stress_level = SelectField('3. On a scale of 1-10, how would you rate your stress level today?', choices=[
         ('1', '1 - Very low'),
         ('2', '2'),
         ('3', '3'),
@@ -80,8 +85,7 @@ class MoodSymptomAssessmentForm(FlaskForm):
         ('10', '10 - Very high')
     ])
 
-
-    positive_affect_rating = SelectField('On a scale of 1-10, how would you rate your positive affect today?', choices=[
+    positive_affect_rating = SelectField('4. How happy or positive do you feel today? Rate it on a scale of 1 to 10, where 1 means you are feeling very low, and 10 means you are feeling very high.', choices=[
         ('1', '1 - Very low'),
         ('2', '2'),
         ('3', '3'),
@@ -94,143 +98,151 @@ class MoodSymptomAssessmentForm(FlaskForm):
         ('10', '10 - Very high')
     ])
 
-    positive_affect_threshold = RadioField('Do you think positive affect has a higher threshold for significant changes in response to weather compared to negative affect?', choices=[('yes', 'Yes'), ('no', 'No'), ('not_sure', 'Not sure')])
+    positive_affect_threshold = RadioField('5. Do you think that feeling happy or positive changes more easily because of the weather, compared to feeling sad or negative? Choose "Yes" if you think it is easier, "No" if you think it is about the same, or "Not sure" if you are unsure.', choices=[('yes', 'Yes'), ('no', 'No'), ('not_sure', 'Not sure')])
 
-    climate_anxiety = RadioField('Have you ever dealt with climate change anxiety?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+    climate_anxiety = RadioField('6. Have you ever dealt with climate change anxiety?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    mood_swings_weather = RadioField('Do you experience mood swings due to weather changes?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+    mood_swings_weather = RadioField('7. Do you experience mood swings due to weather changes?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    experienced_sad_disaster = RadioField('Have you ever dealt with mood changes due to a major disaster or extreme weather conditions?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+    experienced_sad_disaster = RadioField('8. Have you ever dealt with mood changes due to a major disaster or extreme weather conditions?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    primary_purpose = SelectField('What is your primary purpose for joining this app?', choices=[('meet_friends', 'Meet Friends'), ('learn_more_about_myself', 'Learn More About Myself'), ('improve_moods', 'Improve My Moods'), ('just_curious', 'Just Curious')], validators=[InputRequired()])
+    primary_purpose = SelectField('9. What is your primary purpose for joining this app?', choices=[('meet_friends', 'Meet Friends'), ('learn_more_about_myself', 'Learn More About Myself'), ('improve_moods', 'Improve My Moods'), ('just_curious', 'Just Curious')], validators=[InputRequired()])
 
-    mood_variation_weather = RadioField('Do you notice mood variations on different types of weather days, such as "nice days" and "poor weather days"?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+    mood_variation_weather = RadioField('10. Do you notice mood variations on different types of weather days, such as "nice days" and "poor weather days"?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    variations = TextAreaField('If you answered "Yes" to the previous question, what weather condition(s) affect you positively & negatively?', validators=[Length(max=1000)])
+    variations = TextAreaField('11. If you answered "Yes" to the previous question, what weather condition(s) affect you positively & negatively?', validators=[Length(max=1000)])
 
-    weather_mood_beliefs = RadioField('Do you believe that your mood is influenced by specific weather conditions?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+    weather_mood_beliefs = RadioField('12. Do you believe that your mood is influenced by specific weather conditions?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    impact_behavior = RadioField('Have you noticed any changes in your behavior due to specific weather conditions?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+    impact_behavior = RadioField('13. Have you noticed any changes in your behavior due to specific weather conditions?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    behavioral_changes = TextAreaField('If you answered "Yes" to the previous question, please describe some specific behavioral changes you\'ve noticed in response to certain weather conditions.', validators=[Length(max=1000)])
+    behavioral_changes = TextAreaField('14. If you answered "Yes" to the previous question, please describe some specific behavioral changes you\'ve noticed in response to certain weather conditions.', validators=[Length(max=1000)])
 
+    experienced_sad = RadioField('15. Do you usually feel down on rainy or cloudy days?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    experienced_sad = RadioField('Do you usually feel down on rainy or cloudy days?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+    experienced_happy = RadioField('16. Do you usually feel happy on sunny days?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    experienced_happy = RadioField('Do you usually feel happy on sunny days?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
-
-    seasonal_affective_disorder = RadioField('Have you ever experienced symptoms related to Seasonal Affective Disorder (SAD)?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
-
+    seasonal_affective_disorder = RadioField('17. Have you ever experienced symptoms related to Seasonal Affective Disorder (SAD)?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
 
-    mood_variations_specific = RadioField('Have you observed mood changes linked to specific weather variables (e.g., temperature, humidity, precipitation)?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+    weather_variables = SelectMultipleField('18. Have you observed mood changes linked to specific weather variables? (Select all that apply)', choices=[
+        ('temperature', 'Temperature'),
+        ('humidity', 'Humidity'),
+        ('precipitation', 'Precipitation'),
+        ('barometric_pressure', 'Barometric Pressure'),
+        ('wind_speed', 'Wind Speed'),
+        ('sunlight', 'Sunlight'),
+        ('uv_index', 'UV Index'),
+        ('pollution_levels', 'Pollution Levels'),
+        ('seasonal_changes', 'Seasonal Changes')
+    ])
 
 
-    mood_description = TextAreaField('Please describe your current mood in more detail (optional)')
+    number_18 = TextAreaField('19. If yes for #18, please discribe')
 
-    sleep_hours = SelectField('How many hours of sleep did you get last night?', choices=[
+    sleep_hours = SelectField('20. How many hours of sleep did you get last night?', choices=[
         ('0-4', '0-4 hours'),
         ('5-7', '5-7 hours'),
         ('8-10', '8-10 hours'),
         ('10+', 'More than 10 hours')
     ])
 
-    exercise = RadioField('Did you engage in physical exercise today?', choices=[
+    exercise = RadioField('21. Did you engage in physical exercise today?', choices=[
         ('yes', 'Yes'),
         ('no', 'No')
     ])
-    exercise_description = StringField('If yes, please describe the type and duration of exercise')
+    exercise_description = StringField('22. If yes, please describe the type and duration of exercise')
 
-    exercise_frequency = SelectField('How often do you exercise?', choices=[
+    exercise_frequency = SelectField('23. How often do you exercise?', choices=[
         ('rarely', 'Rarely'),
         ('once a week', 'Once a week'),
         ('several times a week', 'Several times a week'),
         ('daily', 'Daily')
     ])
 
-
-    importance_of_survey_time = SelectField('How important do you think it is to complete mood surveys at the same time each day for accurate assessment?', choices=[
-        ('very important', 'Very Important'),
-        ('somewhat important', 'Somewhat Important'),
-        ('not very important', 'Not Very Important')
-    ])
-
-    future_research_time = StringField('What are some specific recommendations for improving future research on the weather-mood relationship? (optional)')
-    future_research_duration = SelectField('Do you think that longer research periods are necessary to detect subtle mood changes related to weather?', choices=[
-        ('yes', 'Yes'),
-        ('no', 'No'),
-        ('not sure', 'Not Sure')
-    ])
-    future_research_weather_variables = SelectField('How would you propose studying the effects of a broader range of weather and seasonal variables on mood?', choices=[
+    future_research_weather_variables = SelectField('24. How would you propose studying the effects of a broader range of weather and seasonal variables on mood?', choices=[
         ('broaden_variables', 'Broaden the range of variables studied'),
         ('focus_on_specifics', 'Focus on specific weather variables'),
         ('other', 'Other'),
         ('not_sure', 'Not Sure')
     ])
-    geographic_duration = SelectField('How long have you lived in your current geographic location?', choices=[
+    geographic_duration = SelectField('25. How long have you lived in your current geographic location?', choices=[
         ('less_than_1_year', 'Less than a year'),
         ('1-5_years', '1-5 years'),
         ('5-10_years', '5-10 years'),
         ('more_than_10_years', 'More than 10 years')
     ])
 
-    experienced_geographic_changes = RadioField('Have you experienced substantial mood changes based on your geographic location?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+    experienced_geographic_changes = RadioField('26. Have you experienced seasonal mood changes based on your geographic location?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    geographic_location = SelectField('Do you live in the same geographic location your entire life, or have you relocated to different places?', choices=[('lifelong_resident', 'Lifelong Resident'), ('relocated', 'Relocated')], validators=[InputRequired()])
+    geographic_location = SelectField('27. Have you ever relocated to a different geographical location for better weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    impact_relocation = RadioField('If you have relocated, have you noticed changes in your mood related to the novel weather conditions in your new location?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+    impact_relocation = RadioField('28. If you have relocated, have you noticed changes in your mood related to the novel weather conditions in your new location?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    relocate_changes = TextAreaField('If you answered "Yes" to the previous question, please describe.', validators=[Length(max=1000)])
+    relocate_changes = TextAreaField('29. If you answered "Yes" to the previous question, please describe.', validators=[Length(max=1000)])
 
+    other_factors_influence_mood = SelectMultipleField('30. What other factors, apart from weather, do you believe influence your mood on a daily basis?', 
 
-    other_factors_influence_mood = SelectMultipleField('What other factors, apart from weather, do you believe influence your mood on a daily basis?', choices=[
+    choices=[
         ('academic_or_work', 'Academic or work-related factors'),
         ('personal_relationships', 'Personal relationships'),
         ('health_and_well_being', 'Health and well-being'),
         ('other', 'Other')
+    ],
+      widget=ListWidget(prefix_label=False), option_widget=CheckboxInput())
+
+   
+
+    other_factors_description = TextAreaField('31. If you selected "Other" in the previous question, please specify what other factors influence your mood.')
+
+    diet_influence = RadioField('32. Do you notice changes in your eating habits or food preferences based on the weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+
+    diet_changes_description = TextAreaField('33. If you experience changes in your eating habits based on the weather, please describe them.', validators=[Length(max=1000)])
+
+    physical_symptoms = SelectMultipleField('34. Please check any physical symptoms you have experienced due to weather conditions:', 
+    
+            choices = [
+        ('headache', 'Headache'),
+        ('joint_pain', 'Joint Pain'),
+        ('migraine', 'Migraine'),
+        ('sinus_congestion', 'Sinus Congestion'),
+        ('fatigue', 'Fatigue'),
+        ('nausea', 'Nausea'),
+        ('allergies', 'Allergies'),
+        ('sore_throat', 'Sore Throat'),
+        ('stiffness', 'Stiffness'),
+        ('shortness_of_breath', 'Shortness of Breath'),
+        ('other', 'Other')
+    ],
+     widget=ListWidget(prefix_label=False), option_widget=CheckboxInput())
+
+    physical_symptoms_description = TextAreaField('35. If you experience physical symptoms related to weather, please describe the related weather conditions in addition to any other symptoms not included above.', validators=[Length(max=1000)])
+
+    outdoor_activities = RadioField('36. Do you engage in outdoor activities and notice physical or mental changes based on the weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+
+    outdoor_activities_description = TextAreaField('37. If you engage in outdoor activities and weather affects them, was it physical, mental, or both?', validators=[Length(max=1000)])
+
+    social_interaction = RadioField('38. Do you find that your social interactions change based on the weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+
+    emotional_support = RadioField('39. Do you seek emotional support from friends or family when your mood is affected by the weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+
+    coping_strategies = TextAreaField('40. Do you have specific strategies or activities to cope with weather-related mood and symptom changes?', validators=[Length(max=1000)])
+
+    long_term_patterns = TextAreaField('41. Have you noticed any long-term patterns or trends in how weather affects your mood and symptoms?', validators=[Length(max=1000)])
+
+    emotional_support_description = TextAreaField('42. If you seek emotional support related to weather, please describe who you turn to and why. (optional)', validators=[Length(max=1000)])
+
+    expectations_beliefs = TextAreaField('43. Do you have beliefs or expectations about how specific weather conditions affect your mood? (optional)', validators=[Length(max=1000)])
+
+    additional_comments = TextAreaField('44. Do you have any additional comments or observations about your mood or symptoms? (optional)')
+
+    importance_of_survey_time = SelectField('45. How important do you think it is to complete mood surveys at the same time each day for accurate assessment? (optional)', choices=[
+        ('very important', 'Very Important'),
+        ('somewhat important', 'Somewhat Important'),
+        ('not very important', 'Not Very Important')
     ])
 
-    other_factors_description = TextAreaField('If you selected "Other" in the previous question, please specify what other factors influence your mood.')
-
-    diet_influence = RadioField('Do you notice changes in your eating habits or food preferences based on the weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
-
-    diet_changes_description = TextAreaField('If you experience changes in your eating habits based on the weather, please describe them.', validators=[Length(max=1000)])
-
-    physical_symptoms = SelectMultipleField('Please check any physical symptoms you have experienced due to weather conditions:', choices=[
-    ('headache', 'Headache'),
-    ('joint_pain', 'Joint Pain'),
-    ('migraine', 'Migraine'),
-    ('sinus_congestion', 'Sinus Congestion'),
-    ('fatigue', 'Fatigue'),
-    ('nausea', 'Nausea'),
-    ('allergies', 'Allergies'),
-    ('sore_throat', 'Sore Throat'),
-    ('stiffness', 'Stiffness'),
-    ('shortness_of_breath', 'Shortness of Breath'),
-    ('other', 'Other')
-])
-
-    physical_symptoms_description = TextAreaField('If you experience physical symptoms related to weather, please describe the related weather conditions in addition to any other symptoms not included above.', validators=[Length(max=1000)])
-
-    outdoor_activities = RadioField('Do you engage in outdoor activities and notice changes based on the weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
-
-    outdoor_activities_description = TextAreaField('If you engage in outdoor activities and weather affects them, please describe how.', validators=[Length(max=1000)])
-
-    social_interaction = RadioField('Do you find that your social interactions change based on the weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
-
-    social_interaction_description = TextAreaField('If your social interactions change based on the weather, please describe how.', validators=[Length(max=1000)])
-
-    coping_strategies = TextAreaField('Do you have specific strategies or activities to cope with weather-related mood and symptom changes?', validators=[Length(max=1000)])
-
-    long_term_patterns = TextAreaField('Have you noticed any long-term patterns or trends in how weather affects your mood and symptoms?', validators=[Length(max=1000)])
-
-    emotional_support = RadioField('Do you seek emotional support from friends or family when your mood is affected by the weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
-
-    emotional_support_description = TextAreaField('If you seek emotional support related to weather, please describe who you turn to and why.(optional)', validators=[Length(max=1000)])
-
-    expectations_beliefs = TextAreaField('Do you have beliefs or expectations about how specific weather conditions affect your mood?(optional)', validators=[Length(max=1000)])
-
-    additional_comments = TextAreaField('Do you have any additional comments or observations about your mood or symptoms? (optional)')
+    future_research_time = StringField('46. What are some specific recommendations for improving future research on the weather-mood relationship? (optional)', validators=[Length(max=1000)])
 
 
 class ProfileEditForm(FlaskForm):
