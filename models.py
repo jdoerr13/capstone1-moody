@@ -34,6 +34,41 @@ user_friend_requests = db.Table(
     db.Column('sender_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True),
     db.Column('receiver_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True)
 )
+
+
+class DiagnosisSolution(db.Model):
+    __tablename__ = 'diagnosis_solutions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    diagnosis_id = db.Column(db.Integer, db.ForeignKey('diagnosis.issue_id'))
+    solution_id = db.Column(db.Integer, db.ForeignKey('coping_solutions.solution_id'))
+
+    diagnosis = db.relationship('Diagnosis', back_populates='solutions')
+    solution = db.relationship('CopingSolution', back_populates='diagnoses')
+
+class Diagnosis(db.Model):
+    __tablename__ = 'diagnosis'
+
+    issue_id = db.Column(db.Integer, primary_key=True)
+    issue_name = db.Column(db.String(255), nullable=False)
+
+    solutions = db.relationship('DiagnosisSolution', back_populates='diagnosis')
+
+class CopingSolution(db.Model): #table contains solutions for Mood, Symptoms, Diagnosis.
+    __tablename__ = 'coping_solutions'
+
+    solution_id = db.Column(db.Integer, primary_key=True)
+    solution_text = db.Column(db.Text, nullable=False)
+
+    diagnoses = db.relationship('DiagnosisSolution', back_populates='solution')
+    moods = db.relationship('Mood', back_populates='solution')
+    symptoms = db.relationship('Symptoms', back_populates='solution')
+
+
+
+
+
+
 class JournalEntry(db.Model):
     __tablename__ = 'journal_entries'
 
@@ -125,6 +160,19 @@ class User(db.Model):
             return user
         return None
 
+class DailyAssessment(db.Model):
+    __tablename__ = 'daily_assessment'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))  # Use 'users' as the table name
+    date = db.Column(db.Date)
+    weather_today = db.Column(db.String(64))
+    mood_today = db.Column(db.String(64))
+    stress_level = db.Column(db.String(64))
+    positive_affect_rating = db.Column(db.String(64))
+    
+    user = db.relationship('User', backref='daily_assessments')  # Use 'User' here
+
 class Group(db.Model):
     __tablename__ = 'groups'
 
@@ -159,14 +207,7 @@ class GroupPost(db.Model):
  
 
 
-class Diagnosis(db.Model): #table stores information about main issues or diagnoses and is related to Coping Solutions.
-    __tablename__ = 'diagnosis'
 
-    issue_id = db.Column(db.Integer, primary_key=True)
-    issue_name = db.Column(db.String(255), nullable=False)
-    solution_id = db.Column(db.Integer, db.ForeignKey('coping_solutions.solution_id'), nullable=False)
-
-    solution_diagnosis = db.relationship('CopingSolution', back_populates='diagnosis')
 
 class UserHistory(db.Model):
     __tablename__ = 'user_history'
@@ -229,24 +270,19 @@ class Mood(db.Model): #table stores mood-related data and is related to Coping S
     solution = db.relationship('CopingSolution', back_populates='moods')
     user_history_moods = db.relationship('UserHistory', backref='mood_moods', lazy=True)
 
-class Symptoms(db.Model): # table contains information about other symptoms and is related to Coping Solutions.
+class Symptoms(db.Model):
+    # Table contains information about other symptoms and is related to Coping Solutions.
     __tablename__ = 'symptoms'
 
     symptom_id = db.Column(db.Integer, primary_key=True)
     symptom_name = db.Column(db.String(255), nullable=False)
     solution_id = db.Column(db.Integer, db.ForeignKey('coping_solutions.solution_id'), nullable=False)
 
-    solution_symptoms = db.relationship('CopingSolution', back_populates='symptoms')
+    # Define the relationship with CopingSolution
+    solution = db.relationship('CopingSolution', back_populates='symptoms')
 
-class CopingSolution(db.Model): #table contains solutions for Mood, Symptoms, Diagnosis.
-    __tablename__ = 'coping_solutions'
 
-    solution_id = db.Column(db.Integer, primary_key=True)
-    solution_text = db.Column(db.Text, nullable=False)
 
-    diagnosis = db.relationship('Diagnosis', back_populates='solution_diagnosis')
-    moods = db.relationship('Mood', back_populates='solution')
-    symptoms = db.relationship('Symptoms', back_populates='solution_symptoms')
 
 def connect_db(app):
     """Connect this database to the provided Flask app.

@@ -2,6 +2,8 @@
 
 {% block content %}
 
+
+   
 <section id="moodyJournal">
     <h2>Moody Journal</h2>
     <form id="journalForm">
@@ -14,15 +16,23 @@
     <div id="journalEntries">
         <ul>
             {% for entry in user_journal_entries %}
-                <li><a href="{{ url_for('edit_journal_entry', date=entry.date, id=entry.id) }}">{{ entry.date }}, {{ entry.id }}</a></li>
+                <li>
+                    <span>{{ entry.date }}, {{ entry.id }}</span>
+                    <a href="{{ url_for('edit_journal_entry', date=entry.date, id=entry.id) }}" class="btn btn-primary btn-sm">Edit</a>
+                </li>
             {% endfor %}
         </ul>
     </div>
+    
 </section>
 
 <h2>Moody Calendar</h2>
 
 <div id="calendar">
+    <!-- Your HTML content -->
+    <div id="calendar"></div>
+
+
     <section id="moodyCalendar"></section>
 </div>
 <div id="calendar">
@@ -30,7 +40,42 @@
 </div>
 <div id="journalMessage"></div>
 
+<a href="{{ url_for('daily_assessment') }}" class="btn btn-primary">CLICK HERE TO LOG YOUR DAILY MOOD</a>
 
+<div id="dailyAssessment">
+    <p>Moody Daily for: {{ today_date }}</p>
+    <p>Today's weather is {{ latest_assessment.weather_today }}!</p>
+    <p>You are feeling {{ latest_assessment.mood_today }}.</p>
+    <p>Your stress level is at a {{ latest_assessment.stress_level }}.</p>
+    <p>Your current mood level is at a {{ latest_assessment.positive_affect_rating }}!</p>
+</div>
+
+<!-- Add a toggle button -->
+<button id="toggleMoodHistory">Show Mood History</button>
+
+<!-- Display the average values -->
+<div id="averageMoodData" style="display: none;">
+    <h2>Average Mood Data</h2>
+    <p>Average Weather: {{ average_weather }}</p>
+    <p>Average Mood: {{ average_mood }}</p>
+    <p>Average Stress Level: {{ average_stress_level }}</p>
+    <p>Average Positive Affect Rating: {{ average_positive_affect_rating }}</p>
+</div>
+
+<!-- Add a new section for the mood history -->
+<section id="moodHistory">
+    <h2>Mood History</h2>
+    <ul>
+        {% for mood_entry in mood_history_entries %}
+            <li>
+                <p>Date: {{ mood_entry.date }}</p>
+                <p>Weather: {{ mood_entry.weather_today }}</p>
+                <p>Mood: {{ mood_entry.mood_today }}</p>
+                <p>Stress Level: {{ mood_entry.stress_level }}</p>
+                <p>Positive Affect Rating: {{ mood_entry.positive_affect_rating }}</p>
+            </li>
+        {% endfor %}
+    </ul>
 
 <section id="dailyGoals">
     <h2>Daily Goals for Mood Improvement</h2>
@@ -41,7 +86,8 @@
     <button id="addGoal">Add Goal</button>
    
 </section>
-
+ <!-- button to navigate to the mood_symptom form -->
+ <a href="{{ url_for('mood_symptom') }}" class="btn btn-primary">Take Mood Assessment</a>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -100,10 +146,10 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 </script>
-    <script src="https://unpkg.com/popper"></script>
+
 
 <script>
-    import Popper from 'popper.js';
+
     document.addEventListener('DOMContentLoaded', function () {
         const journalForm = document.getElementById("journalForm");
         const journalEntryInput = document.getElementById("journalEntry");
@@ -151,8 +197,25 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // Fetch and display journal entries when the page loads
-        fetchAndDisplayJournalEntries();
+      // Function to fetch and display journal entries
+async function fetchAndDisplayJournalEntries() {
+    try {
+        const response = await fetch('/fetch_journal_entries', {
+            method: 'GET',
+        });
+
+        if (response.ok) {
+            const entries = await response.json();
+            displayJournalEntries(entries);
+        } else {
+            console.error('Failed to fetch journal entries:', response.statusText);
+            displayJournalEntries([]);
+        }
+    } catch (error) {
+        console.error('Error fetching journal entries:', error);
+        displayJournalEntries([]);
+    }
+}
 
         // Handle form submission
         journalForm.addEventListener("submit", async function (event) {
@@ -182,6 +245,31 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+
+// Toggle mood history:
+document.addEventListener('DOMContentLoaded', function () {
+    const moodHistory = document.getElementById('moodHistory');
+    const toggleButton = document.getElementById('toggleMoodHistory');
+    const averageMoodData = document.getElementById('averageMoodData');
+
+    // Hide the mood history initially
+    moodHistory.style.display = 'none';
+    averageMoodData.style.display = 'none'; // Hide the average data
+
+    // Toggle mood history when the button is clicked
+    toggleButton.addEventListener('click', function () {
+        if (moodHistory.style.display === 'none') {
+            moodHistory.style.display = 'block';
+            averageMoodData.style.display = 'block'; // Show the average data
+            toggleButton.textContent = 'Hide Mood History';
+        } else {
+            moodHistory.style.display = 'none';
+            averageMoodData.style.display = 'none'; // Hide the average data
+            toggleButton.textContent = 'Show Mood History';
+        }
+    });
+});
+    
 </script>
 
 <script type="module" src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -192,17 +280,9 @@ document.addEventListener('DOMContentLoaded', function () {
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridWeek', // Display a week view by default
-            events: [
-                {
-                    title: 'Loading Weather...',
-                    start: new Date(),
-                    allDay: true,
-                    rendering: 'background', // Show it as a background event
-                    id: 'loading-weather' // Add an ID to identify this event
-                }
-            ],
-                // Set a fixed height for the calendar
-                height: 275, // You can adjust the value to your preference
+            events: [], // No initial events
+            // Set a fixed height for the calendar
+            height: 275, // You can adjust the value to your preference
         });
 
         // Render the calendar
@@ -211,40 +291,84 @@ document.addEventListener('DOMContentLoaded', function () {
         // Get the user's location from the template
         var userLocation = '{{ user_location }}';
 
-        // Fetch weather data using Axios
-        const options = {
-            method: 'GET',
-            url: 'https://weatherapi-com.p.rapidapi.com/forecast.json',
-            params: {
-                q: userLocation, // Use the user's location
-                days: '3',
-                units: 'imperial', // Use 'imperial' for Fahrenheit
-            },
-            headers: {
-                'X-RapidAPI-Key': 'eb3fa9d2eamsh622acd4eaa00bf3p19fc73jsn647406a37c4e',
-                'X-RapidAPI-Host': 'weatherapi-com.p.rapidapi.com',
-            }
-        };
-        try {
-            const response = await axios.request(options);
-            console.log(response.data);
+        // Function to fetch weather data and update the calendar event
+        async function updateWeatherData() {
+            const options = {
+                method: 'GET',
+                url: 'https://weatherapi-com.p.rapidapi.com/forecast.json',
+                params: {
+                    q: userLocation, // Use the user's location
+                    days: '3',
+                    units: 'imperial', // Use 'imperial' for Fahrenheit
+                },
+                headers: {
+                    'X-RapidAPI-Key': 'eb3fa9d2eamsh622acd4eaa00bf3p19fc73jsn647406a37c4e',
+                    'X-RapidAPI-Host': 'weatherapi-com.p.rapidapi.com',
+                },
+            };
 
-            // Extract and format weather data for today
-            const today = new Date();
-            const weatherData = response.data.forecast.forecastday;
-            const todayWeather = weatherData.find((day) => day.date === today.toISOString().split('T')[0]);
+            try {
+                const response = await axios.request(options);
 
-            // Update the calendar event with today's weather
-            if (todayWeather) {
-                const temperatureF = todayWeather.day.avgtemp_f + '°F'; // Temperature in Fahrenheit
-                calendar.getEventById('loading-weather').setProp('title', todayWeather.day.condition.text + '\n' + temperatureF);
-            } else {
-                calendar.getEventById('loading-weather').setProp('title', 'Weather data not available for today.');
+                // Extract and format weather data for today
+                const today = new Date();
+                const weatherData = response.data.forecast.forecastday;
+                const todayWeather = weatherData.find((day) => day.date === today.toISOString().split('T')[0]);
+
+                if (todayWeather) {
+                    const temperatureF = todayWeather.day.avgtemp_f + '°F'; // Temperature in Fahrenheit
+                    calendar.addEvent({
+                        title: `${todayWeather.day.condition.text} (${temperatureF})`,
+                        start: today.toISOString().split('T')[0],
+                        rendering: 'background',
+                        allDay: true,
+                    });
+
+                    // Fetch and display the latest assessment data
+                    // const formattedToday = today.toISOString().split('T')[0];
+                    // fetchLatestAssessment(formattedToday);
+                } else {
+                    console.error('Weather data not available for today.');
+                }
+            } catch (error) {
+                console.error('Error fetching weather data:', error);
             }
-        } catch (error) {
-            console.error('Error fetching weather data:', error);
-            calendar.getEventById('loading-weather').setProp('title', 'Failed to load weather data.');
         }
+
+        // // Function to display the latest assessment data
+        // async function displayLatestAssessment(latestAssessment) {
+        //     if (latestAssessment) {
+        //         // Update the daily assessment information in your HTML
+        //         document.getElementById('dailyAssessment').innerHTML = `
+        //             <p>Moody Daily for: ${latestAssessment.date}</p>
+        //             <p>Today's weather is ${latestAssessment.weather_today}!</p>
+        //             <p>You are feeling ${latestAssessment.mood_today}.</p>
+        //             <p>Your stress level is at a ${latestAssessment.stress_level}.</p>
+        //             <p>Your current mood is ${latestAssessment.positive_affect_rating}!</p>
+        //         `;
+        //     } else {
+        //         console.error('Latest assessment data not available for today.');
+        //     }
+        // }
+
+        // // Function to fetch the latest assessment data
+        // async function fetchLatestAssessment(date) {
+        //     try {
+        //         const response = await fetch(`/fetch_latest_assessment?date=${date}`);
+        //         if (response.ok) {
+        //             const latestAssessment = await response.json();
+        //             displayLatestAssessment(latestAssessment);
+        //         } else {
+        //             console.error('Failed to fetch latest assessment:', response.statusText);
+        //         }
+        //     } catch (error) {
+        //         console.error('Error fetching latest assessment:', error);
+        //     }
+        // }
+
+        // Initialize weather data and assessment data
+        await updateWeatherData();
+
 
         // Function to toggle between week and month views
         let isFullMonth = false;
@@ -257,26 +381,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Attach the toggleView function to the button's click event
         document.getElementById('toggleView').addEventListener('click', toggleView);
-                // Function to display the message
-                function displayJournalMessage(journalEntryRegistered) {
-            const messageElement = document.getElementById('journalMessage');
-            if (journalEntryRegistered) {
-                messageElement.textContent = 'Great Job Today';
-            } else {
-                messageElement.textContent = 'Complete Journal Entry';
-            }
-        }
-
-        // Check if a journal entry for today is registered
-        const today = new Date();
-        const formattedToday = today.toISOString().split('T')[0];
-        const isJournalEntryRegistered = user_journal_entries.some(entry => entry.date === formattedToday);
-
-        // Display the appropriate message
-        displayJournalMessage(isJournalEntryRegistered);
-    
     });
 </script>
+
+
 
 
 

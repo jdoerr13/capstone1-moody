@@ -59,20 +59,29 @@ class MoodSymptomAssessmentForm(FlaskForm):
                                        widget=ListWidget(prefix_label=False), option_widget=CheckboxInput())
 
     mood_today = SelectMultipleField('2. How are you feeling today? (Select all that apply)', choices=[
-        ('happy', 'Happy'),
-        ('sad', 'Sad'),
-        ('angry', 'Angry'),
-        ('neutral', 'Neutral'),
-        ('energetic', 'Energetic'),
-        ('anxious', 'Anxious'),
-        ('content', 'Content'),
-        ('irritable', 'Irritable'),
-        ('confident', 'Confident'),
-        ('relaxed', 'Relaxed'),
-        ('stressed', 'Stressed')
+   ('happy', '1 - Happy'),
+    ('sad', '2 - Sad'),
+    ('angry', '3 - Angry'),
+    ('neutral', '4 - Neutral'),
+    ('energetic', '5 - Energetic'),
+    ('anxious', '6 - Anxious'),
+    ('content', '7 - Content'),
+    ('irritable', '8 - Irritable'),
+    ('confident', '9 - Confident'),
+    ('relaxed', '10 - Relaxed'),
+    ('stressed', '11 - Stressed'),
+    ('focused', '12 - Focused'),
+    ('blam Moody', '13 - Bla Moody'),
+    ('below Average', '14 - Below Average'),
+    ('moderate/mellow', '15 - Moderate/Mellow'),
+    ('above Average', '16 - Above Average'),
+    ('pretty Good!', '17 - Pretty Good!'),
+    ('feeling Good!', '18 - Feeling Good!'),
+    ('great', '19 - Great'),
+    ('very happy and/or Excited', '20 - Very happy and/or Excited')
     ])
     
-    stress_level = SelectField('3. On a scale of 1-10, how would you rate your stress level today?', choices=[
+    stress_level = RadioField('3. On a scale of 1-10, how would you rate your stress level today?', choices=[
         ('1', '1 - Very low'),
         ('2', '2'),
         ('3', '3'),
@@ -85,8 +94,8 @@ class MoodSymptomAssessmentForm(FlaskForm):
         ('10', '10 - Very high')
     ])
 
-    positive_affect_rating = SelectField('4. How happy or positive do you feel today? Rate it on a scale of 1 to 10, where 1 means you are feeling very low, and 10 means you are feeling very high.', choices=[
-        ('1', '1 - Very low'),
+    positive_affect_rating = RadioField('4. How is your mood today on a scale from 1-10? where 1 means you are feeling very low/sad, and 10 means you are feeling very happy/positive.', choices=[
+    ('1', '1 - Very low'),
         ('2', '2'),
         ('3', '3'),
         ('4', '4'),
@@ -98,7 +107,7 @@ class MoodSymptomAssessmentForm(FlaskForm):
         ('10', '10 - Very high')
     ])
 
-    positive_affect_threshold = RadioField('5. Do you think that feeling happy or positive changes more easily because of the weather, compared to feeling sad or negative? Choose "Yes" if you think it is easier, "No" if you think it is about the same, or "Not sure" if you are unsure.', choices=[('yes', 'Yes'), ('no', 'No'), ('not_sure', 'Not sure')])
+    positive_affect_threshold = RadioField('5. Do you think that feeling happy or positive is more affected by the weather than feeling sad or negative? Choose "Yes" if you think it is easier, "No" if you think it is about the same, or "Not sure" if you are unsure.', choices=[('yes', 'Yes'), ('no', 'No'), ('not_sure', 'Not sure')])
 
     climate_anxiety = RadioField('6. Have you ever dealt with climate change anxiety?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
@@ -106,7 +115,7 @@ class MoodSymptomAssessmentForm(FlaskForm):
 
     experienced_sad_disaster = RadioField('8. Have you ever dealt with mood changes due to a major disaster or extreme weather conditions?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    primary_purpose = SelectField('9. What is your primary purpose for joining this app?', choices=[('meet_friends', 'Meet Friends'), ('learn_more_about_myself', 'Learn More About Myself'), ('improve_moods', 'Improve My Moods'), ('just_curious', 'Just Curious')], validators=[InputRequired()])
+    primary_purpose = RadioField('9. What is your primary purpose for joining this app?', choices=[('meet_friends', 'Meet Friends'), ('learn_more_about_myself', 'Learn More About Myself'), ('improve_moods', 'Improve My Moods'), ('just_curious', 'Just Curious')], validators=[InputRequired()])
 
     mood_variation_weather = RadioField('10. Do you notice mood variations on different types of weather days, such as "nice days" and "poor weather days"?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
@@ -140,7 +149,7 @@ class MoodSymptomAssessmentForm(FlaskForm):
 
     number_18 = TextAreaField('19. If yes for #18, please discribe')
 
-    sleep_hours = SelectField('20. How many hours of sleep did you get last night?', choices=[
+    sleep_hours = RadioField('20. How many hours of sleep did you get last night?', choices=[
         ('0-4', '0-4 hours'),
         ('5-7', '5-7 hours'),
         ('8-10', '8-10 hours'),
@@ -153,20 +162,20 @@ class MoodSymptomAssessmentForm(FlaskForm):
     ])
     exercise_description = StringField('22. If yes, please describe the type and duration of exercise')
 
-    exercise_frequency = SelectField('23. How often do you exercise?', choices=[
+    exercise_frequency = RadioField('23. How often do you exercise?', choices=[
         ('rarely', 'Rarely'),
         ('once a week', 'Once a week'),
         ('several times a week', 'Several times a week'),
         ('daily', 'Daily')
     ])
 
-    future_research_weather_variables = SelectField('24. How would you propose studying the effects of a broader range of weather and seasonal variables on mood?', choices=[
+    future_research_weather_variables = RadioField('24. How would you propose studying the effects of a broader range of weather and seasonal variables on mood?', choices=[
         ('broaden_variables', 'Broaden the range of variables studied'),
         ('focus_on_specifics', 'Focus on specific weather variables'),
         ('other', 'Other'),
         ('not_sure', 'Not Sure')
     ])
-    geographic_duration = SelectField('25. How long have you lived in your current geographic location?', choices=[
+    geographic_duration = RadioField('25. How long have you lived in your current geographic location?', choices=[
         ('less_than_1_year', 'Less than a year'),
         ('1-5_years', '1-5 years'),
         ('5-10_years', '5-10 years'),
@@ -175,7 +184,7 @@ class MoodSymptomAssessmentForm(FlaskForm):
 
     experienced_geographic_changes = RadioField('26. Have you experienced seasonal mood changes based on your geographic location?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    geographic_location = SelectField('27. Have you ever relocated to a different geographical location for better weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+    geographic_location = RadioField('27. Have you ever relocated to a different geographical location for better weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
     impact_relocation = RadioField('28. If you have relocated, have you noticed changes in your mood related to the novel weather conditions in your new location?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
@@ -192,7 +201,6 @@ class MoodSymptomAssessmentForm(FlaskForm):
       widget=ListWidget(prefix_label=False), option_widget=CheckboxInput())
 
    
-
     other_factors_description = TextAreaField('31. If you selected "Other" in the previous question, please specify what other factors influence your mood.')
 
     diet_influence = RadioField('32. Do you notice changes in your eating habits or food preferences based on the weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
@@ -213,8 +221,8 @@ class MoodSymptomAssessmentForm(FlaskForm):
         ('stiffness', 'Stiffness'),
         ('shortness_of_breath', 'Shortness of Breath'),
         ('other', 'Other')
-    ],
-     widget=ListWidget(prefix_label=False), option_widget=CheckboxInput())
+    ])
+     
 
     physical_symptoms_description = TextAreaField('35. If you experience physical symptoms related to weather, please describe the related weather conditions in addition to any other symptoms not included above.', validators=[Length(max=1000)])
 
@@ -224,25 +232,88 @@ class MoodSymptomAssessmentForm(FlaskForm):
 
     social_interaction = RadioField('38. Do you find that your social interactions change based on the weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    emotional_support = RadioField('39. Do you seek emotional support from friends or family when your mood is affected by the weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
+    social_interaction = RadioField('39. Do you often find yourself feeling overwhelmed, anxious, or stressed when thinking about or experiencing the effects of climate change or environmental issues?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    coping_strategies = TextAreaField('40. Do you have specific strategies or activities to cope with weather-related mood and symptom changes?', validators=[Length(max=1000)])
 
-    long_term_patterns = TextAreaField('41. Have you noticed any long-term patterns or trends in how weather affects your mood and symptoms?', validators=[Length(max=1000)])
+    emotional_support = RadioField('40. Do you seek emotional support from friends or family when your mood is affected by the weather?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    emotional_support_description = TextAreaField('42. If you seek emotional support related to weather, please describe who you turn to and why. (optional)', validators=[Length(max=1000)])
+    estorms = RadioField('41. Do you worry about the possibility of major disasters or severe weather events affecting your life or community, even when there is no imminent threat?', choices=[('yes', 'Yes'), ('no', 'No')], validators=[InputRequired()])
 
-    expectations_beliefs = TextAreaField('43. Do you have beliefs or expectations about how specific weather conditions affect your mood? (optional)', validators=[Length(max=1000)])
+    coping_strategies = TextAreaField('42. Do you have specific strategies or activities to cope with weather-related mood and symptom changes?', validators=[Length(max=1000)])
 
-    additional_comments = TextAreaField('44. Do you have any additional comments or observations about your mood or symptoms? (optional)')
+    long_term_patterns = TextAreaField('43. Have you noticed any long-term patterns or trends in how weather affects your mood and symptoms?', validators=[Length(max=1000)])
 
-    importance_of_survey_time = SelectField('45. How important do you think it is to complete mood surveys at the same time each day for accurate assessment? (optional)', choices=[
+    emotional_support_description = TextAreaField('44. If you seek emotional support related to weather, please describe who you turn to and why. (optional)', validators=[Length(max=1000)])
+
+    expectations_beliefs = TextAreaField('45. Do you have beliefs or expectations about how specific weather conditions affect your mood? (optional)', validators=[Length(max=1000)])
+
+    additional_comments = TextAreaField('46. Do you have any additional comments or observations about your mood or symptoms? (optional)')
+
+    importance_of_survey_time = RadioField('47. How important do you think it is to complete mood surveys at the same time each day for accurate assessment? (optional)', choices=[
         ('very important', 'Very Important'),
         ('somewhat important', 'Somewhat Important'),
         ('not very important', 'Not Very Important')
     ])
 
-    future_research_time = StringField('46. What are some specific recommendations for improving future research on the weather-mood relationship? (optional)', validators=[Length(max=1000)])
+    future_research_time = StringField('47. What are some specific recommendations for improving future research on the weather-mood relationship? (optional)', validators=[Length(max=1000)])
+
+
+class DailyAssessmentForm(FlaskForm):
+    weather_today = SelectMultipleField('1. How is the weather today? (Select all that apply)', 
+                                       choices=[
+                                           ('sunny', 'Sunny'),
+                                           ('cloudy', 'Cloudy'),
+                                           ('rainy', 'Rainy'),
+                                           ('windy', 'Windy'),
+                                           ('partly_cloudy', 'Partly Cloudy'),
+                                           ('stormy', 'Stormy'),
+                                           ('foggy', 'Foggy'),
+                                           ('snowy', 'Snowy'),
+                                           ('hot', 'Hot'),
+                                           ('cold', 'Cold')
+                                       ],
+                                       widget=ListWidget(prefix_label=False), option_widget=CheckboxInput())
+
+    mood_today = SelectMultipleField('2. How are you feeling today? (Select all that apply)', choices=[
+        ('happy', 'Happy'),
+        ('sad', 'Sad'),
+        ('angry', 'Angry'),
+        ('neutral', 'Neutral'),
+        ('energetic', 'Energetic'),
+        ('anxious', 'Anxious'),
+        ('content', 'Content'),
+        ('irritable', 'Irritable'),
+        ('confident', 'Confident'),
+        ('relaxed', 'Relaxed'),
+        ('stressed', 'Stressed')
+    ])
+    
+    stress_level = SelectMultipleField('3. On a scale of 1-10, how would you rate your stress level today?', choices=[
+        ('1', '1 - Very low'),
+        ('2', '2'),
+        ('3', '3'),
+        ('4', '4'),
+        ('5', '5'),
+        ('6', '6'),
+        ('7', '7'),
+        ('8', '8'),
+        ('9', '9'),
+        ('10', '10 - Very high')
+    ])
+
+    positive_affect_rating = SelectMultipleField('4. How is your mood today on a scale from 1-10? where 1 means you are feeling very low/sad, and 10 means you are feeling very happy/positive.', choices=[
+        ('1', '1 - Very low'),
+        ('2', '2 - Low'),
+        ('3', '3 - Bla Moody'),
+        ('4', '4 - Below Average'),
+        ('5', '5 - moderate/mellow'),
+        ('6', '6 - Above Average'),
+        ('7', '7 - Pretty Good!'),
+        ('8', '8 - Feeling Good!'),
+        ('Great!', '9 - Great!'),
+        ('Very happy and/or Excited', '10 - Very happy and/or Excited')
+    ])
+
 
 
 class ProfileEditForm(FlaskForm):

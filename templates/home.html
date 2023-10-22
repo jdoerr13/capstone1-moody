@@ -43,6 +43,16 @@
     </header>
 
 
+    <a href="{{ url_for('daily_assessment') }}" class="btn btn-primary">CLICK HERE TO LOG YOUR DAILY MOOD</a>
+
+
+    <div>
+        <p>Moody Daily for: {{ today_date }}</p>
+        <p>Today's weather is {{ latest_assessment.weather_today }}!</p>
+        <p>You are feeling {{ latest_assessment.mood_today }}.</p>
+    <p>Your stress level is at a {{ latest_assessment.stress_level }}.</p>
+    <p>Your current mood level is at a {{ latest_assessment.positive_affect_rating }}!</p>
+    </div>
 
 
     <section>

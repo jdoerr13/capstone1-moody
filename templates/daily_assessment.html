@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <title>Daily Assessment</title>
+    <h1>Daily Assessment</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        
+        <div class="form-group">
+            {{ form.weather_today.label }}
+            {% for choice in form.weather_today.choices %}
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="{{ form.weather_today.name }}" id="{{ form.weather_today.id ~ '_' ~ loop.index0 }}" value="{{ choice[0] }}">
+                    <label class="form-check-label" for="{{ form.weather_today.id ~ '_' ~ loop.index0 }}">{{ choice[1] }}</label>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="form-group">
+            {{ form.mood_today.label }}
+            {% for choice in form.mood_today.choices %}
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="{{ form.mood_today.name }}" id="{{ form.mood_today.id ~ '_' ~ loop.index0 }}" value="{{ choice[0] }}">
+                    <label class="form-check-label" for="{{ form.mood_today.id ~ '_' ~ loop.index0 }}">{{ choice[1] }}</label>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.stress_level.label }}
+            {% for choice in form.stress_level.choices %}
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="{{ form.stress_level.name }}" id="{{ form.stress_level.id ~ '_' ~ loop.index0 }}" value="{{ choice[0] }}">
+                    <label class="form-check-label" for="{{ form.stress_level.id ~ '_' ~ loop.index0 }}">{{ choice[1] }}</label>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="form-group">
+            {{ form.positive_affect_rating.label }}
+            {% for choice in form.positive_affect_rating.choices %}
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="{{ form.positive_affect_rating.name }}" id="{{ form.positive_affect_rating.id ~ '_' ~ loop.index0 }}" value="{{ choice[0] }}">
+                    <label class="form-check-label" for="{{ form.positive_affect_rating.id ~ '_' ~ loop.index0 }}">{{ choice[1] }}</label>
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <a href="{{ url_for('homepage') }}" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</body>
+{% endblock %}

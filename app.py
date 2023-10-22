@@ -4,12 +4,13 @@ from flask import Flask, render_template, request, flash, redirect, session, g, 
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 # from sqlalchemy import or_
-from forms import LoginForm, SignupForm, MoodSymptomAssessmentForm, ProfileEditForm, JournalEntryForm
-from models import db, connect_db, User, Diagnosis, UserHistory, Weather, Mood, Symptoms, CopingSolution, Group, GroupPost, JournalEntry
-from datetime import datetime, timedelta  # Import the datetime module
+from forms import LoginForm, SignupForm, MoodSymptomAssessmentForm, ProfileEditForm, JournalEntryForm, DailyAssessmentForm
+from models import db, connect_db, User, Diagnosis, UserHistory, Weather, Mood, Symptoms, CopingSolution, Group, JournalEntry, DailyAssessment, GroupPost
+from datetime import datetime, timedelta, date  # Import the datetime module
 from flask_bcrypt import Bcrypt
 # from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from statistics import mean, StatisticsError
 # from flask_wtf.csrf import CSRFProtect
 
 CURR_USER_KEY = "curr_user"
@@ -326,17 +327,9 @@ def set_location():
 def homepage():
     if g.user:
         user_history = UserHistory.query.filter_by(user_id=g.user.user_id).all()
-        
-         # Retrieve user groups using the many-to-many relationship
-        user_groups = g.user.groups  # This will give you the groups associated with the current user
-
-        # information about friends (assuming you have a friends relationship)
-        # friends = g.user.friends  # Modify this according to your model structure
-
-        # Add the ProfileEditForm to the context and use it to set the location
+        user_groups = g.user.groups
         form = ProfileEditForm(request.form)
-        
-         # Check if the user has a location
+        today_date = date.today()
         location = g.user.location
         current_weather_data = None
 
@@ -344,14 +337,22 @@ def homepage():
         if location:
             current_weather_data = get_current_weather(location)
 
+        # Retrieve the latest daily assessment for the user
+        latest_assessment = DailyAssessment.query.filter_by(
+            user_id=g.user.user_id,
+            date=today_date
+        ).first()
+      
         return render_template(
             'home.html',
+            today_date=today_date,
             user_history=user_history,
             user_groups=user_groups,
             user=g.user,
             form=form,
             location=location,
-            current_weather_data=current_weather_data  # Pass weather data to the template
+            current_weather_data=current_weather_data,
+            latest_assessment=latest_assessment
         )
     else:
         return render_template('home-anon.html')
@@ -494,27 +495,138 @@ def remove_friend(friend_id):
 
 
 
+#_______________________Assessments__________________________________
+
+# Updated function to determine the diagnosis
+def determine_diagnosis(form_data):
+    diagnoses = set()
+
+
+#2
+    if form_data.get('experienced_sad_disaster') == 'yes': 
+        diagnoses.add(2)
+
+    if form_data.get('estorms') == 'yes':
+        diagnoses.add(2)
+
+
+    print(f'experienced_sad_disaster: {form_data.get("experienced_sad_disaster")}')
+    print(f'estorms: {form_data.get("estorms")}')
+
+#3
+    mood_symptoms = [
+        'mood_swings_weather',
+        'mood_variation_weather',
+        'weather_mood_beliefs',
+    ]
+    if any(form_data.get(symptom) == 'yes' for symptom in mood_symptoms):
+        diagnoses.add(3)
+
+
+#4
+    sad_symptoms = [
+        'experienced_sad',
+        'seasonal_affective_disorder',
+        'experienced_geographic_changes',
+        'geographic_location',
+        'impact_relocation',
+    ]
+    if any(form_data.get(symptom) == 'yes' for symptom in sad_symptoms):
+        diagnoses.add(4)
+
+#5
+    lifestyle_factors = [
+        'positive_affect_threshold',
+        'diet_influence',
+        'emotional_support',
+    ]
+    if any(form_data.get(factor) == 'yes' for factor in lifestyle_factors):
+        diagnoses.add(5)
+
+#6
+    if form_data.get('outdoor_activities') == 'yes':
+        diagnoses.add(6)
+
+    # Define the list of physical symptoms choices
+    physical_symptoms_choices = [
+        'headache',
+        'joint_pain',
+        'migraine',
+        'sinus_congestion',
+        'fatigue',
+        'nausea',
+        'allergies',
+        'sore_throat',
+        'stiffness',
+        'shortness_of_breath',
+        'other',
+    ]
+  # Get the values of physical symptoms from the form data
+    physical_symptoms_values = form_data.getlist('physical_symptoms')
+    # Check if any of the physical symptoms checkboxes are checked
+    if any(symptom in physical_symptoms_values for symptom in physical_symptoms_choices):
+        diagnoses.add(6)
+
+    #1
+    if form_data.get('climate_anxiety') == 'yes' or form_data.get('social_interaction') == 'yes':
+        diagnoses.add(1)
+
+
+    return list(diagnoses)
 
 
 
-
-
-
-
-#_______________________Assessments & Journal__________________________________
+# Updated route for the mood symptom form
 @app.route('/mood_symptom', methods=['GET', 'POST'])
 def mood_symptom():
     form = MoodSymptomAssessmentForm()
 
     if request.method == 'POST' and form.validate_on_submit():
-        # Process the form data here (e.g., save to a database)
-        # Redirect to a success page or perform other actions
-        return redirect(url_for('success_page'))  # Replace 'success_page' with your actual success page route
+        form_data = request.form  # Get the form data
+        diagnoses = determine_diagnosis(form_data)  # Determine the diagnoses
 
-    return render_template('mood_symptom_form.html', form=form, user=g.user)
+        # Query the database to get diagnosis names based on diagnosis IDs
+        diagnosis_names = {}
+        for diagnosis_id in diagnoses:
+            diagnosis = Diagnosis.query.get(diagnosis_id)
+            if diagnosis:
+                diagnosis_names[diagnosis_id] = diagnosis.issue_name
+
+        # Create a list of diagnosis names based on the diagnosis IDs
+        diagnosis_names_list = [diagnosis_names[diagnosis] for diagnosis in diagnoses]
+
+        # Render a response, providing the diagnoses to the user
+        return render_template('diagnosis.html', diagnosis_names=diagnosis_names_list)
+
+    return render_template('mood_symptom_form.html', form=form)
 
 
-#View function for 
+@app.route('/daily_assessment', methods=['GET', 'POST'])
+def daily_assessment():
+    form = DailyAssessmentForm()
+
+    if request.method == 'POST' and form.validate_on_submit():
+        # Process and store the data in the database
+        assessment = DailyAssessment(
+            user_id=g.user.user_id,
+            date=datetime.now().date(),
+            weather_today=','.join(form.weather_today.data),
+            mood_today=','.join(form.mood_today.data),
+            stress_level=form.stress_level.data,
+            positive_affect_rating=form.positive_affect_rating.data
+        )
+
+        db.session.add(assessment)
+        db.session.commit()
+
+        return redirect(url_for('homepage'))
+
+    return render_template('daily_assessment.html', form=form)
+
+
+
+
+
 
 
 #_______________________Friends & Groups______________________________________
@@ -682,9 +794,11 @@ def delete_post(post_id):
 
 #________________WELLNESS- JOURNAL__________________________________
 
+
 @app.route('/wellness', methods=['GET', 'POST'])
 def wellness():
     form = JournalEntryForm()
+    today_date = date.today()
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
@@ -715,10 +829,96 @@ def wellness():
     if user_id:
         user_journal_entries = JournalEntry.query.filter_by(user_id=user_id).all()
 
-    # Fetch weather data for the current user's location
+    latest_assessment = DailyAssessment.query.filter_by(
+        user_id=g.user.user_id,
+        date=today_date
+    ).first()
+
     user_location = g.user.location
 
-    return render_template('wellness.html', form=form, user_journal_entries=user_journal_entries, user_location=user_location)
+    mood_history_entries = DailyAssessment.query.filter_by(user_id=g.user.user_id).all()
+
+    # Create mappings for the form choices
+    weather_mapping = {
+        'sunny': 1,
+        'cloudy': 2,
+        'rainy': 3,
+        'windy': 4,
+        'partly_cloudy': 5,
+        'stormy': 6,
+        'foggy': 7,
+        'snowy': 8,
+        'hot': 9,
+        'cold': 10
+    }
+
+    mood_mapping = {
+        'Happy': 1,
+        'Sad': 2,
+        'Angry': 3,
+        'Neutral': 4,
+        'Energetic': 5,
+        'Anxious': 6,
+        'Content': 7,
+        'Irritable': 8,
+        'Confident': 9,
+        'Relaxed': 10,
+        'Stressed': 11,
+        'Focused': 12,
+        'Bla Moody': 13,
+        'Below Average': 14,
+        'Moderate/Mellow': 15,
+        'Above Average': 16,
+        'Pretty Good!': 17,
+        'Feeling Good!': 18,
+        'Great': 19,
+        'Very happy and/or Excited': 20,
+    }
+
+    # Calculate the average values
+    mood_entries = [mood_mapping.get(entry.mood_today, 0) for entry in mood_history_entries]
+    
+    stress_entries = [int(entry.stress_level) if entry.stress_level.isdigit() else 0 for entry in mood_history_entries]
+
+    positive_affect_entries = []
+
+    for entry in mood_history_entries:
+        rating_text = entry.positive_affect_rating.strip("{}").split(" - ")[0]
+        if rating_text.isdigit():
+            positive_affect_entries.append(int(rating_text))
+        else:
+            # Handle the case where the rating is not a valid integer
+            # You can choose to set it to a default value or perform other error handling.
+            # For example, setting it to -1 for invalid values:
+            positive_affect_entries.append(-1)
+
+    weather_entries = [weather_mapping.get(entry.weather_today, 0) for entry in mood_history_entries]
+
+    # Calculate the average values, excluding entries with placeholder values
+    stress_entries = [entry for entry in stress_entries if entry > 0]
+
+    if stress_entries:
+        average_stress_level = mean(stress_entries)
+    else:
+        average_stress_level = "No data"  # You can set it to a meaningful value
+
+    average_mood = mean(mood_entries)
+    average_positive_affect_rating = mean(positive_affect_entries)
+    average_weather = max(set(weather_entries), key=weather_entries.count)
+
+    return render_template(
+        'wellness.html',
+        today_date=today_date,
+        form=form,
+        user_journal_entries=user_journal_entries,
+        user_location=user_location,
+        latest_assessment=latest_assessment,
+        average_weather=average_weather,
+        average_mood=average_mood,
+        average_stress_level=average_stress_level,
+        average_positive_affect_rating=average_positive_affect_rating
+    )
+
 
 
 
@@ -817,6 +1017,25 @@ def delete_journal_entry(id):
 
 #___________WELLNESS - CALENDAR_______________________
 
+# # API endpoint to fetch the latest daily assessment for a given date
+# @app.route('/fetch_latest_assessment', methods=['GET'])
+# def fetch_latest_assessment():
+#     date = request.args.get('date')  # Get the date parameter from the request
+
+#     # Query the database to fetch the latest assessment for the given date
+#     latest_assessment = DailyAssessment.query.filter_by(date=date).first()
+
+#     if latest_assessment:
+#         # Serialize the assessment data to a dictionary
+#         assessment_data = {
+#             'weather_today': latest_assessment.weather_today,
+#             'mood_today': latest_assessment.mood_today,
+#             'stress_level': latest_assessment.stress_level,
+#             'positive_affect_rating': latest_assessment.positive_affect_rating
+#         }
+#         return jsonify(assessment_data)
+#     else:
+#         return jsonify({'error': 'Assessment data not available for the given date'}), 404
 
 
 
