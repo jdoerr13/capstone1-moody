@@ -27,6 +27,7 @@
     font-family: 'Marker Felt', cursive;
     font-weight: 900; /* Adjust font weight as needed */
     color: #7e33ff; /* Choose your desired text color */
+    font-size: 55px;
 }
 
 .navbar-brand > img {
@@ -146,3 +147,102 @@ nav form.navbar-form, .navbar-form {
 .user-location {
     color: #657786;
 }
+
+
+
+
+
+
+
+
+/* home.html */
+    .content-box {
+        background: linear-gradient(135deg, #E0A3D2, #9B91C7);
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .btn-primary {
+        background-color: #007BFF;
+        color: #655c5c;
+    }
+
+    .btn-danger {
+        background-color: #1b1a1a;
+        color: #fff;
+    }
+
+    .wider-header {
+        width: 200%; /* Adjust the width percentage as needed */
+        margin-left: 0; /* Center the wider header on the page */
+    }
+    
+    header {
+        background: linear-gradient(135deg, #a392a2, #5d5d60);
+        color: #4e585e;
+        padding: 20px;
+        max-width: 1200px; /* Adjust the max-width to your preference */
+        margin: 0 auto; /* Center the header horizontally */
+        transform: scale(0.9);
+        animation: slideIn 0.5s ease forwards;
+    }
+
+    .header h1 {
+        font-size: 36px;
+    }
+
+    .header p {
+        font-size: 18px;
+    }
+
+    @keyframes slideIn {
+        to {
+            transform: scale(1);
+        }
+    }
+    .wider-header {
+        width: 150%; /* Adjust the width percentage as needed */
+        margin-left: 0%; /* Center the wider header on the page */
+    }
+    .welcome-message {
+        font-size: 48px; /* Increase font size */
+        font-weight: bold; /* Make it bold */
+        color: #007BFF; /* Change the color to a prominent one */
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Add a subtle text shadow */
+        margin-bottom: 20px; /* Add more spacing */
+        text-align: right; /* Align the text to the right */
+    }
+    .profile-icon {
+        text-align: right; 
+    }
+
+    .user-location {
+        font-size: 36px; /* Increase font size */
+        color: #4d5053; /* Adjust the color to a subtle one */
+        text-transform: uppercase; /* Uppercase the text */
+    }
+
+    .btn-dark-grey {
+        background-color: #4d5053;
+        color: #fff;
+    }
+
+    .bubbly-text {
+        display: inline-block;
+        font-family: 'Marker Felt', cursive;
+        font-weight: 900;
+        color: #3f3e42;
+        font-size: 55px;
+        animation: bubble 0.3s infinite alternate;
+    }
+
+    @keyframes bubble {
+        0% {
+            transform: translateY(0);
+        }
+        100% {
+            transform: translateY(-5px);
+        }
+    }

@@ -2,150 +2,150 @@
 
 {% block content %}
     <title>Home Page</title>
-            
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Add your CSS links or stylesheets here -->
-</head>
-<body>
-    <header>
-    <!--  header content here, ex: navigation links, user profile info -->
-    <!-- Display the user's profile picture (assuming it's stored as 'image_url') -->
-    <img src="{{ user.image_url }}" alt="Profile Picture" class="profile-icon">
 
-
-
-
-    <!-- Display the user's location and current weather -->
-        <h1>Welcome, {{ user.username }}!</h1>
-
-        {% if location %}
-        <p>Your location: {{ location }}</p>
-    {% else %}
-        <h3>*Don't forget to update your location in "edit profile".</h3>
-    {% endif %}
-
-
-        {% if current_weather_data %}
-        <div class="mt-4">
-            <h2>Current Weather for {{ current_weather_data['location']['name'] }}, {{ current_weather_data['location']['region'] }}, {{ current_weather_data['location']['country'] }}</h2>
-            <h4>Current Time: {{ current_weather_data['location']['localtime'] }}</h4>
-            <div class="row">
-                <div class="col-md-6">
-                    <h4>Temperature:</h4>
-                    <p>{{ current_weather_data['current']['temp_f'] }}°F</p>
-                    <p>{{ current_weather_data['current']['temp_c'] }}°C</p>
-                </div>
-                <div class="col-md-6">
-                    <h4>Feels Like:</h4>
-                    <p>{{ current_weather_data['current']['feelslike_f'] }}°F</p>
-                    <p>{{ current_weather_data['current']['feelslike_c'] }}°C</p>
-                </div>
-                <div class="col-md-6">
-                <p>{{ current_weather_data['current']['condition']['text'] }}</p>
-            <img src="{{ current_weather_data['current']['condition']['icon'] }}" alt="{{ current_weather_data['current']['condition']['text'] }}" class="img-fluid">
-                </div>
-
+    <header class="container mt-4">
+        <div class="row">
+            <div class="col-md-6">
+                <h1 class="bubbly-text">Moody</h1>
+                {% if location %}
+                    <h3 class="user-location">Your Home Location: {{ location }}</h3>
+                {% else %}
+                    <h3 class="user-location">*Don't forget to update your location in "edit profile".</h3>
+                {% endif %}
+            </div>
+            <div class="col-md-6 text-right">
+                <h1 class="welcome-message">Welcome, {{ user.username }}!</h1>
+                <!-- Display the user's profile picture under the welcome message -->
+                <img src="{{ user.image_url }}" alt="Profile Picture" class="profile-icon">
             </div>
         </div>
-    {% else %}
-        <p>No weather data available for the current location.</p>
-    {% endif %}
-    <!-- button to navigate to the profile editing page -->
-    <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Edit Profile</a>
+    </header>
+    
+    
+
+
+            <div class="col-md-6 text-right">
+                {% if current_weather_data %}
+                    <div class="content-box">
+                        <h2>Current Weather for {{ current_weather_data['location']['name'] }}, {{ current_weather_data['location']['region'] }}, {{ current_weather_data['location']['country'] }}</h2>
+                        <h4>Current Time: {{ current_weather_data['location']['localtime'] }}</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4>Temperature:</h4>
+                                <p>{{ current_weather_data['current']['temp_f'] }}°F</p>
+                                <p>{{ current_weather_data['current']['temp_c'] }}°C</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h4>Feels Like:</h4>
+                                <p>{{ current_weather_data['current']['feelslike_f'] }}°F</p>
+                                <p>{{ current_weather_data['current']['feelslike_c'] }}°C</p>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <p>{{ current_weather_data['current']['condition']['text'] }}</p>
+                            <img src="{{ current_weather_data['current']['condition']['icon'] }}" alt="{{ current_weather_data['current']['condition']['text'] }}" class="img-fluid">
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="content-box">
+                        <p>No weather data available for the current location.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
     </header>
 
+    <div class="container mt-4">
 
-    <a href="{{ url_for('daily_assessment') }}" class="btn btn-primary">CLICK HERE TO LOG YOUR DAILY MOOD</a>
-    <div id="dailyAssessment">
-        <p>Moody Daily for: {{ today_date }}</p>
-
-{% if latest_assessment %}
-        <p>Today's weather is {{ latest_assessment.weather_today }}!</p>
-        <p>You are feeling {{ latest_assessment.mood_today }}.</p>
-        <p>Your stress level is at a {{ latest_assessment.stress_level }}.</p>
-        <p>Your current mood level is at a {{ latest_assessment.positive_affect_rating }}!</p>
-{% else %}
-        <p>Today's weather is ?</p>
-        <p>You are feeling ??</p>
-        <p>Your stress level is at a ???</p>
-        <p>Your current mood level is at a ????</p>
-{% endif %}
+        <div class="content-box">
+            <a href="{{ url_for('daily_assessment') }}" class="btn btn-primary">Log Your Daily Mood</a>
+            <h3>Moody Daily on: {{ today_date }}</h3>
+            {% if latest_assessment %}
+                <p>Today's weather is {{ latest_assessment.weather_today }}!</p>
+                <p>You are feeling {{ latest_assessment.mood_today }}.</p>
+                <p>Your stress level is at a {{ latest_assessment.stress_level }}.</p>
+                <p>Your current mood level is at a {{ latest_assessment.positive_affect_rating }}!</p>
+            {% else %}
+                <p>Today's weather is ?</p>
+                <p>You are feeling ??</p>
+                <p>Your stress level is at a ???</p>
+                <p>Your current mood level is at a ????</p>
+            {% endif %}
+        </div>
     </div>
 
-
-    <section>
-        <h2>Your Wellness Companion & Moody Journal</h2>
-        <ul>
-            {% for history_item in user_history %}
-                <li>{{ history_item.date }} - {{ history_item.activity }}</li>
-            {% endfor %}
-        </ul>
-        <!-- button to navigate to the mood_symptom form -->
-        <a href="{{ url_for('mood_symptom') }}" class="btn btn-primary">Take Mood Assessment</a>
-        <!-- Button to navigate to the Wellness page -->
-        <a href="{{ url_for('wellness') }}" class="btn btn-primary">Wellness Page</a>
-    </section>
-
-    <a href="{{ url_for('diagnosis_history') }}" class="btn btn-primary">Diagnosis History</a>
-
-
-
-
-    <section>
-        <h2>Friends (Moodies) & Groups</h2>
-        <ul>
-            <a href="{{ url_for('friends_groups') }}" class="btn btn-primary">Friends & Groups</a>
-        </ul>
-        <h4>My Groups</h4>
+    <section class="container mt-4">
+        <div class="content-box">
+            <h3>Your Wellness Companion & Moody Journal</h3>
             <ul>
-                {% for group in user_groups %}
-<!-- wrap the group element in a container for easier removal -->
-                <div class="group" data-group-id="{{ group.group_id }}">
-                    <p><a href="{{ url_for('group', group_id=group.group_id) }}" class="group-link">{{ group.group_name }}</a></p>
-                    <button class="leave-group-button" data-group-id="{{ group.group_id }}">Leave Group</button>
-                </div>
+                {% for history_item in user_history %}
+                    <li>{{ history_item.date }} - {{ history_item.activity }}</li>
                 {% endfor %}
             </ul>
+            <a href="{{ url_for('mood_symptom') }}" class="btn btn-primary">Take Mood Assessment</a>
+            <a href="{{ url_for('wellness') }}" class="btn btn-primary">Wellness Page</a>
+            <a href="{{ url_for('diagnosis_history') }}" class="btn 
+            btn-primary">Diagnosis History</a>
+        </div>
     </section>
 
+    
 
-
-    <section>
-        <h2>Weather Information</h2>
-        <!-- Add weather-related information here, e.g., links to current weather, forecast, etc. -->
-        <a href="/current">Current Weather</a>
-        <a href="/forecast">Weather Forecast</a>
-        <a href="/history">Historical Weather</a>
+    <section class="container mt-4">
+        <div class="content-box">
+            <h3>Friends (Moodies) & Groups</h3>
+            <a href="{{ url_for('friends_groups') }}" class="btn btn-primary">Friends & Groups</a>
+            <h4>My Groups</h4>
+            <ul>
+                {% for group in user_groups %}
+                    <div class="group" data-group-id="{{ group.group_id }}">
+                        <h4><a href="{{ url_for('group', group_id=group.group_id) }}" class="group-link">{{ group.group_name }}</a></h4>
+                        <button class="btn-dark-grey" data-group-id="{{ group.group_id }}">Leave Group</button>
+                    </div>
+                {% endfor %}
+            </ul>
+        </div>
     </section>
 
-    <section>
-        <h2>AstroMoodology</h2>
-        <!-- Add link to more fun astronomy information here -->
-        <a href="/astronomy">Astronomy Data</a>
+    <section class="container mt-4">
+        <div class="content-box">
+            <h3>Weather Information</h3>
+            <a href="/current" class="btn btn-primary">Current Weather</a>
+            <a href="/forecast" class="btn btn-primary">Weather Forecast</a>
+            <a href="/history" class="btn btn-primary">Historical Weather</a>
+        </div>
     </section>
 
+    <section class="container mt-4">
+        <div class="content-box">
+            <h2>AstroMoodology</h2>
+            <a href="/astronomy" class="btn btn-primary">Astronomy Data</a>
+        </div>
+    </section>
+</div>
 
+
+
+
+<footer class="container">
+    <!-- Footer content here, e.g., copyright information, contact details -->
+</footer>
 
     <script>
-            $(document).ready(function() {
-                // Attach a click event handler to all "leave group" buttons
-                $('.leave-group-button').click(function() {
-                    let groupId = $(this).data('group-id');
+        $(document).ready(function() {
+            // Attach a click event handler to all "leave group" buttons
+            $('.leave-group-button').click(function() {
+                let groupId = $(this).data('group-id');
 
-                    // Make an AJAX request to the server to leave the group
-                    $.post('/leave_group/' + groupId, function(data) {
-                        if (data.success) {
-                            // Remove the group element from the "my groups" list
-                            $(`.group[data-group-id="${groupId}"]`).remove();
-                        }
-                    });
+                // Make an AJAX request to the server to leave the group
+                $.post('/leave_group/' + groupId, function(data) {
+                    if (data.success) {
+                        // Remove the group element from the "my groups" list
+                        $(`.group[data-group-id="${groupId}"]`).remove();
+                    }
                 });
             });
-        </script>
-
-
-    <footer>
-        <!-- Add footer content here, e.g., copyright information, contact details -->
-    </footer>
+        });
+    </script>
 {% endblock %}
 

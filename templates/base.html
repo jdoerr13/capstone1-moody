@@ -7,7 +7,7 @@
 
   <!-- CSS and JavaScript libraries here -->
   <link rel="stylesheet" href="/static/style.css">
-  <!-- <script src="/static/js/main.js"></script> -->
+  <script src="/static/js/main.js"></script>
 
   <link rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.css">
   <script src="https://unpkg.com/jquery"></script>
@@ -41,7 +41,7 @@
           <h2>Moody</h2> 
         </a>
       </div>
-      <ul class="nav navbar-nav ml-auto">
+      <!-- <ul class="nav navbar-nav ml-auto">
         {% if request.endpoint != None %}
           <li>
             <form class="form-inline my-2 my-lg-0" action="/search">
@@ -55,7 +55,7 @@
               </div>
             </form>
           </li>
-        {% endif %}
+        {% endif %} -->
         {% if not g.user %}
           <li><a href="/signup">Sign Up</a></li>
           <li><a href="/login">Log In</a></li>
