@@ -1,8 +1,6 @@
 from datetime import datetime
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import relationship, backref, registry
-
 
 # Create a SQLAlchemy instance
 db = SQLAlchemy()
@@ -10,10 +8,7 @@ db = SQLAlchemy()
 # Initialize Bcrypt for password hashing
 bcrypt = Bcrypt()
 
-# Register the mapper
-mapper_registry = registry()
-
-# Define the user_group_association table for many-to-many relationship- SHOW THE GROUPS THE USER IS IN
+# Define many-to-many association tables
 user_group_association = db.Table(
     'user_group_association',
     db.Column('user_id', db.Integer, db.ForeignKey('users.user_id')),
@@ -21,31 +16,114 @@ user_group_association = db.Table(
     extend_existing=True,
 )
 
-# Association table for friends - Allows many-to-many relationships between users in the application. SHOWS FRIENDS
-user_friends = db.Table(  
+user_friends = db.Table(
     'user_friends',
     db.Column('user_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True),
     db.Column('friend_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True)
 )
 
-# Association table representing & MANAGING friend requests between users.
 user_friend_requests = db.Table(
     'user_friend_requests',
     db.Column('sender_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True),
     db.Column('receiver_id', db.Integer, db.ForeignKey('users.user_id'), primary_key=True)
 )
 
+class UserDiagnosisAssociation(db.Model):
+    __tablename__ = "user_diagnostic_ass"
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), primary_key=True)
+    diagnosis_id = db.Column(db.Integer, db.ForeignKey('diagnosis.issue_id'), primary_key=True)
+    date_recorded = db.Column(db.Date, nullable=False)
+
+    # Define the relationships with the User and Diagnosis models
+    user = db.relationship('User', back_populates='diagnosis_associations')
+    diagnosis = db.relationship('Diagnosis', back_populates='user_associations')
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String(80), nullable=False, unique=True)
+    email = db.Column(db.String(120), nullable=False, unique=True)  
+    password = db.Column(db.String(120), nullable=False)
+    registration_date = db.Column(db.DateTime, nullable=False)
+    image_url = db.Column(db.String(255))
+    location = db.Column(db.String(255))
+    bio = db.Column(db.Text)
+
+    user_histories = db.relationship('UserHistory', back_populates='user')
+    solutions = db.relationship('DiagnosisSolution', back_populates='user')
+    diagnosis_associations = db.relationship('UserDiagnosisAssociation', back_populates='user')
+
+    friends = db.relationship(
+        'User',
+        secondary=user_friends,
+        primaryjoin=(user_friends.c.user_id == user_id),
+        secondaryjoin=(user_friends.c.friend_id == user_id),
+        backref=db.backref('user_friends', lazy='dynamic'),
+    )
+
+    friend_requests = db.relationship(
+        'User',
+        secondary=user_friend_requests,
+        primaryjoin=(user_friend_requests.c.sender_id == user_id),
+        secondaryjoin=(user_friend_requests.c.receiver_id == user_id),
+        backref=db.backref('user_friend_requests', lazy='dynamic'),
+    )
+
+    groups = db.relationship(
+        'Group',
+        secondary=user_group_association,
+        back_populates='members',
+    )
+
+    @classmethod
+    def signup(cls, username, email, password, registration_date):
+        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
+        user = User(
+            username=username,
+            email=email,
+            password=hashed_pwd,
+            registration_date=registration_date,
+        )
+        db.session.add(user)
+        return user
+
+    @classmethod
+    def authenticate(cls, username, password):
+        user = cls.query.filter_by(username=username).first()
+        if user and bcrypt.check_password_hash(user.password, password):
+            return user
+        return None
+
+class UserHistory(db.Model):
+    __tablename__ = 'user_history'
+
+    history_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    weather_id = db.Column(db.Integer, db.ForeignKey('weather.weather_id'), nullable=False)
+    date_recorded = db.Column(db.Date, nullable=False, unique=True)  # Add a unique constraint
+
+    user = db.relationship('User', back_populates='user_histories')
+    weather = db.relationship('Weather', back_populates='user_history')
+
+
+
 
 class DiagnosisSolution(db.Model):
     __tablename__ = 'diagnosis_solutions'
 
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))  # Add this line
     diagnosis_id = db.Column(db.Integer, db.ForeignKey('diagnosis.issue_id'))
     solution_id = db.Column(db.Integer, db.ForeignKey('coping_solutions.solution_id'))
+    solution_text = db.Column(db.Text)
 
+    user = db.relationship('User', back_populates='solutions')
     diagnosis = db.relationship('Diagnosis', back_populates='solutions')
     solution = db.relationship('CopingSolution', back_populates='diagnoses')
 
+
+# Define Diagnosis
 class Diagnosis(db.Model):
     __tablename__ = 'diagnosis'
 
@@ -53,22 +131,18 @@ class Diagnosis(db.Model):
     issue_name = db.Column(db.String(255), nullable=False)
 
     solutions = db.relationship('DiagnosisSolution', back_populates='diagnosis')
+    user_associations = db.relationship('UserDiagnosisAssociation', back_populates='diagnosis')
 
-class CopingSolution(db.Model): #table contains solutions for Mood, Symptoms, Diagnosis.
+# Define CopingSolution
+class CopingSolution(db.Model):
     __tablename__ = 'coping_solutions'
 
     solution_id = db.Column(db.Integer, primary_key=True)
     solution_text = db.Column(db.Text, nullable=False)
 
     diagnoses = db.relationship('DiagnosisSolution', back_populates='solution')
-    moods = db.relationship('Mood', back_populates='solution')
-    symptoms = db.relationship('Symptoms', back_populates='solution')
 
-
-
-
-
-
+# Define JournalEntry
 class JournalEntry(db.Model):
     __tablename__ = 'journal_entries'
 
@@ -90,88 +164,20 @@ class JournalEntry(db.Model):
             'user_id': self.user_id,
             'date': self.date.strftime('%Y-%m-%d'),  # Format the date as a string
             'entry': self.entry,
-        }   
-
-# User model
-class User(db.Model):
-    __tablename__ = 'users'
-
-    user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(80), nullable=False, unique=True)
-    email = db.Column(db.String(120), nullable=False, unique=True)
-    password = db.Column(db.String(120), nullable=False)
-    registration_date = db.Column(db.DateTime, nullable=False)
-    image_url = db.Column(db.String(255))  # Add the image_url column
-    location = db.Column(db.String(255))
-    bio = db.Column(db.Text)  # Add the bio column as a text field
-    # Add a field for the user's profile picture URL
-    image_url = db.Column(db.String(255))  # This field will store the profile picture URL
-
-
-    user_history = db.relationship('UserHistory', back_populates='user', lazy='dynamic')
-
-    # Relationship for friends
-    friends = db.relationship(
-        'User',
-        secondary=user_friends,
-        primaryjoin=(user_friends.c.user_id == user_id),
-        secondaryjoin=(user_friends.c.friend_id == user_id),
-        backref=db.backref('user_friends', lazy='dynamic'),
-    )
-
-    # Relationship for friend requests
-    friend_requests = db.relationship(
-        'User',
-        secondary=user_friend_requests,
-        primaryjoin=(user_friend_requests.c.sender_id == user_id),
-        secondaryjoin=(user_friend_requests.c.receiver_id == user_id),
-        backref=db.backref('user_friend_requests', lazy='dynamic'),
-    )
-
-    # Add the many-to-many relationship with groups
-    groups = db.relationship(
-        'Group',
-        secondary=user_group_association,
-        back_populates='members',  # Updated back_populates name
-    )
-
-    
-    @classmethod
-    def signup(cls, username, email, password, registration_date):
-        """Sign up user.
-
-        Hashes password and adds user to the system.
-        """
-        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
-
-        user = User(
-            username=username,
-            email=email,
-            password=hashed_pwd,
-            registration_date=registration_date,
-        )
-        db.session.add(user)
-        return user
-
-    @classmethod
-    def authenticate(cls, username, password):
-        user = cls.query.filter_by(username=username).first()
-        if user and bcrypt.check_password_hash(user.password, password):
-            return user
-        return None
+        }
 
 class DailyAssessment(db.Model):
     __tablename__ = 'daily_assessment'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))  # Use 'users' as the table name
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))
     date = db.Column(db.Date)
     weather_today = db.Column(db.String(64))
     mood_today = db.Column(db.String(64))
-    stress_level = db.Column(db.String(64))
-    positive_affect_rating = db.Column(db.String(64))
-    
-    user = db.relationship('User', backref='daily_assessments')  # Use 'User' here
+    stress_level = db.Column(db.Integer)
+    positive_affect_rating = db.Column(db.Integer)
+
+    user = db.relationship('User', backref='daily_assessments')
 
 class Group(db.Model):
     __tablename__ = 'groups'
@@ -206,27 +212,6 @@ class GroupPost(db.Model):
     # Define the many-to-many relationship with the User model
  
 
-
-
-
-class UserHistory(db.Model):
-    __tablename__ = 'user_history'
-
-    history_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
-    weather_id = db.Column(db.Integer, db.ForeignKey('weather.weather_id'), nullable=False)
-    mood_id = db.Column(db.Integer, db.ForeignKey('moods.mood_id'), nullable=False)
-    symptom_id = db.Column(db.Integer, db.ForeignKey('symptoms.symptom_id'))
-    diagnosis_id = db.Column(db.Integer, db.ForeignKey('diagnosis.issue_id'))
-    date_recorded = db.Column(db.Date, nullable=False)
-
-    user = db.relationship('User', back_populates='user_history')
-    weather = db.relationship('Weather', back_populates='user_history')
-    mood = db.relationship('Mood', back_populates='user_history_moods')
-    symptom = db.relationship('Symptoms', foreign_keys=[symptom_id])
-    diagnosis = db.relationship('Diagnosis', foreign_keys=[diagnosis_id])
-
-
 class Weather(db.Model):
     __tablename__ = 'weather'
 
@@ -256,30 +241,6 @@ class Weather(db.Model):
     # Relationship with UserHistory (one-to-one)
     user_history = db.relationship('UserHistory', uselist=False, back_populates='weather')
 
-    # Other fields and relationships...
-
-
-class Mood(db.Model): #table stores mood-related data and is related to Coping Solutions.
-    __tablename__ = 'moods'
-
-    mood_id = db.Column(db.Integer, primary_key=True)
-    mood_date = db.Column(db.Date, nullable=False)
-    mood_level = db.Column(db.Integer, nullable=False)
-    solution_id = db.Column(db.Integer, db.ForeignKey('coping_solutions.solution_id'), nullable=False)
-
-    solution = db.relationship('CopingSolution', back_populates='moods')
-    user_history_moods = db.relationship('UserHistory', backref='mood_moods', lazy=True)
-
-class Symptoms(db.Model):
-    # Table contains information about other symptoms and is related to Coping Solutions.
-    __tablename__ = 'symptoms'
-
-    symptom_id = db.Column(db.Integer, primary_key=True)
-    symptom_name = db.Column(db.String(255), nullable=False)
-    solution_id = db.Column(db.Integer, db.ForeignKey('coping_solutions.solution_id'), nullable=False)
-
-    # Define the relationship with CopingSolution
-    solution = db.relationship('CopingSolution', back_populates='symptoms')
 
 
 
@@ -287,14 +248,12 @@ class Symptoms(db.Model):
 def connect_db(app):
     """Connect this database to the provided Flask app.
 
-    You should call this in your Flask app.
+    all this in your Flask app.
     """
     db.app = app
     db.init_app(app)
     app.app_context().push()
 
-    # Ensure that SQLAlchemy is properly configured
-    mapper_registry.configure(db.metadata)
 
     # Create the database tables
     db.create_all()

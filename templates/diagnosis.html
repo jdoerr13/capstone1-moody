@@ -12,26 +12,35 @@
             margin-bottom: 10px;
         }
     </style>
-    <h1>Mood Symptom Diagnosis</h1>
-    <h2>Your Diagnoses:</h2>
-    <ul>
-        {% if diagnosis_names %}
-            {% for diagnosis in diagnosis_names %}
-                <li>{{ diagnosis }}</li>
-                <div class="disclaimer-box">
-                    <p>
-                        <em>
-                            All content and media on the Moody website is created and published online for information purposes only.
-                            It is not intended to be a substitute for professional medical advice and should not be relied on as health or personal advice.
-                            Always seek the guidance of your doctor or other qualified health professional with any questions you may have regarding your health or medical condition.
-                            Never disregard the advice of a medical professional or delay in seeking it because of something you have read on this Website.
-                        </em>
-                    </p>
-                </div>
-            {% endfor %}
-        {% else %}
-            <li>You currently do not have a diagnosis. Please take the test again another day.</li>
-        {% endif %}
-    </ul>
+<h1>Mood Symptom Diagnosis</h1>
+<h2>Your Diagnoses:</h2>
+<ul>
+    {% if diagnosis_data %}
+        {% for diagnosis_name, solution_texts in diagnosis_data.items() %}
+            <li>{{ diagnosis_name }}</li>
+            <p><strong>Coping Solutions:</strong></p>
+            <ul> <!-- Start an unordered list for coping solutions -->
+                {% for solution_text in solution_texts %}
+                    <li>{{ solution_text }}</li> <!-- List each solution -->
+                {% endfor %}
+            </ul> <!-- Close the unordered list -->
+        {% endfor %}
+    {% else %}
+        <li>You currently do not have a diagnosis. Please take the test again another day.</li>
+    {% endif %}
+</ul>
+
+    <!-- Add a button/link to the diagnosis_history page -->
+<a href="{{ url_for('diagnosis_history') }}" class="btn btn-primary">Diagnosis History</a>
+    <div class="disclaimer-box">
+        <p>
+            <em>
+                All content and media on the Moody website is created and published online for information purposes only.
+                It is not intended to be a substitute for professional medical advice and should not be relied on as health or personal advice.
+                Always seek the guidance of your doctor or other qualified health professional with any questions you may have regarding your health or medical condition.
+                Never disregard the advice of a medical professional or delay in seeking it because of something you have read on this Website.
+            </em>
+        </p>
+    </div>
 </body>
 {% endblock %}

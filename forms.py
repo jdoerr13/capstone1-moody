@@ -45,42 +45,42 @@ class JournalEntryForm(FlaskForm):
 class MoodSymptomAssessmentForm(FlaskForm):
     weather_today = SelectMultipleField('1. How is the weather today? (Select all that apply)', 
                                        choices=[
-                                           ('sunny', 'Sunny'),
-                                           ('cloudy', 'Cloudy'),
-                                           ('rainy', 'Rainy'),
-                                           ('windy', 'Windy'),
-                                           ('partly_cloudy', 'Partly Cloudy'),
-                                           ('stormy', 'Stormy'),
-                                           ('foggy', 'Foggy'),
-                                           ('snowy', 'Snowy'),
-                                           ('hot', 'Hot'),
-                                           ('cold', 'Cold')
+                                           ('1', 'Sunny'),
+                                           ('2', 'Cloudy'),
+                                           ('3', 'Rainy'),
+                                           ('4', 'Windy'),
+                                           ('5', 'Partly Cloudy'),
+                                           ('6', 'Stormy'),
+                                           ('7', 'Foggy'),
+                                           ('8', 'Snowy'),
+                                           ('9', 'Hot'),
+                                           ('10', 'Cold')
                                        ],
                                        widget=ListWidget(prefix_label=False), option_widget=CheckboxInput())
 
     mood_today = SelectMultipleField('2. How are you feeling today? (Select all that apply)', choices=[
-   ('happy', '1 - Happy'),
-    ('sad', '2 - Sad'),
-    ('angry', '3 - Angry'),
-    ('neutral', '4 - Neutral'),
-    ('energetic', '5 - Energetic'),
-    ('anxious', '6 - Anxious'),
-    ('content', '7 - Content'),
-    ('irritable', '8 - Irritable'),
-    ('confident', '9 - Confident'),
-    ('relaxed', '10 - Relaxed'),
-    ('stressed', '11 - Stressed'),
-    ('focused', '12 - Focused'),
-    ('blam Moody', '13 - Bla Moody'),
-    ('below Average', '14 - Below Average'),
-    ('moderate/mellow', '15 - Moderate/Mellow'),
-    ('above Average', '16 - Above Average'),
-    ('pretty Good!', '17 - Pretty Good!'),
-    ('feeling Good!', '18 - Feeling Good!'),
-    ('great', '19 - Great'),
-    ('very happy and/or Excited', '20 - Very happy and/or Excited')
+   ('1', 'Happy'),
+    ('2', 'Sad'),
+    ('3', 'Angry'),
+    ('4', 'Neutral'),
+    ('5', 'Energetic'),
+    ('6', 'Anxious'),
+    ('7', 'Content'),
+    ('8', 'Irritable'),
+    ('9', 'Confident'),
+    ('10', 'Relaxed'),
+    ('11', 'Stressed'),
+    ('12', 'Focused'),
+    ('13', 'Bla Moody'),
+    ('14', 'Below Average'),
+    ('15', 'Moderate/Mellow'),
+    ('16', 'Above Average'),
+    ('17', 'Pretty Good!'),
+    ('18', 'Feeling Good!'),
+    ('19', 'Great'),
+    ('20', 'Very happy and/or Excited')
     ])
-    
+
     stress_level = RadioField('3. On a scale of 1-10, how would you rate your stress level today?', choices=[
         ('1', '1 - Very low'),
         ('2', '2'),
@@ -310,8 +310,8 @@ class DailyAssessmentForm(FlaskForm):
         ('6', '6 - Above Average'),
         ('7', '7 - Pretty Good!'),
         ('8', '8 - Feeling Good!'),
-        ('Great!', '9 - Great!'),
-        ('Very happy and/or Excited', '10 - Very happy and/or Excited')
+        ('9', '9 - Great!'),
+        ('10', '10 - Very happy and/or Excited')
     ])
 
 

@@ -21,79 +21,88 @@ import os
 #     db.session.add(group6)
 #     db.session.commit()
 
-def seed_diagnoses():
-    # Create instances for each diagnosis and their corresponding solution_ids
-    diagnoses_data = [
-        ("Climate Change or Environmental Anxiety", "Stay informed about climate issues and actions you can take."),
-        ("Major Disaster or Severe Weather Anxiety", "Create an emergency plan for your family and home."),
-        ("Weather-Induced Mood Swings (Moody)", "Monitor weather forecasts and plan activities accordingly."),
-        ("Seasonal Affective Disorder (SAD)", "Use light therapy to mitigate the effects of reduced daylight."),
-        ("General Weather Stress or Cabin Fever", "Engage in indoor hobbies or activities during poor weather."),
-        ("Weather-Induced Physical Issues", "Monitor your physical symptoms and seek medical advice as needed."),
-    ]
-
-    # Get the solution dictionary
-    solution_dict = seed_coping_solutions()
-
-    # Add the diagnoses to the database
-    for issue_name, solution_text in diagnoses_data:
-        diagnosis = Diagnosis(issue_name=issue_name, solution_id=solution_dict[solution_text])
-        db.session.add(diagnosis)
-
-    # Commit the changes to the database
-    db.session.commit()
 
 
-def seed_coping_solutions():
-    # Create instances for coping solutions
-    solutions = [
-        # For Climate Change or Environmental Anxiety
-        "Stay informed about climate issues and actions you can take.",
-        "Practice eco-friendly habits to reduce personal environmental impact.",
-        "Seek professional therapy to address anxiety and fears related to climate change.",
 
-        # For Major Disaster or Severe Weather Anxiety
-        "Create an emergency plan for your family and home.",
-        "Stay informed about disaster preparedness and local resources.",
-        "Consider professional therapy to address disaster-related anxiety.",
 
-        # For Weather-Induced Mood Swings (Moody)
-        "Monitor weather forecasts and plan activities accordingly.",
-        "Engage in mood-boosting activities on gloomy days.",
-        "Consider therapy to manage mood swings influenced by the weather.",
 
-        # For Seasonal Affective Disorder (SAD)
-        "Use light therapy to mitigate the effects of reduced daylight.",
-        "Stay active and maintain a consistent daily routine.",
-        "Consult a mental health professional for SAD-specific therapies.",
+# if __name__ == "__main__":
+#     # Configure your app and database connection string
+#     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql:///moody')
 
-        # For General Weather Stress or Cabin Fever
-        "Engage in indoor hobbies or activities during poor weather.",
-        "Practice relaxation techniques to reduce stress and cabin fever.",
-        "Seek therapy for managing stress and coping with weather-induced stress.",
+#     # Run the seed functions
+#     seed_diagnoses()
+#     seed_coping_solutions()
 
-        # For Weather-Induced Physical Issues
-        "Monitor your physical symptoms and seek medical advice as needed.",
-        "Stay active and maintain a healthy lifestyle regardless of the weather.",
-        "Consult healthcare professionals for addressing weather-induced physical issues."
-    ]
+# INSERT INTO groups (group_name, description) VALUES
+# ('Climate Change Anxiety', 'Group for climate change-related discussions.'),
+# ('Major Disaster/Severe Weather Anxiety', 'Group for extreme weather and disaster discussions.'),
+# ('Weather makes me moody', 'Group for discussing mood and weather correlations.'),
+# ('SAD', 'Group for Seasonal Affective Disorder (SAD) support.'),
+# ('General Weather Stress/ Cabin Fever', 'Group for general weather-related stress discussions.'),
+# ('Weather & Physical Health', 'Weather & Physical Health');
 
-    solution_dict = {}  # Create a dictionary to store solutions and their IDs
 
-    for solution_text in solutions:
-        solution = CopingSolution(solution_text=solution_text)
-        db.session.add(solution)
-        db.session.flush()  # Flush to get the generated solution_id
-        db.session.commit()  # Commit the solution to the database
+# moody=# select * from coping_solutions;
+#  solution_id |                                   solution_text                                   
+# -------------+-----------------------------------------------------------------------------------
+#            1 | Stay informed about climate issues and actions you can take.
+#            2 | Practice eco-friendly habits to reduce personal environmental impact.
+#            3 | Seek professional therapy to address anxiety and fears related to climate change.
+#            4 | Create an emergency plan for your family and home.
+#            5 | Stay informed about disaster preparedness and local resources.
+#            6 | Consider professional therapy to address disaster-related anxiety.
+#            7 | Monitor weather forecasts and plan activities accordingly.
+#            8 | Engage in mood-boosting activities on gloomy days.
+#            9 | Consider therapy to manage mood swings influenced by the weather.
+#           10 | Use light therapy to mitigate the effects of reduced daylight.
+#           11 | Stay active and maintain a consistent daily routine.
+#           12 | Consult a mental health professional for SAD-specific therapies.
+#           13 | Engage in indoor hobbies or activities during poor weather.
+#           14 | Practice relaxation techniques to reduce stress and cabin fever.
+#           15 | Seek therapy for managing stress and coping with weather-induced stress.
+#           16 | Monitor your physical symptoms and seek medical advice as needed.
+#           17 | Stay active and maintain a healthy lifestyle regardless of the weather.
+#           18 | Consult healthcare professionals for addressing weather-induced physical issues.
+# (18 rows)
 
-        solution_dict[solution_text] = solution.solution_id
+# moody=# select * from diagnosis;                                                 issue_id |                issue_name                
+# ----------+------------------------------------------
+#         1 | Climate Change or Environmental Anxiety
+#         2 | Major Disaster or Severe Weather Anxiety
+#         3 | Weather-Induced Mood Swings (Moody)
+#         4 | Seasonal Affective Disorder (SAD)
+#         5 | General Weather Stress or Cabin Fever
+#         6 | Weather-Induced Physical Issues
 
-    return solution_dict  # Return the dictionary
 
-if __name__ == "__main__":
-    # Configure your app and database connection string
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql:///moody')
+# moody=# SELECT * FROM diagnosis_solutions;
+#  id | diagnosis_id | solution_id 
+# ----+--------------+-------------
+#   1 |            1 |           1
+#   2 |            1 |           2
+#   3 |            1 |           3
+#   7 |            2 |           4
+#   8 |            2 |           5
+#   9 |            2 |           6
+#  13 |            3 |           7
+#  14 |            3 |           8
+#  15 |            3 |           9
+#  19 |            4 |          10
+#  20 |            4 |          11
+#  21 |            4 |          12
+#  25 |            5 |          13
+#  26 |            5 |          14
+#  27 |            5 |          15
+#  31 |            6 |          16
+#  32 |            6 |          17
+#  33 |            6 |          18
+# (18 rows)
+ 
 
-    # Run the seed functions
-    seed_diagnoses()
-    seed_coping_solutions()
+#  then: -- 
+# Update solution_text in diagnosis_solutions table based on coping_solutions
+# UPDATE diagnosis_solutions AS ds
+# SET solution_text = cs.solution_text
+# FROM coping_solutions AS cs
+# WHERE ds.solution_id = cs.solution_id;

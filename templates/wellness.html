@@ -2,8 +2,6 @@
 
 {% block content %}
 
-
-   
 <section id="moodyJournal">
     <h2>Moody Journal</h2>
     <form id="journalForm">
@@ -12,58 +10,66 @@
         <button type="submit">Save Journal Entry</button>
     </form>
 
-    <h3>Journal Box (Date, Total Entries)</h3>
-    <div id="journalEntries">
-        <ul>
-            {% for entry in user_journal_entries %}
-                <li>
-                    <span>{{ entry.date }}, {{ entry.id }}</span>
-                    <a href="{{ url_for('edit_journal_entry', date=entry.date, id=entry.id) }}" class="btn btn-primary btn-sm">Edit</a>
-                </li>
-            {% endfor %}
-        </ul>
-    </div>
+ <h3>Journal Box (Date, Total Entries)</h3>
+<div id="journalEntries" style="display: none;">
+    <ul>
+        {% for entry in user_journal_entries %}
+            <li>
+                <span>{{ entry.date }}, {{ entry.id }}</span>
+                <a href="{{ url_for('edit_journal_entry', date=entry.date, id=entry.id) }}" class="btn btn-primary btn-sm">Edit</a>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<button id="toggleJournalButton" class="btn btn-primary">See Entries</button>
     
 </section>
 
 <h2>Moody Calendar</h2>
-
 <div id="calendar">
-    <!-- Your HTML content -->
-    <div id="calendar"></div>
-
-
     <section id="moodyCalendar"></section>
 </div>
+
 <div id="calendar">
     <button id="toggleView">See Full Month</button>
 </div>
+
 <div id="journalMessage"></div>
 
-<a href="{{ url_for('daily_assessment') }}" class="btn btn-primary">CLICK HERE TO LOG YOUR DAILY MOOD</a>
 
+
+<a href="{{ url_for('daily_assessment') }}" class="btn btn-primary">CLICK HERE TO LOG YOUR DAILY MOOD</a>
 <div id="dailyAssessment">
     <p>Moody Daily for: {{ today_date }}</p>
+    {% if latest_assessment %}
     <p>Today's weather is {{ latest_assessment.weather_today }}!</p>
     <p>You are feeling {{ latest_assessment.mood_today }}.</p>
     <p>Your stress level is at a {{ latest_assessment.stress_level }}.</p>
     <p>Your current mood level is at a {{ latest_assessment.positive_affect_rating }}!</p>
+{% else %}
+    <p>Today's weather is ?</p>
+    <p>You are feeling ??</p>
+    <p>Your stress level is at a ???</p>
+    <p>Your current mood level is at a ????</p>
+{% endif %}
 </div>
 
 <!-- Add a toggle button -->
 <button id="toggleMoodHistory">Show Mood History</button>
 
+<section id="moodHistory">
 <!-- Display the average values -->
 <div id="averageMoodData" style="display: none;">
     <h2>Average Mood Data</h2>
-    <p>Average Weather: {{ average_weather }}</p>
-    <p>Average Mood: {{ average_mood }}</p>
+    <p>Most Common Weather: {{ weather_today_choices }}</p>
+    <p>Top Moods: {{ top_moods | join(', ') }}</p>
     <p>Average Stress Level: {{ average_stress_level }}</p>
     <p>Average Positive Affect Rating: {{ average_positive_affect_rating }}</p>
 </div>
 
 <!-- Add a new section for the mood history -->
-<section id="moodHistory">
+
     <h2>Mood History</h2>
     <ul>
         {% for mood_entry in mood_history_entries %}
@@ -76,6 +82,7 @@
             </li>
         {% endfor %}
     </ul>
+</section>
 
 <section id="dailyGoals">
     <h2>Daily Goals for Mood Improvement</h2>
@@ -86,6 +93,7 @@
     <button id="addGoal">Add Goal</button>
    
 </section>
+
  <!-- button to navigate to the mood_symptom form -->
  <a href="{{ url_for('mood_symptom') }}" class="btn btn-primary">Take Mood Assessment</a>
 
@@ -139,15 +147,28 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-
     function deleteGoal(listItem) {
         goalsList.removeChild(listItem);
     }
 });
-
 </script>
 
+<script>
+    const journalEntriesDiv = document.getElementById("journalEntries");
+    const toggleJournalButton = document.getElementById("toggleJournalButton");
+    let isJournalVisible = false;
 
+    toggleJournalButton.addEventListener("click", function () {
+        isJournalVisible = !isJournalVisible;
+        if (isJournalVisible) {
+            journalEntriesDiv.style.display = "block";
+            toggleJournalButton.textContent = "Hide Entries";
+        } else {
+            journalEntriesDiv.style.display = "none";
+            toggleJournalButton.textContent = "See Entries";
+        }
+    });
+</script>
 <script>
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -157,65 +178,53 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Function to display journal entries
         function displayJournalEntries(entries) {
-            journalEntriesDiv.innerHTML = "";  // Clear the existing entries
+    journalEntriesDiv.innerHTML = "";  // Clear the existing entries
 
-            if (entries.length > 0) {
-                const ul = document.createElement("ul");
+    if (entries.length > 0) {
+        const ul = document.createElement("ul");
 
-                entries.forEach(entry => {
-                    const li = document.createElement("li");
-                    const link = document.createElement("a");
-                    link.href = `/edit_journal_entry/${entry.date}`;
-                    link.textContent = entry.date;  // Display the date
-                    li.appendChild(link);
-                    ul.appendChild(li);
+        entries.forEach(entry => {
+            const li = document.createElement("li");
+
+            // Create a span to display the entry text
+            const entryTextSpan = document.createElement("span");
+            entryTextSpan.textContent = `${entry.date} (#${entry.id})`;
+
+            // Create an "Edit" button
+            const editButton = document.createElement("button");
+            editButton.textContent = "Edit";
+            editButton.className = "btn btn-primary btn-sm";
+            editButton.addEventListener("click", () => {
+                
+                window.location.href = `/edit_journal_entry/${entry.id}`;
                 });
 
-                journalEntriesDiv.appendChild(ul);
-            } else {
-                journalEntriesDiv.innerHTML = '<p>No journal entries available.</p>';
-            }
-        }
+            // Append the entry text and "Edit" button to the list item
+            li.appendChild(entryTextSpan);
+            li.appendChild(editButton);
 
-        // Function to fetch and display journal entries
-        async function fetchAndDisplayJournalEntries() {
-            try {
-                const response = await fetch('/fetch_journal_entries', {
-                    method: 'GET',
-                });
-
-                if (response.ok) {
-                    const entries = await response.json();
-                    displayJournalEntries(entries);
-                } else {
-                    console.error('Failed to fetch journal entries:', response.statusText);
-                    displayJournalEntries([]);
-                }
-            } catch (error) {
-                console.error('Error fetching journal entries:', error);
-                displayJournalEntries([]);
-            }
-        }
-
-      // Function to fetch and display journal entries
-async function fetchAndDisplayJournalEntries() {
-    try {
-        const response = await fetch('/fetch_journal_entries', {
-            method: 'GET',
+            ul.appendChild(li);
         });
 
-        if (response.ok) {
-            const entries = await response.json();
-            displayJournalEntries(entries);
-        } else {
-            console.error('Failed to fetch journal entries:', response.statusText);
-            displayJournalEntries([]);
-        }
-    } catch (error) {
-        console.error('Error fetching journal entries:', error);
-        displayJournalEntries([]);
+        journalEntriesDiv.appendChild(ul);
+    } else {
+        journalEntriesDiv.innerHTML = '<p>No journal entries available.</p>';
     }
 }
+
+    // Function to fetch and display journal entries
+    function fetchAndDisplayJournalEntries() {
+        // Fetch journal entries from the server using a fetch request
+        fetch('/fetch_journal_entries')
+            .then((response) => response.json())
+            .then((entries) => {
+                // Display the fetched journal entries
+                displayJournalEntries(entries);
+            })
+            .catch((error) => {
+                console.error('Error fetching journal entries:', error);
+            });
+    }
 
         // Handle form submission
         journalForm.addEventListener("submit", async function (event) {
@@ -244,8 +253,19 @@ async function fetchAndDisplayJournalEntries() {
                 }
             }
         });
+
+            // Fetch and display journal entries when the page loads
+        fetchAndDisplayJournalEntries();
     });
 
+
+
+
+
+
+
+
+    
 // Toggle mood history:
 document.addEventListener('DOMContentLoaded', function () {
     const moodHistory = document.getElementById('moodHistory');
@@ -335,36 +355,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // // Function to display the latest assessment data
-        // async function displayLatestAssessment(latestAssessment) {
-        //     if (latestAssessment) {
-        //         // Update the daily assessment information in your HTML
-        //         document.getElementById('dailyAssessment').innerHTML = `
-        //             <p>Moody Daily for: ${latestAssessment.date}</p>
-        //             <p>Today's weather is ${latestAssessment.weather_today}!</p>
-        //             <p>You are feeling ${latestAssessment.mood_today}.</p>
-        //             <p>Your stress level is at a ${latestAssessment.stress_level}.</p>
-        //             <p>Your current mood is ${latestAssessment.positive_affect_rating}!</p>
-        //         `;
-        //     } else {
-        //         console.error('Latest assessment data not available for today.');
-        //     }
-        // }
 
-        // // Function to fetch the latest assessment data
-        // async function fetchLatestAssessment(date) {
-        //     try {
-        //         const response = await fetch(`/fetch_latest_assessment?date=${date}`);
-        //         if (response.ok) {
-        //             const latestAssessment = await response.json();
-        //             displayLatestAssessment(latestAssessment);
-        //         } else {
-        //             console.error('Failed to fetch latest assessment:', response.statusText);
-        //         }
-        //     } catch (error) {
-        //         console.error('Error fetching latest assessment:', error);
-        //     }
-        // }
 
         // Initialize weather data and assessment data
         await updateWeatherData();

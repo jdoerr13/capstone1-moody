@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <title>Diagnosis History</title>
+    <h1>Diagnosis History</h1>
+    <ul>
+        {% if user_history %}
+            {% for entry in user_history %}
+                <li>Date Recorded: {{ entry.date_recorded }}</li>
+                <li>Diagnosis: {{ entry.diagnosis.issue_name if entry.diagnosis else "N/A" }}</li>
+                <li>
+                    Recommended Support Group: {{ map_issue_to_group(entry.diagnosis.issue_id) if entry.diagnosis else "N/A" }} <a href="{{ url_for('friends_groups') }}" class="btn btn-primary">Go to Groups</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </ul>
+    {% else %}
+        <p>No assessment history found.</p>
+    {% endif %}
+
+    <!-- Add a button to show current diagnosis and solutions -->
+    <button id="show-diagnosis-button" class="btn btn-primary">Show Current Diagnosis</button>
+
+    <div id="diagnosis-info" style="display: none;">
+        <h2>Your Current Diagnosis:</h2>
+        <ul>
+            {% if diagnosis_data %}
+                {% for diagnosis_name, solution_texts in diagnosis_data.items() %}
+                    <li>{{ diagnosis_name }}</li>
+                    <p><strong>Coping Solutions:</strong></p>
+                    <ul>
+                        {% for solution_text in solution_texts %}
+                            <li>{{ solution_text }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            {% else %}
+                <li>You currently do not have a diagnosis. Please take the test again.</li>
+            {% endif %}
+        </ul>
+    </div>
+
+    <a href="{{ url_for('homepage') }}" class="btn btn-secondary">Home</a>
+
+    <style>
+        /* Add your custom CSS styles here */
+        .form-group {
+            margin-bottom: 10px;
+        }
+    </style>
+
+    <div class="disclaimer-box">
+        <p>
+            <em>
+                All content and media on the Moody website is created and published online for information purposes only.
+                It is not intended to be a substitute for professional medical advice and should not be relied on as health or personal advice.
+                Always seek the guidance of your doctor or other qualified health professional with any questions you may have regarding your health or medical condition.
+                Never disregard the advice of a medical professional or delay in seeking it because of something you have read on this Website.
+            </em>
+        </p>
+    </div>
+
+    <script>
+        // Add JavaScript to show/hide the diagnosis information
+        document.getElementById('show-diagnosis-button').addEventListener('click', function () {
+            var diagnosisInfo = document.getElementById('diagnosis-info');
+            if (diagnosisInfo.style.display === 'none' || diagnosisInfo.style.display === '') {
+                diagnosisInfo.style.display = 'block';
+            } else {
+                diagnosisInfo.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+{% endblock %}

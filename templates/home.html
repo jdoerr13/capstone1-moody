@@ -17,7 +17,14 @@
 
     <!-- Display the user's location and current weather -->
         <h1>Welcome, {{ user.username }}!</h1>
+
+        {% if location %}
         <p>Your location: {{ location }}</p>
+    {% else %}
+        <h3>*Don't forget to update your location in "edit profile".</h3>
+    {% endif %}
+
+
         {% if current_weather_data %}
         <div class="mt-4">
             <h2>Current Weather for {{ current_weather_data['location']['name'] }}, {{ current_weather_data['location']['region'] }}, {{ current_weather_data['location']['country'] }}</h2>
@@ -33,6 +40,11 @@
                     <p>{{ current_weather_data['current']['feelslike_f'] }}°F</p>
                     <p>{{ current_weather_data['current']['feelslike_c'] }}°C</p>
                 </div>
+                <div class="col-md-6">
+                <p>{{ current_weather_data['current']['condition']['text'] }}</p>
+            <img src="{{ current_weather_data['current']['condition']['icon'] }}" alt="{{ current_weather_data['current']['condition']['text'] }}" class="img-fluid">
+                </div>
+
             </div>
         </div>
     {% else %}
@@ -44,14 +56,20 @@
 
 
     <a href="{{ url_for('daily_assessment') }}" class="btn btn-primary">CLICK HERE TO LOG YOUR DAILY MOOD</a>
-
-
-    <div>
+    <div id="dailyAssessment">
         <p>Moody Daily for: {{ today_date }}</p>
+
+{% if latest_assessment %}
         <p>Today's weather is {{ latest_assessment.weather_today }}!</p>
         <p>You are feeling {{ latest_assessment.mood_today }}.</p>
-    <p>Your stress level is at a {{ latest_assessment.stress_level }}.</p>
-    <p>Your current mood level is at a {{ latest_assessment.positive_affect_rating }}!</p>
+        <p>Your stress level is at a {{ latest_assessment.stress_level }}.</p>
+        <p>Your current mood level is at a {{ latest_assessment.positive_affect_rating }}!</p>
+{% else %}
+        <p>Today's weather is ?</p>
+        <p>You are feeling ??</p>
+        <p>Your stress level is at a ???</p>
+        <p>Your current mood level is at a ????</p>
+{% endif %}
     </div>
 
 
@@ -68,6 +86,7 @@
         <a href="{{ url_for('wellness') }}" class="btn btn-primary">Wellness Page</a>
     </section>
 
+    <a href="{{ url_for('diagnosis_history') }}" class="btn btn-primary">Diagnosis History</a>
 
 
 

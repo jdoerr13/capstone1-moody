@@ -5,13 +5,14 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 # from sqlalchemy import or_
 from forms import LoginForm, SignupForm, MoodSymptomAssessmentForm, ProfileEditForm, JournalEntryForm, DailyAssessmentForm
-from models import db, connect_db, User, Diagnosis, UserHistory, Weather, Mood, Symptoms, CopingSolution, Group, JournalEntry, DailyAssessment, GroupPost
-from datetime import datetime, timedelta, date  # Import the datetime module
+from models import db, connect_db, User, Diagnosis, UserHistory, Weather, CopingSolution, Group, JournalEntry, DailyAssessment, GroupPost, DiagnosisSolution, UserDiagnosisAssociation
+from datetime import datetime, timedelta, date 
 from flask_bcrypt import Bcrypt
 # from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from statistics import mean, StatisticsError
+from statistics import mean, mode
 # from flask_wtf.csrf import CSRFProtect
+
 
 CURR_USER_KEY = "curr_user"
 app = Flask(__name__)
@@ -19,7 +20,8 @@ app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 
 
-# Initialize Flask-Migrate- USED WITH ANY UPDATE TO THE MODELS FOR DB MOODY
+
+# # Initialize Flask-Migrate- USED WITH ANY UPDATE TO THE MODELS FOR DB MOODY
 migrate = Migrate(app, db)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = (
@@ -40,8 +42,6 @@ app.debug = True
 connect_db(app)
 app.app_context().push()
 # db.drop_all()
-
-
 db.create_all()
 
 ##############################################################################
@@ -338,10 +338,7 @@ def homepage():
             current_weather_data = get_current_weather(location)
 
         # Retrieve the latest daily assessment for the user
-        latest_assessment = DailyAssessment.query.filter_by(
-            user_id=g.user.user_id,
-            date=today_date
-        ).first()
+        latest_assessment = DailyAssessment.query.filter_by(user_id=g.user.user_id).order_by(DailyAssessment.date.desc()).first()
       
         return render_template(
             'home.html',
@@ -462,6 +459,10 @@ def accept_friend_request(sender_id):
             g.user.friend_requests.remove(sender)
             # Add the sender to the current user's list of friends
             g.user.friends.append(sender)
+
+            # Add the current user to the sender's list of friends
+            sender.friends.append(g.user)
+
             db.session.commit()
             return jsonify(success=True, message='Friend request accepted')
         else:
@@ -576,29 +577,100 @@ def determine_diagnosis(form_data):
 
 
 
-# Updated route for the mood symptom form
 @app.route('/mood_symptom', methods=['GET', 'POST'])
 def mood_symptom():
     form = MoodSymptomAssessmentForm()
 
     if request.method == 'POST' and form.validate_on_submit():
-        form_data = request.form  # Get the form data
-        diagnoses = determine_diagnosis(form_data)  # Determine the diagnoses
+        # Get the form data
+        form_data = request.form
 
-        # Query the database to get diagnosis names based on diagnosis IDs
-        diagnosis_names = {}
-        for diagnosis_id in diagnoses:
+        # Determine the diagnoses
+        diagnosis_ids = determine_diagnosis(form_data)
+
+        # Create a dictionary to store the diagnoses
+        diagnosis_data = {}
+
+        for diagnosis_id in diagnosis_ids:
             diagnosis = Diagnosis.query.get(diagnosis_id)
             if diagnosis:
-                diagnosis_names[diagnosis_id] = diagnosis.issue_name
+                diagnosis_name = diagnosis.issue_name
+                solution_texts = [solution.solution_text for solution in diagnosis.solutions]
+                diagnosis_data[diagnosis_name] = solution_texts
 
-        # Create a list of diagnosis names based on the diagnosis IDs
-        diagnosis_names_list = [diagnosis_names[diagnosis] for diagnosis in diagnoses]
+                # Check if the user already has this diagnosis in their history
+                existing_diagnosis = UserDiagnosisAssociation.query.filter_by(
+                    user_id=g.user.user_id,
+                    diagnosis_id=diagnosis_id
+                ).first()
 
-        # Render a response, providing the diagnoses to the user
-        return render_template('diagnosis.html', diagnosis_names=diagnosis_names_list)
+                if not existing_diagnosis:
+                    user_diagnosis_association = UserDiagnosisAssociation(
+                        user_id=g.user.user_id,
+                        diagnosis_id=diagnosis_id,
+                        date_recorded=date.today()
+                    )
+                    db.session.add(user_diagnosis_association)
+
+        # Commit the new UserDiagnosisAssociation entries to the database
+        db.session.commit()
+
+        # Render a response, providing the diagnoses and solutions to the user
+        return render_template('diagnosis.html', diagnosis_data=diagnosis_data)
 
     return render_template('mood_symptom_form.html', form=form)
+
+
+
+# Create a function to map issue_id to group_name
+def map_issue_to_group(issue_id):
+    issue_group_mapping = {
+        1: "Climate Change Anxiety",
+        2: "Major Disaster/Severe Weather Anxiety",
+        3: "Weather makes me moody",
+        4: "SAD",
+        5: "General Weather Stress/ Cabin Fever",
+        6: "Weather & Physical Health",
+    }
+    return issue_group_mapping.get(issue_id, "N/A")
+
+@app.route('/diagnosis_history', methods=['GET'])
+def diagnosis_history():
+    if not g.user:
+        return jsonify(success=False, message='Not logged in')
+
+    # Retrieve the user's history based on the user_id attribute
+    user_id = g.user.user_id
+
+    # Query the database to retrieve the user's history based on user_id
+    user_history = UserDiagnosisAssociation.query.filter_by(user_id=user_id).all()
+
+
+    # Create a dictionary to store the user's diagnosis history
+    diagnosis_data = {}
+
+    for entry in user_history:
+        diagnosis = Diagnosis.query.get(entry.diagnosis_id)
+        if diagnosis:
+            diagnosis_name = diagnosis.issue_name
+            recommended_group_name = map_issue_to_group(diagnosis.issue_id)
+            diagnosis_data[diagnosis_name] = {
+                "recommended_group_name": recommended_group_name,
+            }
+
+    for entry in user_history:
+        diagnosis = Diagnosis.query.get(entry.diagnosis_id)
+        if diagnosis:
+            diagnosis_name = diagnosis.issue_name
+            solution_texts = [solution.solution_text for solution in diagnosis.solutions]
+            diagnosis_data[diagnosis_name] = solution_texts
+
+    return render_template('diagnosis_history.html', user_history=user_history, diagnosis_data=diagnosis_data, map_issue_to_group=map_issue_to_group)
+
+
+
+
+
 
 
 @app.route('/daily_assessment', methods=['GET', 'POST'])
@@ -793,7 +865,9 @@ def delete_post(post_id):
     return redirect(url_for('group', group_id=post.group_id))
 
 #________________WELLNESS- JOURNAL__________________________________
-
+# Function to calculate the top N values from a list
+def top_n_values(lst, n):
+    return sorted(lst, reverse=True)[:n]
 
 @app.route('/wellness', methods=['GET', 'POST'])
 def wellness():
@@ -829,83 +903,74 @@ def wellness():
     if user_id:
         user_journal_entries = JournalEntry.query.filter_by(user_id=user_id).all()
 
-    latest_assessment = DailyAssessment.query.filter_by(
-        user_id=g.user.user_id,
-        date=today_date
-    ).first()
+
+
+
+#________________
+    latest_assessment = DailyAssessment.query.filter_by(user_id=g.user.user_id).order_by(DailyAssessment.date.desc()).first()
+
 
     user_location = g.user.location
 
     mood_history_entries = DailyAssessment.query.filter_by(user_id=g.user.user_id).all()
 
-    # Create mappings for the form choices
-    weather_mapping = {
-        'sunny': 1,
-        'cloudy': 2,
-        'rainy': 3,
-        'windy': 4,
-        'partly_cloudy': 5,
-        'stormy': 6,
-        'foggy': 7,
-        'snowy': 8,
-        'hot': 9,
-        'cold': 10
-    }
-
-    mood_mapping = {
-        'Happy': 1,
-        'Sad': 2,
-        'Angry': 3,
-        'Neutral': 4,
-        'Energetic': 5,
-        'Anxious': 6,
-        'Content': 7,
-        'Irritable': 8,
-        'Confident': 9,
-        'Relaxed': 10,
-        'Stressed': 11,
-        'Focused': 12,
-        'Bla Moody': 13,
-        'Below Average': 14,
-        'Moderate/Mellow': 15,
-        'Above Average': 16,
-        'Pretty Good!': 17,
-        'Feeling Good!': 18,
-        'Great': 19,
-        'Very happy and/or Excited': 20,
-    }
-
-    # Calculate the average values
-    mood_entries = [mood_mapping.get(entry.mood_today, 0) for entry in mood_history_entries]
-    
-    stress_entries = [int(entry.stress_level) if entry.stress_level.isdigit() else 0 for entry in mood_history_entries]
-
+# Initialize lists for the entries
+    mood_entries = []
+    stress_entries = []
     positive_affect_entries = []
+    weather_entries = []
 
     for entry in mood_history_entries:
+        # Mood entries
+        mood_entries.append(entry.mood_today)  # Append each mood entry
+
+        # Stress entries
+        stress_level = entry.stress_level.strip("{}").split(" - ")[0]
+        if stress_level.isdigit():
+            stress_entries.append(int(stress_level))
+        else:
+            stress_entries.append(0)  # Set to 0 for invalid values
+
+        # Positive affect entries
         rating_text = entry.positive_affect_rating.strip("{}").split(" - ")[0]
         if rating_text.isdigit():
             positive_affect_entries.append(int(rating_text))
         else:
-            # Handle the case where the rating is not a valid integer
-            # You can choose to set it to a default value or perform other error handling.
-            # For example, setting it to -1 for invalid values:
-            positive_affect_entries.append(-1)
+            positive_affect_entries.append(0)  # Set to 0 for invalid values
 
-    weather_entries = [weather_mapping.get(entry.weather_today, 0) for entry in mood_history_entries]
+        # Weather entries
+        weather_entries.extend(entry.weather_today)
 
-    # Calculate the average values, excluding entries with placeholder values
-    stress_entries = [entry for entry in stress_entries if entry > 0]
+    # Calculate the top three moods
+    if mood_entries:
+        top_mood_values = top_n_values(mood_entries, 3)
+        top_moods = list(set(top_mood_values))  # Remove duplicates
+        top_moods = [str(mood) for mood in top_moods]
+        average_mood = ', '.join(top_moods)
+    else:
+        average_mood = "No data"
 
+    # Calculate the average stress level and positive affect rating
     if stress_entries:
         average_stress_level = mean(stress_entries)
     else:
-        average_stress_level = "No data"  # You can set it to a meaningful value
+        average_stress_level = "No data"
 
-    average_mood = mean(mood_entries)
-    average_positive_affect_rating = mean(positive_affect_entries)
-    average_weather = max(set(weather_entries), key=weather_entries.count)
+    if positive_affect_entries:
+        average_positive_affect_rating = mean(positive_affect_entries)
+    else:
+        average_positive_affect_rating = "No data"
 
+    # Calculate the most common weather
+    if weather_entries:
+        most_common_weather = mode(weather_entries)
+    else:
+        most_common_weather = "No data"
+
+    # Get the weather choices for today from the form
+    weather_today_choices = latest_assessment.weather_today if latest_assessment else []
+
+    # Render the template
     return render_template(
         'wellness.html',
         today_date=today_date,
@@ -913,11 +978,18 @@ def wellness():
         user_journal_entries=user_journal_entries,
         user_location=user_location,
         latest_assessment=latest_assessment,
-        average_weather=average_weather,
+        most_common_weather=most_common_weather,
         average_mood=average_mood,
         average_stress_level=average_stress_level,
-        average_positive_affect_rating=average_positive_affect_rating
+        average_positive_affect_rating=average_positive_affect_rating,
+        top_moods=top_moods,
+        mood_history_entries=mood_history_entries,
+        weather_today_choices=weather_today_choices
     )
+
+
+
+
 
 
 
@@ -958,11 +1030,11 @@ def fetch_journal_entries():
 
     # Fetch journal entries for today's date and the current user (if logged in)
     today = datetime.today().strftime('%Y-%m-%d')
-    id=JournalEntry.id
-    entries = JournalEntry.query.filter_by(date=today, user_id=user_id, id=id).all()
+    entries = JournalEntry.query.filter_by(date=today, user_id=user_id).all()
 
     # Return the journal entries as JSON
     return jsonify([entry.serialize() for entry in entries])
+
 
 @app.route('/edit_journal_entry/<int:id>', methods=['GET', 'POST'])
 def edit_journal_entry(id):
