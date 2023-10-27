@@ -12,11 +12,11 @@
             {{ field.label(class="form-label") }}
 
             {% if field.name == 'image_url' %}
-              <label for="profile_picture">Choose Profile Picture</label>
-              <input type="file" name="profile_picture" id="profile_picture" accept="image/*">
-            {% elif field.name != 'current_password' %}
-              {{ field(placeholder=field.label.text, class="form-control", value=user[field.name]) }}
-            {% endif %}
+            <label for="profile_picture">Choose Profile Picture</label>
+            <input type="file" name="profile_picture" id="profile_picture" accept="image/*">
+        {% elif field.name != 'current_password' %}
+            {{ field(placeholder=field.label.text, class="form-control", value=user[field.name]) }}
+        {% endif %}
 
             {% for error in field.errors %}
               <span class="text-danger">{{ error }}</span>

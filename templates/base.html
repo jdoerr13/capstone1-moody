@@ -41,8 +41,8 @@
           <h2>Moody</h2> 
         </a>
       </div>
-      <!-- <ul class="nav navbar-nav ml-auto">
-        {% if request.endpoint != None %}
+      <ul class="nav navbar-nav ml-auto">
+        <!-- {% if request.endpoint != None %}
           <li>
             <form class="form-inline my-2 my-lg-0" action="/search">
               <div class="input-group">
@@ -77,7 +77,6 @@
     {% for category, message in get_flashed_messages(with_categories=True) %}
       <div class="alert alert-{{ category }}">{{ message }}</div>
     {% endfor %}
-
     {% block content %}
     {% endblock %}
   </div>

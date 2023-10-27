@@ -24,7 +24,7 @@
                 <div class="row">
                     {% for day in forecast_data.forecast.forecastday %}
                         <div class="col-md-4 mb-4">
-                            <div class="card">
+                            <div class="card custom-card">
                                 <div class="card-body">
                                     <h5 class="card-title">{{ day.date }}</h5>
                                     <p class="card-text">Condition: {{ day.day.condition.text }}</p>

@@ -1,102 +1,120 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
 {% block content %}
+    <title>Wellness Page</title>
 
-<section id="moodyJournal">
-    <h2>Moody Journal</h2>
-    <form id="journalForm">
-        <label for="journalEntry">Write your journal entry:</label>
-        <textarea id="journalEntry" name="journal_entry" rows="4" cols="50"></textarea>
-        <button type="submit">Save Journal Entry</button>
-    </form>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="content-box">
+                    <h2>Moody Journal</h2>
+                    <form id="journalForm">
+                        <div class="form-group">
+                            <label for="journalEntry">Write your journal entry:</label>
+                            <textarea id="journalEntry" name="journal_entry" rows="4" cols="50" class="form-control"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Journal Entry</button>
+                    </form>
 
- <h3>Journal Box (Date, Total Entries)</h3>
-<div id="journalEntries" style="display: none;">
-    <ul>
-        {% for entry in user_journal_entries %}
-            <li>
-                <span>{{ entry.date }}, {{ entry.id }}</span>
-                <a href="{{ url_for('edit_journal_entry', date=entry.date, id=entry.id) }}" class="btn btn-primary btn-sm">Edit</a>
-            </li>
-        {% endfor %}
-    </ul>
-</div>
+                    <h3>Journal Box (Date, Total Entries)</h3>
+                    <div id="journalEntries" style="display: none;">
+                        <ul>
+                            {% for entry in user_journal_entries %}
+                                <li>
+                                    <span>{{ entry.date }}, {{ entry.id }}</span>
+                                    <a href="{{ url_for('edit_journal_entry', date=entry.date, id=entry.id) }}" class="btn btn-primary btn-sm">Edit</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
 
-<button id="toggleJournalButton" class="btn btn-primary">See Entries</button>
-    
-</section>
+                    <button id="toggleJournalButton" class="btn btn-primary">See Entries</button>
+                </div>
 
-<h2>Moody Calendar</h2>
-<div id="calendar">
-    <section id="moodyCalendar"></section>
-</div>
+                <!-- Move "Daily Goals for Improvement" here -->
+                <div class="content-box">
+                    <section id="dailyGoals">
+                        <h2>Daily Goals for Mood Improvement</h2>
+                        <ul id="goalsList">
+                            <!-- Your goals with checkboxes and delete buttons will be added here dynamically -->
+                        </ul>
+                        <div class="form-group">
+                            <input type="text" id="newGoal" placeholder="Add a new goal" class="form-control">
+                        </div>
+                        <button id="addGoal" class="btn btn-primary">Add Goal</button>
+                    </section>
+                </div>
+            </div>
 
-<div id="calendar">
-    <button id="toggleView">See Full Month</button>
-</div>
+            <div class="col-md-6">
+                <div class="content-box">
+                    <a href="{{ url_for('daily_assessment') }}" class="btn btn-primary">CLICK HERE TO LOG YOUR DAILY MOOD</a>
+                    <div id="dailyAssessment">
+                        <p>Moody Daily for: {{ today_date }}</p>
+                        {% if latest_assessment %}
+                        <p>Today's weather is {{ latest_assessment.weather_today }}!</p>
+                        <p>You are feeling {{ latest_assessment.mood_today }}.</p>
+                        <p>Your stress level is at a {{ latest_assessment.stress_level }}.</p>
+                        <p>Your current mood level is at a {{ latest_assessment.positive_affect_rating }}!</p>
+                    {% else %}
+                        <p>Today's weather is ?</p>
+                        <p>You are feeling ??</p>
+                        <p>Your stress level is at a ???</p>
+                        <p>Your current mood level is at a ????</p>
+                    {% endif %}
+                    </div>
+                    <!-- Add a toggle button -->
+                    
+                </div>
 
-<div id="journalMessage"></div>
+                <div class="content-box">
+                    <button id="toggleMoodHistory" class="btn btn-primary mt-4">Show Mood History</button>
+                    <div id="moodHistory">
+                        <!-- Display the average values -->
+                        <div id="averageMoodData" style="display: none;">
+                            <h2>Average Mood Data</h2>
+                            <p>Most Common Weather: {{ weather_today_choices }}</p>
+                            <p>Top Moods: {{ top_moods | join(', ') }}</p>
+                            <p>Average Stress Level: {{ average_stress_level }}</p>
+                            <p>Average Positive Affect Rating: {{ average_positive_affect_rating }}</p>
+                        </div>
 
+                        <!-- Add a new section for the mood history -->
+                        <h2>Mood History</h2>
+                        <ul>
+                            {% for mood_entry in mood_history_entries %}
+                                <li>
+                                    <p>Date: {{ mood_entry.date }}</p>
+                                    <p>Weather: {{ mood_entry.weather_today }}</p>
+                                    <p>Mood: {{ mood_entry.mood_today }}</p>
+                                    <p>Stress Level: {{ mood_entry.stress_level }}</p>
+                                    <p>Positive Affect Rating: {{ mood_entry.positive_affect_rating }}</p>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Move the "Moody Calendar" section to the bottom -->
+    <div class="container mt-4">
+        <div class="row">
+            <div class="content-box col-md-12">
+                <h2>Moody Calendar</h2>
+                <h4>Your Local Weather</h4>
+                <div id="calendar">
+                    <section id="moodyCalendar"></section>
+                </div>
 
-<a href="{{ url_for('daily_assessment') }}" class="btn btn-primary">CLICK HERE TO LOG YOUR DAILY MOOD</a>
-<div id="dailyAssessment">
-    <p>Moody Daily for: {{ today_date }}</p>
-    {% if latest_assessment %}
-    <p>Today's weather is {{ latest_assessment.weather_today }}!</p>
-    <p>You are feeling {{ latest_assessment.mood_today }}.</p>
-    <p>Your stress level is at a {{ latest_assessment.stress_level }}.</p>
-    <p>Your current mood level is at a {{ latest_assessment.positive_affect_rating }}!</p>
-{% else %}
-    <p>Today's weather is ?</p>
-    <p>You are feeling ??</p>
-    <p>Your stress level is at a ???</p>
-    <p>Your current mood level is at a ????</p>
-{% endif %}
-</div>
-
-<!-- Add a toggle button -->
-<button id="toggleMoodHistory">Show Mood History</button>
-
-<section id="moodHistory">
-<!-- Display the average values -->
-<div id="averageMoodData" style="display: none;">
-    <h2>Average Mood Data</h2>
-    <p>Most Common Weather: {{ weather_today_choices }}</p>
-    <p>Top Moods: {{ top_moods | join(', ') }}</p>
-    <p>Average Stress Level: {{ average_stress_level }}</p>
-    <p>Average Positive Affect Rating: {{ average_positive_affect_rating }}</p>
-</div>
-
-<!-- Add a new section for the mood history -->
-
-    <h2>Mood History</h2>
-    <ul>
-        {% for mood_entry in mood_history_entries %}
-            <li>
-                <p>Date: {{ mood_entry.date }}</p>
-                <p>Weather: {{ mood_entry.weather_today }}</p>
-                <p>Mood: {{ mood_entry.mood_today }}</p>
-                <p>Stress Level: {{ mood_entry.stress_level }}</p>
-                <p>Positive Affect Rating: {{ mood_entry.positive_affect_rating }}</p>
-            </li>
-        {% endfor %}
-    </ul>
-</section>
-
-<section id="dailyGoals">
-    <h2>Daily Goals for Mood Improvement</h2>
-    <ul id="goalsList">
-        <!-- Your goals with checkboxes and delete buttons will be added here dynamically -->
-    </ul>
-    <input type="text" id="newGoal" placeholder="Add a new goal">
-    <button id="addGoal">Add Goal</button>
-   
-</section>
-
- <!-- button to navigate to the mood_symptom form -->
- <a href="{{ url_for('mood_symptom') }}" class="btn btn-primary">Take Mood Assessment</a>
-
+                <div id="calendar">
+                    <button id="toggleView" class="btn btn-primary">See Full Month</button>
+                </div>
+            </div>
+        </div>
+    </div>
+ 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const goalsList = document.getElementById('goalsList');
@@ -311,49 +329,52 @@ document.addEventListener('DOMContentLoaded', function () {
         // Get the user's location from the template
         var userLocation = '{{ user_location }}';
 
-        // Function to fetch weather data and update the calendar event
-        async function updateWeatherData() {
-            const options = {
-                method: 'GET',
-                url: 'https://weatherapi-com.p.rapidapi.com/forecast.json',
-                params: {
-                    q: userLocation, // Use the user's location
-                    days: '3',
-                    units: 'imperial', // Use 'imperial' for Fahrenheit
-                },
-                headers: {
-                    'X-RapidAPI-Key': 'eb3fa9d2eamsh622acd4eaa00bf3p19fc73jsn647406a37c4e',
-                    'X-RapidAPI-Host': 'weatherapi-com.p.rapidapi.com',
-                },
-            };
 
-            try {
-                const response = await axios.request(options);
 
-                // Extract and format weather data for today
-                const today = new Date();
-                const weatherData = response.data.forecast.forecastday;
-                const todayWeather = weatherData.find((day) => day.date === today.toISOString().split('T')[0]);
+async function updateWeatherData() {
+    const options = {
+        method: 'GET',
+        url: 'https://weatherapi-com.p.rapidapi.com/forecast.json',
+        params: {
+            q: userLocation,
+            days: '3',
+            units: 'imperial', // imperial for Fahrenheit
+        },
+        headers: {
+            'X-RapidAPI-Key': 'eb3fa9d2eamsh622acd4eaa00bf3p19fc73jsn647406a37c4e',
+            'X-RapidAPI-Host': 'weatherapi-com.p.rapidapi.com',
+        },
+    };
 
-                if (todayWeather) {
-                    const temperatureF = todayWeather.day.avgtemp_f + '°F'; // Temperature in Fahrenheit
-                    calendar.addEvent({
-                        title: `${todayWeather.day.condition.text} (${temperatureF})`,
-                        start: today.toISOString().split('T')[0],
-                        rendering: 'background',
-                        allDay: true,
-                    });
+    try {
+        const response = await axios.request(options);
 
-                    // Fetch and display the latest assessment data
-                    // const formattedToday = today.toISOString().split('T')[0];
-                    // fetchLatestAssessment(formattedToday);
-                } else {
-                    console.error('Weather data not available for today.');
-                }
-            } catch (error) {
-                console.error('Error fetching weather data:', error);
-            }
+        // Extract and format weather data for the next 3 days
+        const weatherData = response.data.forecast.forecastday;
+
+        // Loop through the next 3 days and add the weather to the calendar
+        for (let i = 0; i < 3; i++) {
+            const dayWeather = weatherData[i];
+            const date = dayWeather.date;
+            const temperatureF = dayWeather.day.avgtemp_f + '°F'; // Temperature in Fahrenheit
+            calendar.addEvent({
+                title: `${dayWeather.day.condition.text} (${temperatureF})`,
+                start: date,
+                rendering: 'background',
+                allDay: true,
+            });
         }
+
+        // Fetch and display the latest assessment data for the current day
+        const today = new Date();
+        const formattedToday = today.toISOString().split('T')[0];
+        fetchLatestAssessment(formattedToday);
+    } catch (error) {
+        console.error('Error fetching weather data:', error);
+    }
+}
+
+
 
 
 
@@ -374,9 +395,5 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('toggleView').addEventListener('click', toggleView);
     });
 </script>
-
-
-
-
 
 {% endblock %}

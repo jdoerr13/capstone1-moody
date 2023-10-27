@@ -7,6 +7,8 @@ from datetime import datetime
 from wtforms.widgets import ListWidget, CheckboxInput
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf.file import FileField
+
 
 bcrypt = Bcrypt()
 db = SQLAlchemy()
@@ -323,7 +325,7 @@ class ProfileEditForm(FlaskForm):
     email = StringField('Email', validators=[Optional(), Email()])
     bio = TextAreaField('Bio', validators=[Optional()])
     location = StringField('Location (City, State)', validators=[Optional()], default="Default City, State")
-    image_url = StringField('Profile Picture', validators=[Optional()])
+    image_url = FileField('Profile Picture', validators=[Optional()])
     
     current_password = PasswordField('Current Password', validators=[DataRequired()])
  

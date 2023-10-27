@@ -12,21 +12,30 @@
                 {% else %}
                     <h3 class="user-location">*Don't forget to update your location in "edit profile".</h3>
                 {% endif %}
+                <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Edit Profile</a>
             </div>
             <div class="col-md-6 text-right">
                 <h1 class="welcome-message">Welcome, {{ user.username }}!</h1>
-                <!-- Display the user's profile picture under the welcome message -->
-                <img src="{{ user.image_url }}" alt="Profile Picture" class="profile-icon">
+             <div class="form-group">
+                {% if image_url %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ image_url) }}" alt="Profile Picture" class="profile-icon">
+                {% else %}
+                    <img src="{{ url_for('static', filename='uploads/large_2.png') }}" alt="Default Profile Picture" class="profile-icon">
+                {% endif %}
+            </div>
+            
+
+
             </div>
         </div>
     </header>
     
     
-
-
-            <div class="col-md-6 text-right">
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-6">
                 {% if current_weather_data %}
-                    <div class="content-box">
+                <div class="content-box">
                         <h2>Current Weather for {{ current_weather_data['location']['name'] }}, {{ current_weather_data['location']['region'] }}, {{ current_weather_data['location']['country'] }}</h2>
                         <h4>Current Time: {{ current_weather_data['location']['localtime'] }}</h4>
                         <div class="row">
@@ -40,88 +49,112 @@
                                 <p>{{ current_weather_data['current']['feelslike_f'] }}°F</p>
                                 <p>{{ current_weather_data['current']['feelslike_c'] }}°C</p>
                             </div>
+                            <div class="text-center">
+                                <p>{{ current_weather_data['current']['condition']['text'] }}</p>
+                                <img src="{{ current_weather_data['current']['condition']['icon'] }}" alt="{{ current_weather_data['current']['condition']['text'] }}" class="img-fluid">
+                            </div>
                         </div>
-                        <div class="text-center">
-                            <p>{{ current_weather_data['current']['condition']['text'] }}</p>
-                            <img src="{{ current_weather_data['current']['condition']['icon'] }}" alt="{{ current_weather_data['current']['condition']['text'] }}" class="img-fluid">
+                        {% else %}
+                            <div class="content-box">
+                                <p>No weather data available for the current location.</p>
+                            </div>
+                        {% endif %}
+                 
+
+                        <div class="row">
+                            {% for day in forecast_data.forecast.forecastday %}
+                                <div class="col-md-4 mb-4">
+                                    <div class="card custom-card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ day.date }}</h5>
+                                            <p class="card-text">Condition: {{ day.day.condition.text }}</p>
+                                            <p class="card-text">Temperature: {{ day.day.avgtemp_c }}°C ({{ day.day.avgtemp_f }}°F)</p>
+                                            <p class="card-text">Feels Like: {{ day.day.avgtemp_c }}°C ({{ day.day.avgtemp_f }}°F)</p>
+                                            <p class="card-text">Humidity: {{ day.day.avghumidity }}%</p>
+                                            <p class="card-text">UV Index: {{ day.day.uv }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
                         </div>
+            </div>
+</div>
+
+            
+            <div class="col-md-6 text-right">
+                <div class="content-box">
+               
+                    <h3>Moody Daily on: {{ today_date }}</h3>
+                    <div class="card custom-card-two">
+                    {% if latest_assessment %}
+                        <p>Today's weather is {{ latest_assessment.weather_today }}!</p>
+                        <p>You are feeling {{ latest_assessment.mood_today }}.</p>
+                        <p>Your stress level is at a {{ latest_assessment.stress_level }}.</p>
+                        <p>Your current mood level is at a {{ latest_assessment.positive_affect_rating }}!</p>
+                    {% else %}
+                        <p>Today's weather is ?</p>
+                        <p>You are feeling ??</p>
+                        <p>Your stress level is at a ???</p>
+                        <p>Your current mood level is at a ????</p>
+                    {% endif %}
                     </div>
-                {% else %}
+                    <a href="{{ url_for('daily_assessment') }}" class="btn btn-primary">Log Your Daily Mood</a>
+                </div>
+        
                     <div class="content-box">
-                        <p>No weather data available for the current location.</p>
+                        <h3>Your Wellness Companion & Moody Journal</h3>
+                        <ul>
+                            {% for history_item in user_history %}
+                                <li>{{ history_item.date }} - {{ history_item.activity }}</li>
+                            {% endfor %}
+                        </ul>
+                        <a href="{{ url_for('wellness') }}" class="btn btn-primary">Wellness Page</a>
+                        <a href="{{ url_for('mood_symptom') }}" class="btn btn-primary">Take Mood Assessment</a>
+                      
+                        <a href="{{ url_for('diagnosis_history') }}" class="btn 
+                        btn-primary">Diagnosis History</a>
                     </div>
-                {% endif %}
+             
+                        <div class="content-box">
+                            <h3>Weather Information</h3>
+                            <a href="/current" class="btn btn-primary">Current Weather</a>
+                            <a href="/forecast" class="btn btn-primary">Weather Forecast</a>
+                            <a href="/history" class="btn btn-primary">Historical Weather</a>
+                        </div>
+                   
+                
+                        <div class="col-md-6 text-right">
+                        <div class="content-box">
+                            <h3>AstroMoodology</h3>
+                            <a href="/astronomy" class="btn btn-primary">Astronomy Data</a>
+                        </div>
+                    </div> 
             </div>
         </div>
-    </header>
-
-    <div class="container mt-4">
-
-        <div class="content-box">
-            <a href="{{ url_for('daily_assessment') }}" class="btn btn-primary">Log Your Daily Mood</a>
-            <h3>Moody Daily on: {{ today_date }}</h3>
-            {% if latest_assessment %}
-                <p>Today's weather is {{ latest_assessment.weather_today }}!</p>
-                <p>You are feeling {{ latest_assessment.mood_today }}.</p>
-                <p>Your stress level is at a {{ latest_assessment.stress_level }}.</p>
-                <p>Your current mood level is at a {{ latest_assessment.positive_affect_rating }}!</p>
-            {% else %}
-                <p>Today's weather is ?</p>
-                <p>You are feeling ??</p>
-                <p>Your stress level is at a ???</p>
-                <p>Your current mood level is at a ????</p>
-            {% endif %}
-        </div>
     </div>
-
-    <section class="container mt-4">
-        <div class="content-box">
-            <h3>Your Wellness Companion & Moody Journal</h3>
-            <ul>
-                {% for history_item in user_history %}
-                    <li>{{ history_item.date }} - {{ history_item.activity }}</li>
-                {% endfor %}
-            </ul>
-            <a href="{{ url_for('mood_symptom') }}" class="btn btn-primary">Take Mood Assessment</a>
-            <a href="{{ url_for('wellness') }}" class="btn btn-primary">Wellness Page</a>
-            <a href="{{ url_for('diagnosis_history') }}" class="btn 
-            btn-primary">Diagnosis History</a>
-        </div>
-    </section>
-
     
 
-    <section class="container mt-4">
+
+
+    <div class="container mt-4">
+        <div class="row">
+
         <div class="content-box">
             <h3>Friends (Moodies) & Groups</h3>
             <a href="{{ url_for('friends_groups') }}" class="btn btn-primary">Friends & Groups</a>
+            <ul> <div class="card custom-card-three">
             <h4>My Groups</h4>
-            <ul>
                 {% for group in user_groups %}
                     <div class="group" data-group-id="{{ group.group_id }}">
-                        <h4><a href="{{ url_for('group', group_id=group.group_id) }}" class="group-link">{{ group.group_name }}</a></h4>
+                        <h5><a href="{{ url_for('group', group_id=group.group_id) }}" class="group-link">{{ group.group_name }}</a></h5>
                         <button class="btn-dark-grey" data-group-id="{{ group.group_id }}">Leave Group</button>
                     </div>
                 {% endfor %}
+                </div>
             </ul>
         </div>
-    </section>
-
-    <section class="container mt-4">
-        <div class="content-box">
-            <h3>Weather Information</h3>
-            <a href="/current" class="btn btn-primary">Current Weather</a>
-            <a href="/forecast" class="btn btn-primary">Weather Forecast</a>
-            <a href="/history" class="btn btn-primary">Historical Weather</a>
         </div>
-    </section>
-
-    <section class="container mt-4">
-        <div class="content-box">
-            <h2>AstroMoodology</h2>
-            <a href="/astronomy" class="btn btn-primary">Astronomy Data</a>
-        </div>
-    </section>
+        
 </div>
 
 

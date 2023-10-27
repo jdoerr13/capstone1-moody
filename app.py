@@ -1,8 +1,8 @@
 import requests
 import os
-from flask import Flask, render_template, request, flash, redirect, session, g, jsonify, url_for
+from flask import Flask, render_template, request, flash, redirect, session, g, jsonify, url_for, send_from_directory
 from flask_debugtoolbar import DebugToolbarExtension
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import IntegrityError
 # from sqlalchemy import or_
 from forms import LoginForm, SignupForm, MoodSymptomAssessmentForm, ProfileEditForm, JournalEntryForm, DailyAssessmentForm
 from models import db, connect_db, User, Diagnosis, UserHistory, Weather, CopingSolution, Group, JournalEntry, DailyAssessment, GroupPost, DiagnosisSolution, UserDiagnosisAssociation
@@ -11,6 +11,9 @@ from flask_bcrypt import Bcrypt
 # from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from statistics import mean, mode
+import logging
+from werkzeug.utils import secure_filename
+
 # from flask_wtf.csrf import CSRFProtect
 
 
@@ -18,6 +21,8 @@ CURR_USER_KEY = "curr_user"
 app = Flask(__name__)
 
 app.secret_key = 'your_secret_key_here'
+app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'uploads')
+app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png', 'gif'}
 
 
 
@@ -44,15 +49,8 @@ app.app_context().push()
 # db.drop_all()
 db.create_all()
 
+
 ##############################################################################
-# @app.route('/path-to-your-script.js')
-# def serve_js_as_module():
-#     response = app.send_static_file('path-to-your-script.js')
-#     response.headers['Content-Type'] = 'application/javascript; charset=utf-8'
-#     response.headers['X-Content-Type-Options'] = 'nosniff'
-#     return response
-
-
 # User signup/login/logout
 @app.before_request
 def add_user_to_g():
@@ -173,14 +171,14 @@ def forecast():
 
     if request.method == 'POST':
         location = request.form.get('location')
-        selected_date = request.form.get('date')  # Get the selected date
-        forecast_data = get_today_weather(location, selected_date)
+        # selected_date = request.form.get('date')  # Get the selected date
+        forecast_data = get_weather_forecast(location)
 
     return render_template('api/forecast.html', forecast_data=forecast_data, selected_date=selected_date, user=g.user)
 
 
 
-def get_weather_forecast(location, date):
+def get_weather_forecast(location):
     url = "https://weatherapi-com.p.rapidapi.com/forecast.json"
     querystring = {"q": location, "days": "3"}
     headers = {
@@ -212,7 +210,7 @@ def history():
         if location and date:
             historical_weather_data = get_historical_weather(location, date)
             if historical_weather_data:
-                return render_template('history.html', historical_weather_data=historical_weather_data)
+                flash("Historical weather data successfully retrieved.", 'success')
             else:
                 flash("Failed to fetch historical weather data. Please try again later.", 'error')
         else:
@@ -223,9 +221,9 @@ def history():
 
 
 
+
+
 def get_historical_weather(location, date):
-    # Convert the date string to a datetime object (if needed)
-    # Example format: 'YYYY-MM-DD'
     try:
         formatted_date = datetime.strptime(date, '%Y-%m-%d').strftime('%Y-%m-%d')
     except ValueError:
@@ -253,8 +251,8 @@ def get_historical_weather(location, date):
             flash(f"Failed to fetch historical weather data for {location}. Please try again later.", 'error')
             return None
     except Exception as e:
-        print("Error:", str(e))  # Add this line for debugging
-        flash(f"An error occurred while fetching historical weather data for {location}. Please try again later.", 'error')
+        logging.error("An error occurred:", exc_info=True)  # Log the exception
+        flash(f"An error occurred while fetching historical weather data for {location}.", 'error')
         return None
 
 
@@ -303,8 +301,9 @@ def set_location():
     if location:
         # Automatically fetch weather data for the user's location
         current_weather_data = get_current_weather(location)
+        forecast_data = get_weather_forecast(location)
 
-        if current_weather_data:
+        if current_weather_data and forecast_data:
             # Update the existing user's location and weather data
             if g.user:
                 g.user.location = location
@@ -332,14 +331,19 @@ def homepage():
         today_date = date.today()
         location = g.user.location
         current_weather_data = None
+        user_profile = User.query.filter_by(user_id=g.user.user_id).first()
+        image_url = user_profile.image_url if user_profile else None
 
         # If the user has a location, fetch the current weather data
         if location:
             current_weather_data = get_current_weather(location)
+            forecast_data = get_weather_forecast(location)
+
 
         # Retrieve the latest daily assessment for the user
         latest_assessment = DailyAssessment.query.filter_by(user_id=g.user.user_id).order_by(DailyAssessment.date.desc()).first()
       
+
         return render_template(
             'home.html',
             today_date=today_date,
@@ -349,11 +353,16 @@ def homepage():
             form=form,
             location=location,
             current_weather_data=current_weather_data,
-            latest_assessment=latest_assessment
+            latest_assessment=latest_assessment,
+            forecast_data=forecast_data,
+            image_url=image_url 
         )
     else:
         return render_template('home-anon.html')
     
+@app.route('/uploads/<filename>')
+def uploaded_image(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
@@ -362,20 +371,40 @@ def edit_profile():
         return redirect(url_for('login'))
 
     form = ProfileEditForm()
+    user = g.user  # Get the current user
 
-    if request.method == 'POST' and form.validate_on_submit():
-        # Update the user's profile data in the database
-        user = g.user  # Get the current user
-        form.populate_obj(user)  # Populate the user object with form data
-        db.session.commit()
-        flash('Your profile has been updated.', 'success')
-        return redirect(url_for('homepage'))
+    if request.method == 'POST':
+        # Check if the 'profile_picture' file is included in the form submission
+        if 'profile_picture' in request.files:
+            uploaded_image = request.files['profile_picture']
+            if uploaded_image:
+                # Check if the file extension is allowed
+                if '.' in uploaded_image.filename and uploaded_image.filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']:
+                    filename = secure_filename(uploaded_image.filename)
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    uploaded_image.save(file_path)  # Save the file to the specified folder
+
+                    # Update the user's profile with the file path in the 'image_url' field
+                    user.image_url = file_path
+                    db.session.commit()
+
+        if form.validate_on_submit():
+            # Update the user's profile data in the database
+            form.populate_obj(user)  # Populate the user object with form data
+            db.session.commit()
+            flash('Your profile has been updated.', 'success')
+            return redirect(url_for('homepage'))
 
     # Populate the form with the user's data
-    user = g.user
     form.process(obj=user)  # Populate the form fields with user data
 
     return render_template('edit_profile.html', form=form, user=user)
+
+
+
+
+
+
 
 
 
@@ -1087,27 +1116,7 @@ def delete_journal_entry(id):
     print("Invalid request or entry not deleted.")
     return redirect(url_for('wellness'))
 
-#___________WELLNESS - CALENDAR_______________________
 
-# # API endpoint to fetch the latest daily assessment for a given date
-# @app.route('/fetch_latest_assessment', methods=['GET'])
-# def fetch_latest_assessment():
-#     date = request.args.get('date')  # Get the date parameter from the request
-
-#     # Query the database to fetch the latest assessment for the given date
-#     latest_assessment = DailyAssessment.query.filter_by(date=date).first()
-
-#     if latest_assessment:
-#         # Serialize the assessment data to a dictionary
-#         assessment_data = {
-#             'weather_today': latest_assessment.weather_today,
-#             'mood_today': latest_assessment.mood_today,
-#             'stress_level': latest_assessment.stress_level,
-#             'positive_affect_rating': latest_assessment.positive_affect_rating
-#         }
-#         return jsonify(assessment_data)
-#     else:
-#         return jsonify({'error': 'Assessment data not available for the given date'}), 404
 
 
 

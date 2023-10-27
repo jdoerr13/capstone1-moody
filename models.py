@@ -42,13 +42,17 @@ class User(db.Model):
     __tablename__ = 'users'
 
     user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
     username = db.Column(db.String(80), nullable=False, unique=True)
     email = db.Column(db.String(120), nullable=False, unique=True)  
-    password = db.Column(db.String(120), nullable=False)
-    registration_date = db.Column(db.DateTime, nullable=False)
-    image_url = db.Column(db.String(255))
-    location = db.Column(db.String(255))
     bio = db.Column(db.Text)
+    location = db.Column(db.String(255))
+    image_url = db.Column(db.String(255))
+    password = db.Column(db.String(120), nullable=False)
+    
+    registration_date = db.Column(db.DateTime, nullable=False)
+    
+    
 
     user_histories = db.relationship('UserHistory', back_populates='user')
     solutions = db.relationship('DiagnosisSolution', back_populates='user')
