@@ -18,9 +18,9 @@
                 <h1 class="welcome-message">Welcome, {{ user.username }}!</h1>
              <div class="form-group">
                 {% if image_url %}
-                    <img src="{{ url_for('static', filename='uploads/' ~ image_url) }}" alt="Profile Picture" class="profile-icon">
+                    <img src="{{ image_url }}" alt="Profile Picture" class="profile-icon">
                 {% else %}
-                    <img src="{{ url_for('static', filename='uploads/large_2.png') }}" alt="Default Profile Picture" class="profile-icon">
+                    <img src="{{ url_for('static', filename='uploads/example.png') }}" alt="Default Profile Picture" class="profile-icon">
                 {% endif %}
             </div>
             
