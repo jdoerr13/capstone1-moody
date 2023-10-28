@@ -34,6 +34,14 @@ import os
 #     seed_diagnoses()
 #     seed_coping_solutions()
 
+
+
+
+
+
+
+
+
 # INSERT INTO groups (group_name, description) VALUES
 # ('Climate Change Anxiety', 'Group for climate change-related discussions.'),
 # ('Major Disaster/Severe Weather Anxiety', 'Group for extreme weather and disaster discussions.'),
@@ -102,6 +110,7 @@ import os
 
 #  then: -- 
 # Update solution_text in diagnosis_solutions table based on coping_solutions
+
 # UPDATE diagnosis_solutions AS ds
 # SET solution_text = cs.solution_text
 # FROM coping_solutions AS cs

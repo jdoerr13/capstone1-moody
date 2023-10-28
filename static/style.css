@@ -200,7 +200,7 @@ body {
 
   
     .btn-primary {
-        background-color: #5984b0;
+        background-color: #5984b0 !important;;
         color: #655c5c;
     }
 

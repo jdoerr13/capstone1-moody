@@ -3,51 +3,84 @@
 {% block content %}
     <title>Friend's Profile</title>
 
-    <h1>{{ user.username }}'s Profile:</h1>
+    <div class="container mt-4">
+        <div class="content-box">
+            <div class="row">
+                <div class="col-md-6">
+                    <h1 class="welcome-message">{{ user.username }}'s Profile:</h1>
+                </div>
+                <div class="col-md-6 text-right">
+                    <div class="form-group">
+                        {% if image_url %}
+                            <img src="{{ image_url }}" alt="Profile Picture" class="profile-icon img-fluid">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='uploads/example.png') }}" alt="Default Profile Picture" class="profile-icon img-fluid">
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <h3>Home Location: {{ location }}</h3>
+        </div>
 
-    <p>Location: {{ location }}</p>
-    {% if current_weather_data %}
-    <div class="mt-4">
-        <h2>Current Weather for {{ current_weather_data['location']['name'] }}, {{ current_weather_data['location']['region'] }}, {{ current_weather_data['location']['country'] }}</h2>
-        <h4>Current Time: {{ current_weather_data['location']['localtime'] }}</h4>
-        <div class="row">
-            <div class="col-md-6">
-                <h4>Temperature:</h4>
-                <p>{{ current_weather_data['current']['temp_f'] }}°F</p>
-                <p>{{ current_weather_data['current']['temp_c'] }}°C</p>
+
+        <div class="container mt-4">
+            <div class="row">
+                <div class="col-md-6">
+                    {% if current_weather_data %}
+                        <div class="content-box">
+                            <h2>Current Weather for {{ current_weather_data['location']['name'] }}, {{ current_weather_data['location']['region'] }}, {{ current_weather_data['location']['country'] }}</h2>
+                            <h4>Current Time: {{ current_weather_data['location']['localtime'] }}</h4>
+                            <h4>Temperature:</h4>
+                            <p>{{ current_weather_data['current']['temp_f'] }}°F</p>
+                            <p>{{ current_weather_data['current']['temp_c'] }}°C</p>
+                            <h4>Feels Like:</h4>
+                            <p>{{ current_weather_data['current']['feelslike_f'] }}°F</p>
+                            <p>{{ current_weather_data['current']['feelslike_c'] }}°C</p>
+                            <h4>Condition:</h4>
+                            <p>{{ current_weather_data['current']['condition']['text'] }}</p>
+                            <img src="{{ current_weather_data['current']['condition']['icon'] }}" alt="{{ current_weather_data['current']['condition']['text'] }}" class="img-fluid">
+                        </div>
+                    {% else %}
+                    <div class="content-box">
+                        <p>No weather data available for the current location.</p>
+                    </div>
+                {% endif %}
             </div>
             <div class="col-md-6">
-                <h4>Feels Like:</h4>
-                <p>{{ current_weather_data['current']['feelslike_f'] }}°F</p>
-                <p>{{ current_weather_data['current']['feelslike_c'] }}°C</p>
+                {% if user.bio %}
+                    <div class="content-box">
+                        <h2>Bio:</h2>
+                        <p>{{ user.bio }}</p>
+                    </div>
+                {% endif %}
+                
+                <!-- Groups content box -->
+                <div class="content-box">
+                    <h2>Groups</h2>
+                    <ul>
+                        {% for group in user_groups %}
+                            <li>{{ group.group_name }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <!-- Friends content box -->
+                <div class="content-box">
+                    <h2>Friends</h2>
+                    <ul>
+                        {% for friend in friends %}
+                            <li>
+                                <a href="{{ url_for('friends_profile', user_id=friend.user_id) }}">{{ friend.username }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
-{% else %}
-    <p>No weather data available for the current location.</p>
-{% endif %}
-
- <!-- Display user's bio if available -->
- {% if user.bio %}
- <h2>Bio:</h2>
- <p>{{ user.bio }}</p>
-{% endif %}
-
-    <h2>Groups</h2>
-    <ul>
-        {% for group in user_groups %}
-            <li>{{ group.group_name }}</li>
-        {% endfor %}
-    </ul>
-
-    <h2>Friends</h2>
-    <ul>
-        {% for friend in friends %}
-            <li>
-                <a href="{{ url_for('friends_profile', user_id=friend.user_id) }}">{{ friend.username }}</a>
-            </li>       
-        {% endfor %}
-    </ul>
-    <a href="{{ url_for('homepage') }}" class="btn btn-primary mt-3">Back to Homepage</a>
+        
+        
+        <a href="{{ url_for('homepage') }}" class="btn btn-primary mt-3">Back to Homepage</a>
+    </div>
 </div>
 {% endblock %}

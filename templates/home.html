@@ -62,6 +62,7 @@
                  
 
                         <div class="row">
+                            {% if forecast_data %}
                             {% for day in forecast_data.forecast.forecastday %}
                                 <div class="col-md-4 mb-4">
                                     <div class="card custom-card">
@@ -76,6 +77,10 @@
                                     </div>
                                 </div>
                             {% endfor %}
+                            {% else %}
+    <!-- Handle the case when forecast_data is None -->
+    <p>No forecast data available.</p>
+{% endif %}
                         </div>
             </div>
 </div>
@@ -160,8 +165,45 @@
 
 
 
-<footer class="container">
-    <!-- Footer content here, e.g., copyright information, contact details -->
+
+    <div class="card custom-card-three">
+        <footer class="content-box">
+    <button id="worksCitedButton" class="btn btn-primary">Works Cited</button>
+
+    <!-- "Works Cited" content (initially hidden) -->
+    <div id="worksCitedContent" class="container" style="display: none;">
+      
+    <!-- Citation for "cornerstone.lib.mnsu.edu" -->
+<p>
+    <strong>Climate Anxiety: Psychological Responses to Climate Change</strong><br>
+    Author: [Author's Name, if available]<br>
+    Publication Date: [Publication Date, if available]<br>
+    URL: <a href="https://cornerstone.lib.mnsu.edu/cgi/viewcontent.cgi?article=1099&context=jur">https://cornerstone.lib.mnsu.edu/cgi/viewcontent.cgi?article=1099&context=jur</a>
+</p>
+
+<!-- Citation for "health.clevelandclinic.org" -->
+<p>
+    <strong>Climate Anxiety: How to Manage It</strong><br>
+    Author: [Author's Name, if available]<br>
+    Publication Date: [Publication Date, if available]<br>
+    URL: <a href="https://health.clevelandclinic.org/climate-anxiety/">https://health.clevelandclinic.org/climate-anxiety/</a>
+</p>
+
+<!-- Citation for "researchgate.net" -->
+<p>
+    <strong>Extreme Weather-Related Events: Implications for Mental Health and Well-Being</strong><br>
+    Author: [Author's Name, if available]<br>
+    Publication Date: [Publication Date, if available]<br>
+    URL: <a href="https://www.researchgate.net/publication/226741943_Extreme_Weather-Related_Events_Implications_for_Mental_Health_and_Well-Being">https://www.researchgate.net/publication/226741943_Extreme_Weather-Related_Events_Implications_for_Mental_Health_and_Well-Being</a>
+</p>
+<p>
+    <strong>Psychology Information Provided by ChatGPT (AI Language Model)</strong><br>
+    Author: ChatGPT (AI Language Model)<br>
+    Publication Date: 10-01-2023<br>
+    URL: [URL of the Service or Platform, if applicable]
+</p>
+</div>
+</div>
 </footer>
 
     <script>
@@ -178,6 +220,19 @@
                     }
                 });
             });
+        });
+    </script>
+       <!-- JavaScript to toggle "Works Cited" content -->
+       <script>
+        const worksCitedButton = document.getElementById("worksCitedButton");
+        const worksCitedContent = document.getElementById("worksCitedContent");
+
+        worksCitedButton.addEventListener("click", () => {
+            if (worksCitedContent.style.display === "none") {
+                worksCitedContent.style.display = "block";
+            } else {
+                worksCitedContent.style.display = "none";
+            }
         });
     </script>
 {% endblock %}

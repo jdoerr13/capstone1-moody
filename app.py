@@ -324,6 +324,8 @@ def set_location():
 
 @app.route('/')
 def homepage():
+    forecast_data = None
+
     if g.user:
         user_history = UserHistory.query.filter_by(user_id=g.user.user_id).all()
         user_groups = g.user.groups
@@ -414,7 +416,8 @@ def edit_profile():
 def friends_profile(user_id):
     # Find the user by user_id
     user = User.query.get(user_id)
-
+    user_profile = User.query.filter_by(user_id=user.user_id).first()
+    image_url = user_profile.image_url if user_profile else None
     if user:
         # Retrieve the user's location (if available)
         location = user.location
@@ -434,7 +437,7 @@ def friends_profile(user_id):
         if location:
             current_weather_data = get_current_weather(location)
             
-        return render_template('friends_profile.html', user=user, location=location, user_groups=user_groups, friends=friends, current_weather_data=current_weather_data)
+        return render_template('friends_profile.html', user=user, location=location, user_groups=user_groups, friends=friends, current_weather_data=current_weather_data, image_url=image_url)
     else:
         # Handle the case where the user is not found
         return "User not found"
