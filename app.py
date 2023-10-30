@@ -1,7 +1,8 @@
 import requests
 import os
+import uuid
 from flask import Flask, render_template, request, flash, redirect, session, g, jsonify, url_for, send_from_directory
-from flask_debugtoolbar import DebugToolbarExtension
+# from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 # from sqlalchemy import or_
 from forms import LoginForm, SignupForm, MoodSymptomAssessmentForm, ProfileEditForm, JournalEntryForm, DailyAssessmentForm
@@ -13,35 +14,26 @@ from flask_migrate import Migrate
 from statistics import mean, mode
 import logging
 from werkzeug.utils import secure_filename
-
 # from flask_wtf.csrf import CSRFProtect
 
-
 CURR_USER_KEY = "curr_user"
+# # # Initialize Flask-Migrate- USED WITH ANY UPDATE TO THE MODELS FOR DB MOODY
+# migrate = Migrate(app, db)
+
 app = Flask(__name__)
-
-app.secret_key = 'your_secret_key_here'
-app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'uploads')
-app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png', 'gif'}
-
-
-
-# # Initialize Flask-Migrate- USED WITH ANY UPDATE TO THE MODELS FOR DB MOODY
-migrate = Migrate(app, db)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = (
     os.environ.get('DATABASE_URL', 'postgresql:///moody'))
-
+app.secret_key = 'your_secret_key_here'
+app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'uploads')
+app.config['ALLOWED_EXTENSIONS'] = {'png'}
 # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# # Initialize SQLAlchemy
-# db = SQLAlchemy(app)
-
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = "JDOERR13"
-toolbar = DebugToolbarExtension(app)
+# toolbar = DebugToolbarExtension(app)
+# app.debug = True
 
-app.debug = True
 # csrf = CSRFProtect(app)
 
 connect_db(app)
@@ -362,45 +354,63 @@ def homepage():
     else:
         return render_template('home-anon.html')
     
-@app.route('/uploads/<filename>')
-def uploaded_image(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+# ...
 
+from sqlalchemy import update
+
+# ...
 @app.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
-    if CURR_USER_KEY not in session:
+    if g.user is None:
         flash('You must be logged in to edit your profile.', 'warning')
         return redirect(url_for('login'))
 
-    form = ProfileEditForm()
     user = g.user  # Get the current user
+    form = ProfileEditForm(obj=user)  # Pass the user object to the form
 
-    if request.method == 'POST':
-        # Check if the 'profile_picture' file is included in the form submission
-        if 'profile_picture' in request.files:
-            uploaded_image = request.files['profile_picture']
+    if form.validate_on_submit():
+        if user:
+            # Handle the image upload
+            uploaded_image = form.image_url.data
             if uploaded_image:
-                # Check if the file extension is allowed
-                if '.' in uploaded_image.filename and uploaded_image.filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']:
-                    filename = secure_filename(uploaded_image.filename)
-                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                    uploaded_image.save(file_path)  # Save the file to the specified folder
+                # Secure the filename
+                filename = secure_filename(uploaded_image.filename)
+                unique_filename = str(uuid.uuid4()) + filename
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                uploaded_image.save(file_path)
+                
+                # Update the user's profile with the image path, not FileStorage
+                user.image_url = unique_filename
 
-                    # Update the user's profile with the file path in the 'image_url' field
-                    user.image_url = file_path
-                    db.session.commit()
-
-        if form.validate_on_submit():
-            # Update the user's profile data in the database
+            # Update other profile data
             form.populate_obj(user)  # Populate the user object with form data
+
+            # Commit the changes to the database
             db.session.commit()
+
             flash('Your profile has been updated.', 'success')
             return redirect(url_for('homepage'))
-
-    # Populate the form with the user's data
-    form.process(obj=user)  # Populate the form fields with user data
+        else:
+            flash('User not found.', 'error')
 
     return render_template('edit_profile.html', form=form, user=user)
+
+
+
+
+
+# Route to serve uploaded files
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
+
+
+
+
+
+
 
 
 
@@ -702,6 +712,7 @@ def diagnosis_history():
 
 
 
+import json
 
 
 
@@ -710,14 +721,18 @@ def daily_assessment():
     form = DailyAssessmentForm()
 
     if request.method == 'POST' and form.validate_on_submit():
-        # Process and store the data in the database
+        # Convert selected values to integers
+        stress_level = int(form.stress_level.data[0])  # Assuming it's a single integer choice
+        positive_affect_rating = int(form.positive_affect_rating.data[0])  # Assuming it's a single integer choice
+
+        # Create the assessment object and insert it into the database
         assessment = DailyAssessment(
             user_id=g.user.user_id,
             date=datetime.now().date(),
             weather_today=','.join(form.weather_today.data),
             mood_today=','.join(form.mood_today.data),
-            stress_level=form.stress_level.data,
-            positive_affect_rating=form.positive_affect_rating.data
+            stress_level=stress_level,
+            positive_affect_rating=positive_affect_rating
         )
 
         db.session.add(assessment)
@@ -726,6 +741,9 @@ def daily_assessment():
         return redirect(url_for('homepage'))
 
     return render_template('daily_assessment.html', form=form)
+
+
+
 
 
 
@@ -913,6 +931,8 @@ def wellness():
         g.user = None
         user_id = None
 
+    top_moods = []  # Initialize top_moods as an empty list
+
     if form.validate_on_submit() and user_id:
         existing_entry = JournalEntry.query.filter_by(
             user_id=user_id,
@@ -957,14 +977,14 @@ def wellness():
         mood_entries.append(entry.mood_today)  # Append each mood entry
 
         # Stress entries
-        stress_level = entry.stress_level.strip("{}").split(" - ")[0]
-        if stress_level.isdigit():
-            stress_entries.append(int(stress_level))
+        stress_level_text = str(entry.stress_level).strip("{}").split(" - ")[0]
+        if stress_level_text.isdigit():
+            stress_entries.append(int(stress_level_text))
         else:
             stress_entries.append(0)  # Set to 0 for invalid values
 
         # Positive affect entries
-        rating_text = entry.positive_affect_rating.strip("{}").split(" - ")[0]
+        rating_text = str(entry.positive_affect_rating).strip("{}").split(" - ")[0]
         if rating_text.isdigit():
             positive_affect_entries.append(int(rating_text))
         else:
@@ -972,6 +992,7 @@ def wellness():
 
         # Weather entries
         weather_entries.extend(entry.weather_today)
+
 
     # Calculate the top three moods
     if mood_entries:
@@ -1018,7 +1039,6 @@ def wellness():
         mood_history_entries=mood_history_entries,
         weather_today_choices=weather_today_choices
     )
-
 
 
 

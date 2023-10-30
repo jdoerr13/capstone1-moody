@@ -7,7 +7,7 @@ from datetime import datetime
 from wtforms.widgets import ListWidget, CheckboxInput
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
-from flask_wtf.file import FileField
+from flask_wtf.file import FileField, FileAllowed
 
 
 bcrypt = Bcrypt()
@@ -291,30 +291,30 @@ class DailyAssessmentForm(FlaskForm):
     ])
     
     stress_level = SelectMultipleField('3. On a scale of 1-10, how would you rate your stress level today?', choices=[
-        ('1', '1 - Very low'),
-        ('2', '2'),
-        ('3', '3'),
-        ('4', '4'),
-        ('5', '5'),
-        ('6', '6'),
-        ('7', '7'),
-        ('8', '8'),
-        ('9', '9'),
-        ('10', '10 - Very high')
-    ])
+            (1, '1 - Very low'),
+            (2, '2'),
+            (3, '3'),
+            (4, '4'),
+            (5, '5'),
+            (6, '6'),
+            (7, '7'),
+            (8, '8'),
+            (9, '9'),
+            (10, '10 - Very high')
+        ], coerce=int)  # Specify coerce=int to ensure integer values
 
     positive_affect_rating = SelectMultipleField('4. How is your mood today on a scale from 1-10? where 1 means you are feeling very low/sad, and 10 means you are feeling very happy/positive.', choices=[
-        ('1', '1 - Very low'),
-        ('2', '2 - Low'),
-        ('3', '3 - Bla Moody'),
-        ('4', '4 - Below Average'),
-        ('5', '5 - moderate/mellow'),
-        ('6', '6 - Above Average'),
-        ('7', '7 - Pretty Good!'),
-        ('8', '8 - Feeling Good!'),
-        ('9', '9 - Great!'),
-        ('10', '10 - Very happy and/or Excited')
-    ])
+            (1, '1 - Very low'),
+            (2, '2 - Low'),
+            (3, '3 - Bla Moody'),
+            (4, '4 - Below Average'),
+            (5, '5 - moderate/mellow'),
+            (6, '6 - Above Average'),
+            (7, '7 - Pretty Good!'),
+            (8, '8 - Feeling Good!'),
+            (9, '9 - Great!'),
+            (10, '10 - Very happy and/or Excited')
+        ], coerce=int)  # Specify coerce=int to ensure integer values
 
 
 
@@ -325,7 +325,8 @@ class ProfileEditForm(FlaskForm):
     email = StringField('Email', validators=[Optional(), Email()])
     bio = TextAreaField('Bio', validators=[Optional()])
     location = StringField('Location (City, State)', validators=[Optional()], default="Default City, State")
-    image_url = FileField('Profile Picture', validators=[Optional()])
+    image_url = FileField('Profile Picture', validators=[FileAllowed(['png', 'jpeg'], 'Images only!')])
+
     
     current_password = PasswordField('Current Password', validators=[DataRequired()])
  

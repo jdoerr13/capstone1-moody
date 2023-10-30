@@ -62,9 +62,9 @@
                         <p>Your stress level is at a ???</p>
                         <p>Your current mood level is at a ????</p>
                     {% endif %}
+
+                    <a href="{{ url_for('mood_symptom') }}" class="btn btn-primary">Take Mood Assessment</a>
                     </div>
-                    <!-- Add a toggle button -->
-                    
                 </div>
 
                 <div class="content-box">
@@ -83,13 +83,13 @@
                         <h2>Mood History</h2>
                         <ul>
                             {% for mood_entry in mood_history_entries %}
-                                <li>
-                                    <p>Date: {{ mood_entry.date }}</p>
+                                
+                                    <p><b><u>Date: {{ mood_entry.date }}</u></b></p>
                                     <p>Weather: {{ mood_entry.weather_today }}</p>
                                     <p>Mood: {{ mood_entry.mood_today }}</p>
                                     <p>Stress Level: {{ mood_entry.stress_level }}</p>
                                     <p>Positive Affect Rating: {{ mood_entry.positive_affect_rating }}</p>
-                                </li>
+                                
                             {% endfor %}
                         </ul>
                     </div>
@@ -114,6 +114,9 @@
             </div>
         </div>
     </div>
+
+    <a href="/" class="btn btn-primary">Back to Home</a>
+
  
 <script>
 document.addEventListener('DOMContentLoaded', function () {

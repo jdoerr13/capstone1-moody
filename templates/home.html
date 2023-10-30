@@ -14,18 +14,20 @@
                 {% endif %}
                 <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Edit Profile</a>
             </div>
-            <div class="col-md-6 text-right">
-                <h1 class="welcome-message">Welcome, {{ user.username }}!</h1>
-             <div class="form-group">
-                {% if image_url %}
-                    <img src="{{ image_url }}" alt="Profile Picture" class="profile-icon">
-                {% else %}
-                    <img src="{{ url_for('static', filename='uploads/example.png') }}" alt="Default Profile Picture" class="profile-icon">
-                {% endif %}
-            </div>
-            
 
 
+
+       <div class="col-md-6 text-right">
+    <h1 class="welcome-message">Welcome, {{ user.username }}!</h1>
+    <div class="form-group">
+        {% if user.image_url %}
+        <img src="{{ url_for('get_image', user_id=user.user_id) }}" alt="User Image">
+
+        {% else %}
+            <img src="{{ url_for('static', filename='uploads/example.png') }}" alt="Default Profile Picture" class="profile-icon">
+        {% endif %}
+    </div>
+</div>
             </div>
         </div>
     </header>
@@ -81,8 +83,8 @@
     <!-- Handle the case when forecast_data is None -->
     <p>No forecast data available.</p>
 {% endif %}
-                        </div>
             </div>
+     </div>
 </div>
 
             
@@ -143,57 +145,63 @@
 
     <div class="container mt-4">
         <div class="row">
-
         <div class="content-box">
-            <h3>Friends (Moodies) & Groups</h3>
+            <h3>Groups & Your Friends (Moodies)</h3>
             <a href="{{ url_for('friends_groups') }}" class="btn btn-primary">Friends & Groups</a>
             <ul> <div class="card custom-card-three">
-            <h4>My Groups</h4>
+            <h4>My Groups:</h4>
                 {% for group in user_groups %}
                     <div class="group" data-group-id="{{ group.group_id }}">
                         <h5><a href="{{ url_for('group', group_id=group.group_id) }}" class="group-link">{{ group.group_name }}</a></h5>
                         <button class="btn-dark-grey" data-group-id="{{ group.group_id }}">Leave Group</button>
                     </div>
-                {% endfor %}
+            {% endfor %}
                 </div>
             </ul>
+            <ul> <div class="card custom-card-four">
+            <h4>My Friends:</h4>
+                {% for friend in g.user.friends %}
+                <a href="{{ url_for('friends_profile', user_id=friend.user_id) }}">{{ friend.username }}</a>
+            {% endfor %}
+                </ul>
+             </div>
         </div>
-        </div>
-        
-</div>
+    </div>
 
 
 
+<div class="container mt-6">
+    <div class="row">
 
-
-    <div class="card custom-card-three">
-        <footer class="content-box">
-    <button id="worksCitedButton" class="btn btn-primary">Works Cited</button>
+    <div class="content-box mx-auto" style="max-width: 400px;">
+        <button id="worksCitedButton" class="btn btn-primary">Works Cited</button>
 
     <!-- "Works Cited" content (initially hidden) -->
-    <div id="worksCitedContent" class="container" style="display: none;">
+    <div id="worksCitedContent" class="container mx-auto" style="display: none; text-align: center;">
       
     <!-- Citation for "cornerstone.lib.mnsu.edu" -->
 <p>
-    <strong>Climate Anxiety: Psychological Responses to Climate Change</strong><br>
-    Author: [Author's Name, if available]<br>
-    Publication Date: [Publication Date, if available]<br>
+    <strong>The Impact of Weather Conditions on Mood Variability in
+        Geographically Relocated Versus Non-Relocated Individuals </strong><br>
+    Author: Jamie M. Scott<br>
+    Publication Date: 2007<br>
     URL: <a href="https://cornerstone.lib.mnsu.edu/cgi/viewcontent.cgi?article=1099&context=jur">https://cornerstone.lib.mnsu.edu/cgi/viewcontent.cgi?article=1099&context=jur</a>
 </p>
 
 <!-- Citation for "health.clevelandclinic.org" -->
 <p>
     <strong>Climate Anxiety: How to Manage It</strong><br>
-    Author: [Author's Name, if available]<br>
-    Publication Date: [Publication Date, if available]<br>
+    Author: TBD <br>
+    Publication Date: July 6, 2023 <br>
     URL: <a href="https://health.clevelandclinic.org/climate-anxiety/">https://health.clevelandclinic.org/climate-anxiety/</a>
 </p>
 
 <!-- Citation for "researchgate.net" -->
 <p>
     <strong>Extreme Weather-Related Events: Implications for Mental Health and Well-Being</strong><br>
-    Author: [Author's Name, if available]<br>
-    Publication Date: [Publication Date, if available]<br>
+    Author: David M. Simpson; Inka Weissbecker; Sandra Sephton
+;     <br>
+    Publication Date: June 2011<br>
     URL: <a href="https://www.researchgate.net/publication/226741943_Extreme_Weather-Related_Events_Implications_for_Mental_Health_and_Well-Being">https://www.researchgate.net/publication/226741943_Extreme_Weather-Related_Events_Implications_for_Mental_Health_and_Well-Being</a>
 </p>
 <p>

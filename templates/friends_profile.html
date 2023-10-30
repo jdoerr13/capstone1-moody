@@ -56,22 +56,21 @@
                 
                 <!-- Groups content box -->
                 <div class="content-box">
-                    <h2>Groups</h2>
+                    <h2>Groups:</h2>
                     <ul>
                         {% for group in user_groups %}
-                            <li>{{ group.group_name }}</li>
+                            <ul>{{ group.group_name }}</ul>
                         {% endfor %}
                     </ul>
                 </div>
                 
                 <!-- Friends content box -->
                 <div class="content-box">
-                    <h2>Friends</h2>
+                    <h2>Friends:</h2>
                     <ul>
                         {% for friend in friends %}
-                            <li>
-                                <a href="{{ url_for('friends_profile', user_id=friend.user_id) }}">{{ friend.username }}</a>
-                            </li>
+    <ul><a href="{{ url_for('friends_profile', user_id=friend.user_id) }}">{{ friend.username }}</a>
+                            </ul>
                         {% endfor %}
                     </ul>
                 </div>

@@ -188,6 +188,20 @@ body {
     background-color: rgba(211, 211, 211, 0.5) !important;
     margin-right: 800px; 
 }
+.card.custom-card-four {
+    background-color: rgba(211, 211, 211, 0.5) !important;
+    margin-left: 800px; 
+    position: relative; /* Set the position to relative */
+    top: -60px; /* Adjust the top value as needed to move it up */
+}
+#searchResults li {
+    text-align: left; /* Align the text to the right within each list item (<li>) */
+}
+
+.friends-list {
+    text-align: left; /* Align the content to the left within div.friends-list */
+}
+
 
     .content-box {
         background: linear-gradient(135deg, #E0A3D2, #9B91C7);

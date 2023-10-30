@@ -2,46 +2,69 @@
 
 {% block content %}
     <section>
-        <h2>{{ group.group_name }}</h2>
-        <p>{{ group.description }}</p>
-
-        <!-- Create Post Form -->
-        <h3>Share Your Thoughts</h3>
-        <form id="post-form" method="post" action="{{ url_for('create_group_post', group_id=group.group_id) }}">
-            <input type="text" id="post-content" name="post_content" placeholder="Share your thoughts">
-            <button type="submit">Post</button>
-        </form>
-
-        <!-- Discussion Forum -->
-        <div id="discussion">
-            {% for post in posts %}
-                <div class="post">
-                    <p>{{ post.user.username }} says:</p>
-                    <p>{{ post.post_content }}</p>
-                    <p>Posted on: {{ post.timestamp }}</p>
-                    {% if post.user_id == g.user.user_id %}
-                        <form method="post" action="{{ url_for('delete_post', post_id=post.id) }}">
-                            <button type="submit" class="delete-post-button">Delete</button>
-                        </form>
-                    {% endif %}
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 text-center"> <!-- Use col-md-12 to occupy the full width and text-center to center the content -->
+                    <h2>{{ group.group_name }}</h2>
+                    <p>{{ group.description }}</p>
                 </div>
-            {% endfor %}
+            </div>
+        </div>
+        
+
+        <!-- Create Post Form and Discussion Forum -->
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="content-box">
+                        <h3>Share Your Thoughts</h3>
+                        <form id="post-form" method="post" action="{{ url_for('create_group_post', group_id=group.group_id) }}">
+                            <input type="text" id="post-content" name="post_content" placeholder="Share your thoughts">
+                            <button type="submit">Post</button>
+                        </form>
+
+                        <!-- Discussion Forum -->
+                        <div class="card custom-card-two">
+                            <div id="discussion">
+                                {% for post in posts %}
+                                    <div class="post">
+                                        <p>{{ post.user.username }} says:</p>
+                                        <p>{{ post.post_content }}</p>
+                                        <p>Posted on: {{ post.timestamp }}</p>
+                                        {% if post.user_id == g.user.user_id %}
+                                            <form method="post" action="{{ url_for('delete_post', post_id=post.id) }}">
+                                                <button type="submit" class="delete-post-button">Delete</button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="content-box">
+                        <h2>Coping Solutions / Resources</h2>
+                        <ul>
+                            <li><a href="#"><a href="https://health.clevelandclinic.org/climate-anxiety/">https://health.clevelandclinic.org/climate-anxiety/</a></a></li>
+                            <li><a href="#"><a href="https://www.researchgate.net/publication/226741943_Extreme_Weather-Related_Events_Implications_for_Mental_Health_and_Well-Being">https://www.researchgate.net/publication/226741943_Extreme_Weather-Related_Events_Implications_for_Mental_Health_and_Well-Being</a></a></li>
+                            <!-- Add more resource links here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Coping Solutions / Resources -->
-        <h2>Coping Solutions / Resources</h2>
-        <ul>
-            <li><a href="#">Res</a></li>
-            <li><a href="#">Res</a></li>
-            <!-- Add more resource links here -->
-        </ul>
-
+        <div class="col-md-6">
+        <div class="content-box">
         <!-- Button to See Group Members -->
         <button id="seeGroupMembersButton" data-group-id="{{ group.group_id }}">See Group Members</button>
 
-
         <!-- Group Members List -->
         <ul id="groupMembers" style="display: none;"></ul>
+        </div>
+        </div>
     </section>
 
     <a href="/friends_groups" class="btn btn-primary">Back to Groups & Friends</a>

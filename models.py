@@ -32,7 +32,7 @@ class UserDiagnosisAssociation(db.Model):
     __tablename__ = "user_diagnostic_ass"
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), primary_key=True)
     diagnosis_id = db.Column(db.Integer, db.ForeignKey('diagnosis.issue_id'), primary_key=True)
-    date_recorded = db.Column(db.Date, nullable=False)
+    date_recorded = db.Column(db.Date, nullable=True)
 
     # Define the relationships with the User and Diagnosis models
     user = db.relationship('User', back_populates='diagnosis_associations')
@@ -50,7 +50,8 @@ class User(db.Model):
     image_url = db.Column(db.String(255))
     password = db.Column(db.String(120), nullable=False)
     
-    registration_date = db.Column(db.DateTime, nullable=False)
+    registration_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
     
     
 
@@ -178,8 +179,8 @@ class DailyAssessment(db.Model):
     date = db.Column(db.Date)
     weather_today = db.Column(db.String(64))
     mood_today = db.Column(db.String(64))
-    stress_level = db.Column(db.Integer)
-    positive_affect_rating = db.Column(db.Integer)
+    stress_level = db.Column(db.Text)
+    positive_affect_rating = db.Column(db.Text)
 
     user = db.relationship('User', backref='daily_assessments')
 
