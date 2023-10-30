@@ -325,7 +325,7 @@ class ProfileEditForm(FlaskForm):
     email = StringField('Email', validators=[Optional(), Email()])
     bio = TextAreaField('Bio', validators=[Optional()])
     location = StringField('Location (City, State)', validators=[Optional()], default="Default City, State")
-    image_url = FileField('Profile Picture', validators=[FileAllowed(['png', 'jpeg'], 'Images only!')])
+    image_url = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'png', 'jpeg', 'gif'], 'Images only!')])
 
     
     current_password = PasswordField('Current Password', validators=[DataRequired()])
