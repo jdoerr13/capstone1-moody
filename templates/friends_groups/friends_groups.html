@@ -56,22 +56,26 @@
                         <button type="submit">Search</button>
                     </form>
 
-                    <ul id="searchResults" style="display: none;">
-                        {% if users %}
-                        {% for user in users %}
-                        {% if user.user_id != g.user.user_id %}
-                        <li>
-                            <a href="{{ url_for('friends_profile', user_id=user.user_id) }}">{{ user.username }}</a>
-                            <button class="send-friend-request" data-user-id="{{ user.user_id }}">Send Friend Request</button>
-                        </li>
-                        {% endif %}
-                        {% endfor %}
-                        {% else %}
-                        {% if not users_found %}
-                        <li>No search results available.</li>
-                        {% endif %}
-                        {% endif %}
-                    </ul>
+            <ul id="searchResults" style="display: none;">
+    {% if users %}
+    {% for user in users %}
+    {% if user.user_id != g.user.user_id %}
+    <li>
+        <a href="{{ url_for('friends_profile', user_id=user.user_id) }}">{{ user.username }}</a>
+        {% if user in g.user.friends %}
+            Already Friends
+        {% else %}
+            <button class="send-friend-request" data-user-id="{{ user.user_id }}">Send Friend Request</button>
+        {% endif %}
+    </li>
+    {% endif %}
+    {% endfor %}
+    {% else %}
+    {% if not users_found %}
+    <li>No search results available.</li>
+    {% endif %}
+    {% endif %}
+</ul>
                 </div>
             </div>
 
@@ -105,14 +109,10 @@
                         </ul>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
     <a href="/" class="btn btn-primary">Back to Home</a>
 </div>
-
-
-
 
 
 

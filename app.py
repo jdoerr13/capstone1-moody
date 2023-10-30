@@ -1,19 +1,19 @@
 import requests
 import os
 import uuid
+import json
+import logging
 from flask import Flask, render_template, request, flash, redirect, session, g, jsonify, url_for, send_from_directory
 # from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
-# from sqlalchemy import or_
 from forms import LoginForm, SignupForm, MoodSymptomAssessmentForm, ProfileEditForm, JournalEntryForm, DailyAssessmentForm
 from models import db, connect_db, User, Diagnosis, UserHistory, Weather, CopingSolution, Group, JournalEntry, DailyAssessment, GroupPost, DiagnosisSolution, UserDiagnosisAssociation
 from datetime import datetime, timedelta, date 
 from flask_bcrypt import Bcrypt
-# from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from statistics import mean, mode
-import logging
 from werkzeug.utils import secure_filename
+from sqlalchemy import update
 # from flask_wtf.csrf import CSRFProtect
 
 CURR_USER_KEY = "curr_user"
@@ -135,6 +135,7 @@ def current():
 
     return render_template('api/current.html', current_weather_data=current_weather_data, user=g.user)
 
+
 def get_current_weather(location):
     url = "https://weatherapi-com.p.rapidapi.com/current.json"
     querystring = {"q": location}  # Use the user-provided location
@@ -142,7 +143,6 @@ def get_current_weather(location):
         "X-RapidAPI-Key": "eb3fa9d2eamsh622acd4eaa00bf3p19fc73jsn647406a37c4e",
         "X-RapidAPI-Host": "weatherapi-com.p.rapidapi.com"
     }
-
     try:
         response = requests.get(url, headers=headers, params=querystring)
 
@@ -156,6 +156,7 @@ def get_current_weather(location):
         flash(f"An error occurred while fetching weather data for {location}. Please try again later.", 'error')
         return None
     
+
 @app.route('/forecast', methods=['GET', 'POST'])
 def forecast():
     forecast_data = None
@@ -167,7 +168,6 @@ def forecast():
         forecast_data = get_weather_forecast(location)
 
     return render_template('api/forecast.html', forecast_data=forecast_data, selected_date=selected_date, user=g.user)
-
 
 
 def get_weather_forecast(location):
@@ -192,7 +192,6 @@ def get_weather_forecast(location):
         return None
     
 
-
 @app.route('/history', methods=['GET', 'POST'])
 def history():
     if request.method == 'POST':
@@ -209,10 +208,6 @@ def history():
             flash("Please enter both location and date.", 'error')
 
     return render_template('api/history.html', historical_weather_data=None, user=g.user)
-
-
-
-
 
 
 def get_historical_weather(location, date):
@@ -312,8 +307,9 @@ def set_location():
     return redirect(url_for('home'))
 
 
-#________HOMEPAGE & USER PROFILES___________________
 
+
+#________HOMEPAGE & USER PROFILES___________________
 @app.route('/')
 def homepage():
     forecast_data = None
@@ -354,11 +350,7 @@ def homepage():
     else:
         return render_template('home-anon.html')
     
-# ...
 
-from sqlalchemy import update
-
-# ...
 @app.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
     if g.user is None:
@@ -396,9 +388,6 @@ def edit_profile():
     return render_template('edit_profile.html', form=form, user=user)
 
 
-
-
-
 # Route to serve uploaded files
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -406,22 +395,7 @@ def uploaded_file(filename):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #_______Friends_________
-
 @app.route('/friends_profile/<int:user_id>')
 def friends_profile(user_id):
     # Find the user by user_id
@@ -432,12 +406,10 @@ def friends_profile(user_id):
         # Retrieve the user's location (if available)
         location = user.location
 
-        # Retrieve weather information for the user's location (if needed)
-        # You can add your logic here.
+        # Retrieve weather information for the user's location (if needed)???
 
         # Retrieve the groups the user is in
         user_groups = user.groups
-
         # Retrieve the user's friends
         friends = user.friends
 
@@ -451,6 +423,7 @@ def friends_profile(user_id):
     else:
         # Handle the case where the user is not found
         return "User not found"
+
 
 @app.route('/send_friend_request/<int:user_id>', methods=['POST'])
 def send_friend_request(user_id):
@@ -483,8 +456,6 @@ def send_friend_request(user_id):
     else:
         # flash('User not found', 'error')
         return jsonify({'success': False, 'message': 'User not found'})
-
-
 
 
 @app.route('/accept_friend_request/<int:sender_id>', methods=['POST'])
@@ -539,19 +510,15 @@ def remove_friend(friend_id):
 
 
 #_______________________Assessments__________________________________
-
 # Updated function to determine the diagnosis
 def determine_diagnosis(form_data):
     diagnoses = set()
-
-
 #2
     if form_data.get('experienced_sad_disaster') == 'yes': 
         diagnoses.add(2)
 
     if form_data.get('estorms') == 'yes':
         diagnoses.add(2)
-
 
     print(f'experienced_sad_disaster: {form_data.get("experienced_sad_disaster")}')
     print(f'estorms: {form_data.get("estorms")}')
@@ -564,7 +531,6 @@ def determine_diagnosis(form_data):
     ]
     if any(form_data.get(symptom) == 'yes' for symptom in mood_symptoms):
         diagnoses.add(3)
-
 
 #4
     sad_symptoms = [
@@ -614,9 +580,7 @@ def determine_diagnosis(form_data):
     if form_data.get('climate_anxiety') == 'yes' or form_data.get('social_interaction') == 'yes':
         diagnoses.add(1)
 
-
     return list(diagnoses)
-
 
 
 @app.route('/mood_symptom', methods=['GET', 'POST'])
@@ -663,7 +627,6 @@ def mood_symptom():
     return render_template('mood_symptom_form.html', form=form)
 
 
-
 # Create a function to map issue_id to group_name
 def map_issue_to_group(issue_id):
     issue_group_mapping = {
@@ -676,6 +639,7 @@ def map_issue_to_group(issue_id):
     }
     return issue_group_mapping.get(issue_id, "N/A")
 
+
 @app.route('/diagnosis_history', methods=['GET'])
 def diagnosis_history():
     if not g.user:
@@ -686,7 +650,6 @@ def diagnosis_history():
 
     # Query the database to retrieve the user's history based on user_id
     user_history = UserDiagnosisAssociation.query.filter_by(user_id=user_id).all()
-
 
     # Create a dictionary to store the user's diagnosis history
     diagnosis_data = {}
@@ -708,12 +671,6 @@ def diagnosis_history():
             diagnosis_data[diagnosis_name] = solution_texts
 
     return render_template('diagnosis_history.html', user_history=user_history, diagnosis_data=diagnosis_data, map_issue_to_group=map_issue_to_group)
-
-
-
-
-import json
-
 
 
 @app.route('/daily_assessment', methods=['GET', 'POST'])
@@ -741,14 +698,6 @@ def daily_assessment():
         return redirect(url_for('homepage'))
 
     return render_template('daily_assessment.html', form=form)
-
-
-
-
-
-
-
-
 
 
 #_______________________Friends & Groups______________________________________
@@ -789,9 +738,6 @@ def friends_groups():
     )
 
 
-
-
-
 @app.route('/join_group/<int:group_id>', methods=['GET', 'POST'])
 def join_group(group_id):
     if not g.user:
@@ -821,7 +767,6 @@ def join_group(group_id):
     
     flash('Group not found', 'danger')
     return jsonify(success=False, message='Group not found')
-
 
 
 @app.route('/leave_group/<int:group_id>', methods=['POST'])
@@ -867,7 +812,6 @@ def group(group_id):
 # csrf_token=csrf.generate_csrf()
 
 
-
 @app.route('/get_group_members/<int:group_id>', methods=['GET'])
 def get_group_members(group_id):
     # Query the database to retrieve group members for the given group_id
@@ -882,7 +826,6 @@ def get_group_members(group_id):
 
 
 
-
 #_____GROUP POSTS_________
 # Group creation, response creation, and post deletion routes
 @app.route('/create_group_post/<int:group_id>', methods=['POST'])
@@ -894,6 +837,7 @@ def create_group_post(group_id):
             db.session.add(new_post)
             db.session.commit()
     return redirect(url_for('group', group_id=group_id))
+
 
 @app.route('/create_response/<int:group_id>/<int:post_id>', methods=['POST'])
 def create_response(group_id, post_id):
@@ -913,6 +857,7 @@ def delete_post(post_id):
         db.session.delete(post)
         db.session.commit()
     return redirect(url_for('group', group_id=post.group_id))
+
 
 #________________WELLNESS- JOURNAL__________________________________
 # Function to calculate the top N values from a list
@@ -955,9 +900,6 @@ def wellness():
     if user_id:
         user_journal_entries = JournalEntry.query.filter_by(user_id=user_id).all()
 
-
-
-
 #________________
     latest_assessment = DailyAssessment.query.filter_by(user_id=g.user.user_id).order_by(DailyAssessment.date.desc()).first()
 
@@ -992,7 +934,6 @@ def wellness():
 
         # Weather entries
         weather_entries.extend(entry.weather_today)
-
 
     # Calculate the top three moods
     if mood_entries:
@@ -1039,11 +980,6 @@ def wellness():
         mood_history_entries=mood_history_entries,
         weather_today_choices=weather_today_choices
     )
-
-
-
-
-
 
 
 @app.route('/save_journal_entry', methods=['POST'])
@@ -1113,7 +1049,6 @@ def edit_journal_entry(id):
     return render_template('edit_journal.html', form=form, id=journal_entry.id, date=journal_entry.date, entry=journal_entry)
 
                            
-                
 @app.route('/delete_journal_entry/<int:id>', methods=['POST'])
 def delete_journal_entry(id):
     if request.method == 'POST':

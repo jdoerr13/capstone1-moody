@@ -6,7 +6,7 @@
 
 import os
 import unittest
-from models import db, User, Group, GroupPost, Diagnosis, DiagnosisSolution, CopingSolution, UserDiagnosisAssociation, UserHistory,  JournalEntry, DailyAssessment, bcrypt
+from models import db, User, Group, GroupPost, Diagnosis, DiagnosisSolution, CopingSolution, UserDiagnosisAssociation, UserHistory,  JournalEntry, DailyAssessment, bcrypt, Weather
 from datetime import datetime
 
 # Set the database URL for testing
@@ -216,97 +216,102 @@ class DiagnosisModelTestCase(unittest.TestCase):
         self.assertEqual(solution.diagnosis, retrieved_diagnosis)
 
 
-class UserDiagnosisAssociationModelTestCase(unittest.TestCase):
-    """Test cases for the UserDiagnosisAssociation model."""
+class JournalEntryModelTestCase(unittest.TestCase):
     def setUp(self):
         """Create test client, add sample data."""
         db.drop_all()
         db.create_all()
 
-        # Delete the existing user with the same username (if it exists)
-        existing_user = User.query.filter_by(username='testuser').first()
-        if existing_user:
-            db.session.delete(existing_user)
-            db.session.commit()
+        self.user = User.signup("testuser", "test@test.com", "password", datetime.utcnow())
+        db.session.add(self.user)
+        db.session.commit()
+
+        self.client = app.test_client()
 
     def tearDown(self):
         """Clean up any fouled transactions."""
         db.session.rollback()
 
-
-    def test_create_user_diagnosis_association(self):
-        # Create a user
-        user = User(username='testuser', email='testuser@example.com', password='testpassword')
-        db.session.add(user)
-        db.session.commit()
-
-        # Create a diagnosis
-        diagnosis = Diagnosis(issue_name='Test Diagnosis')
-        db.session.add(diagnosis)
-        db.session.commit()
-
-        # Create a UserDiagnosisAssociation with the current date
-        association = UserDiagnosisAssociation(
-            user_id=user.user_id,
-            diagnosis_id=diagnosis.issue_id,
-            date_recorded=datetime.utcnow().date()
+    def test_create_journal_entry(self):
+        """Test JournalEntry creation."""
+        entry = JournalEntry(
+            user_id=self.user.user_id,
+            date=datetime.utcnow().date(),  # Provide a valid date
+            entry="Test journal entry"
         )
-        db.session.add(association)
+        db.session.add(entry)
         db.session.commit()
 
-        # Retrieve the association using filtering
-        retrieved_association = UserDiagnosisAssociation.query.filter_by(
-            user_id=user.user_id,
-            diagnosis_id=diagnosis.issue_id
-        ).first()
+        retrieved_entry = db.session.get(JournalEntry, entry.id)
+        self.assertEqual(retrieved_entry.entry, "Test journal entry")
 
-        self.assertIsNotNone(retrieved_association)
-        self.assertIsNotNone(retrieved_association.date_recorded)
-        self.assertEqual(retrieved_association.user_id, user.user_id)
-        self.assertEqual(retrieved_association.diagnosis_id, diagnosis.issue_id)
+    def test_journal_entry_relationships(self):
+        """Test relationships of the JournalEntry model with the User."""
+        entry = JournalEntry(
+            user_id=self.user.user_id,
+            date=datetime.utcnow().date(),
+            entry="Test journal entry"
+        )
+        db.session.add(entry)
+        db.session.commit()
+
+        self.assertIn(entry, self.user.journal_entries)
+        self.assertEqual(entry.user, self.user)
 
 
 
 
 
-class CopingSolutionModelTestCase(unittest.TestCase):
-    """Test cases for the CopingSolution model."""
+
+
+class DailyAssessmentModelTestCase(unittest.TestCase):
     def setUp(self):
-        """Create test client, add sample data."""
+        """Create a test client, add sample data."""
         db.drop_all()
         db.create_all()
 
-        # Create a CopingSolution instance
-        self.coping_solution = CopingSolution(solution_text="Test Coping Solution")
-        db.session.add(self.coping_solution)
+        self.user = User.signup("testuser", "test@test.com", "password", None)
+        db.session.add(self.user)
         db.session.commit()
+
+        self.client = app.test_client()
 
     def tearDown(self):
         """Clean up any fouled transactions."""
         db.session.rollback()
 
-    def test_create_coping_solution(self):
-        """Test creating a CopingSolution."""
-        coping_solution = CopingSolution(solution_text="Another Coping Solution")
-        db.session.add(coping_solution)
+    def test_create_daily_assessment(self):
+        """Test DailyAssessment creation."""
+        assessment = DailyAssessment(
+            user_id=self.user.user_id,
+            weather_today="Sunny",
+            mood_today="Happy",
+            stress_level="Low",
+            positive_affect_rating="High",
+        )
+        db.session.add(assessment)
         db.session.commit()
 
-        retrieved_solution = CopingSolution.query.get(coping_solution.solution_id)
+        retrieved_assessment = DailyAssessment.query.get(assessment.id)
 
-        self.assertEqual(retrieved_solution.solution_text, "Another Coping Solution")
+        self.assertEqual(retrieved_assessment.user_id, self.user.user_id)
+        self.assertEqual(retrieved_assessment.weather_today, "Sunny")
+        self.assertEqual(retrieved_assessment.mood_today, "Happy")
 
-    def test_coping_solution_users_relationship(self):
-        """Test the relationship between CopingSolution and UserDiagnosisAssociation."""
-        user_diagnosis = UserDiagnosisAssociation(user_id=1, diagnosis_id=1)
-        db.session.add(user_diagnosis)
+    def test_daily_assessment_relationships(self):
+        """Test relationships of the DailyAssessment model with the User."""
+        assessment = DailyAssessment(
+            user_id=self.user.user_id,
+            weather_today="Sunny",
+            mood_today="Happy",
+            stress_level="Low",
+            positive_affect_rating="High",
+        )
+        db.session.add(assessment)
         db.session.commit()
 
-        self.assertIn(user_diagnosis, self.coping_solution.users)
-        self.assertEqual(user_diagnosis.coping_solution, self.coping_solution)
+        self.assertEqual(self.user.daily_assessments[0], assessment)
+        self.assertEqual(assessment.user, self.user)
 
 
-
-
-
-# Create separate test classes for other models (  UserHistory, JournalEntry, DailyAssessment) following a similar structure.
 

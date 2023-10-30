@@ -154,9 +154,9 @@ nav form.navbar-form, .navbar-form {
 /* home.html */
 
 .profile-icon {
-    margin-right: 110px; /* Adjust the margin as needed */
-    width: 150px; /* Set the desired width */
-    height: 150px; /* Set the desired height */
+    margin-right: 110px; 
+    width: 150px; 
+    height: 150px; 
     float: right;
 }
 .welcome-message {
@@ -170,6 +170,9 @@ nav form.navbar-form, .navbar-form {
         1px -1px 0 #000,  
         -1px 1px 0 #000,  
         1px 1px 0 #000;   
+}
+.content-box a {
+    word-wrap: break-word; 
 }
 
 body {
@@ -191,15 +194,15 @@ body {
 .card.custom-card-four {
     background-color: rgba(211, 211, 211, 0.5) !important;
     margin-left: 800px; 
-    position: relative; /* Set the position to relative */
-    top: -60px; /* Adjust the top value as needed to move it up */
+    position: relative; 
+    top: -150px; 
 }
 #searchResults li {
-    text-align: left; /* Align the text to the right within each list item (<li>) */
+    text-align: left; 
 }
 
 .friends-list {
-    text-align: left; /* Align the content to the left within div.friends-list */
+    text-align: left; 
 }
 
 

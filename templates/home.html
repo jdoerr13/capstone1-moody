@@ -153,7 +153,7 @@
                 {% for group in user_groups %}
                     <div class="group" data-group-id="{{ group.group_id }}">
                         <h5><a href="{{ url_for('group', group_id=group.group_id) }}" class="group-link">{{ group.group_name }}</a></h5>
-                        <button class="btn-dark-grey" data-group-id="{{ group.group_id }}">Leave Group</button>
+                        <button class="btn-dark-grey leave-group-button" data-group-id="{{ group.group_id }}">Leave Group</button>
                     </div>
             {% endfor %}
                 </div>
