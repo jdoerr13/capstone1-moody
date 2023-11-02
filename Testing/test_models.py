@@ -13,6 +13,22 @@ from datetime import datetime
 os.environ['DATABASE_URL'] = "postgresql:///moody"
 from app import app
 
+# class BaseTestCase(unittest.TestCase):
+#     def setUp(self):
+#         self.app = app.test_client()
+#         db.create_all()
+#         # Perform any necessary setup here
+
+#     def tearDown(self):
+#         db.session.rollback()
+#         # Perform any necessary teardown here
+
+#     def before_each(self):
+#         # Set up sample data for each test
+#         self.user = User.signup("testuser", "test@test.com", "password", None)
+#         db.session.add(self.user)
+#         db.session.commit()
+
 class UserModelTestCase(unittest.TestCase):
     def setUp(self):
         """Create test client, add sample data."""
@@ -257,11 +273,6 @@ class JournalEntryModelTestCase(unittest.TestCase):
 
         self.assertIn(entry, self.user.journal_entries)
         self.assertEqual(entry.user, self.user)
-
-
-
-
-
 
 
 class DailyAssessmentModelTestCase(unittest.TestCase):

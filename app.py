@@ -1,7 +1,6 @@
 import requests
 import os
 import uuid
-import json
 import logging
 from flask import Flask, render_template, request, flash, redirect, session, g, jsonify, url_for, send_from_directory
 # from flask_debugtoolbar import DebugToolbarExtension
@@ -304,7 +303,7 @@ def set_location():
     else:
         flash('Please provide a location to update.', 'error')
 
-    return redirect(url_for('home'))
+    return redirect(url_for('homepage'))
 
 
 
