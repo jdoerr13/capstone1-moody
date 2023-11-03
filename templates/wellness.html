@@ -318,8 +318,8 @@ document.addEventListener('DOMContentLoaded', function () {
 <script type="module">
     document.addEventListener('DOMContentLoaded', async function () {
         // Initialize the FullCalendar
-        var calendarEl = document.getElementById('calendar');
-        var calendar = new FullCalendar.Calendar(calendarEl, {
+        const calendarEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridWeek', // Display a week view by default
             events: [], // No initial events
             // Set a fixed height for the calendar
@@ -330,7 +330,7 @@ document.addEventListener('DOMContentLoaded', function () {
         calendar.render();
 
         // Get the user's location from the template
-        var userLocation = '{{ user_location }}';
+        const userLocation = '{{ user_location }}';
 
 
 

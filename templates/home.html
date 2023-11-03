@@ -148,7 +148,8 @@
         <div class="content-box">
             <h3>Groups & Your Friends (Moodies)</h3>
             <a href="{{ url_for('friends_groups') }}" class="btn btn-primary">Friends & Groups</a>
-            <ul> <div class="card custom-card-three">
+            <ul> 
+                <div class="card custom-card-three">
             <h4>My Groups:</h4>
                 {% for group in user_groups %}
                     <div class="group" data-group-id="{{ group.group_id }}">
@@ -158,7 +159,8 @@
             {% endfor %}
                 </div>
             </ul>
-            <ul> <div class="card custom-card-four">
+            <ul> 
+                <div class="card custom-card-four">
             <h4>My Friends:</h4>
                 {% for friend in g.user.friends %}
                 <a href="{{ url_for('friends_profile', user_id=friend.user_id) }}">{{ friend.username }}</a>

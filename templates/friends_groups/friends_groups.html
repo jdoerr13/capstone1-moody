@@ -171,9 +171,9 @@ document.addEventListener('DOMContentLoaded', function () {
         // Handle "Accept" button click
         $('.accept-button').click(function () {
             // Store the reference to the clicked button
-            var acceptButton = $(this);
+            const acceptButton = $(this);
 
-            var userId = acceptButton.data('user-id');
+            const userId = acceptButton.data('user-id');
 
             // Send an AJAX request to accept the friend request
             $.post(`/accept_friend_request/${userId}`, function (data) {
@@ -182,8 +182,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     acceptButton.parent().remove();
 
                     // Move the accepted friend to the friends list
-                    var friendUsername = acceptButton.siblings('span').text();
-                    var newFriendItem = `<li>${friendUsername}</li>`;
+                    const friendUsername = acceptButton.siblings('span').text();
+                    const newFriendItem = `<li>${friendUsername}</li>`;
                     $('.friends-list ul').append(newFriendItem);
                 } else {
                     // Handle errors if needed
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Remove Friend: 
         $('.remove-friend-button').click(function () {
-            var friendId = $(this).data('user-id');
+            const friendId = $(this).data('user-id');
 
             // Send an AJAX request to remove the friend
             $.post(`/remove_friend/${friendId}`, function (data) {
