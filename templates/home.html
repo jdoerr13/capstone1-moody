@@ -216,34 +216,5 @@
 </div>
 </footer>
 
-    <script>
-        $(document).ready(function() {
-            // Attach a click event handler to all "leave group" buttons
-            $('.leave-group-button').click(function() {
-                let groupId = $(this).data('group-id');
-
-                // Make an AJAX request to the server to leave the group
-                $.post('/leave_group/' + groupId, function(data) {
-                    if (data.success) {
-                        // Remove the group element from the "my groups" list
-                        $(`.group[data-group-id="${groupId}"]`).remove();
-                    }
-                });
-            });
-        });
-    </script>
-       <!-- JavaScript to toggle "Works Cited" content -->
-       <script>
-        const worksCitedButton = document.getElementById("worksCitedButton");
-        const worksCitedContent = document.getElementById("worksCitedContent");
-
-        worksCitedButton.addEventListener("click", () => {
-            if (worksCitedContent.style.display === "none") {
-                worksCitedContent.style.display = "block";
-            } else {
-                worksCitedContent.style.display = "none";
-            }
-        });
-    </script>
 {% endblock %}
 

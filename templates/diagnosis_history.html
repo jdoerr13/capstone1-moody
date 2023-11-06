@@ -43,7 +43,6 @@
     <a href="{{ url_for('homepage') }}" class="btn btn-secondary">Home</a>
 
     <style>
-        /* Add your custom CSS styles here */
         .form-group {
             margin-bottom: 10px;
         }
@@ -60,16 +59,5 @@
         </p>
     </div>
 
-    <script>
-        // Add JavaScript to show/hide the diagnosis information
-        document.getElementById('show-diagnosis-button').addEventListener('click', function () {
-            let diagnosisInfo = document.getElementById('diagnosis-info');
-            if (diagnosisInfo.style.display === 'none' || diagnosisInfo.style.display === '') {
-                diagnosisInfo.style.display = 'block';
-            } else {
-                diagnosisInfo.style.display = 'none';
-            }
-        });
-    </script>
 </body>
 {% endblock %}

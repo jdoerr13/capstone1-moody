@@ -19,39 +19,9 @@
     </form>
     
     
-    
-    
-    
 
     <a href="{{ url_for('wellness', date=form.date.data) }}">Cancel</a>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const deleteButton = document.getElementById('delete-entry');
-        const deleteForm = document.getElementById('delete-form');
-        const submitButton = document.getElementById('submit-entry');
-
-        deleteButton.addEventListener('click', function (event) {
-            event.preventDefault(); // Prevent the default form submission
-            const confirmation = confirm("Are you sure you want to delete this entry?");
-            if (confirmation) {
-                // Submit the delete form
-                deleteForm.submit();
-            }
-        });
-
-        submitButton.addEventListener('click', function (event) {
-            event.preventDefault(); // Prevent the default form submission
-            const confirmation = confirm("Are you sure you want to update this entry?");
-            if (confirmation) {
-                // Submit the update form directly
-                document.getElementById('edit-form').submit();
-            }
-        });
-    });
-</script>
-
 
 
 {% endblock %}
