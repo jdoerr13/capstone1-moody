@@ -1,11 +1,21 @@
 import os
-from app import app, db  # Import your Flask app and SQLAlchemy instance
+from app import app, db  
 from models import Group, Diagnosis, CopingSolution, DiagnosisSolution
 
+# db.drop_all()
+# db.create_all()
 
 def seed_data():
     with app.app_context():
-        # Create and commit instances for each group
+
+        print("Clearing old data...")
+        Group.query.delete()
+        Diagnosis.query.delete()
+        CopingSolution.query.delete()
+        DiagnosisSolution.query.delete()
+
+# Create and commit instances for each group
+        print("Seeding groups...")
         groups = [
             Group(group_name="Climate Change Anxiety", description="Group for climate change-related discussions."),
             Group(group_name="Major Disaster/Severe Weather Anxiety", description="Group for extreme weather and disaster discussions."),
@@ -15,29 +25,12 @@ def seed_data():
             Group(group_name="Weather & Physical Health", description="Weather & Physical Health"),
         ]
 
-        db.session.add_all(groups)
+ 
+        db.session.bulk_save_objects(groups)
         db.session.commit()
 
-# def seed_groups():
-#     # Create instances for each group
-#     group1 = Group(group_name="Climate Change Anxiety", description="Group for climate change-related discussions.")
-#     group2 = Group(group_name="Major Disaster/Severe Weather Anxiety", description="Group for extreme weather and disaster discussions.")
-#     group3 = Group(group_name="Weather makes me moody", description="Group for discussing mood and weather correlations.")
-#     group4 = Group(group_name="SAD", description="Group for Seasonal Affective Disorder (SAD) support.")
-#     group5 = Group(group_name="General Weather Stress/ Cabin Fever", description="Group for general weather-related stress discussions.")
-#     group6 = Group(group_name="Weather & Physical Health", description="Weather & Physical Health")
-
-#     Add the groups to the database
-#     db.session.add(group1)
-#     db.session.add(group2)
-#     db.session.add(group3)
-#     db.session.add(group4)
-#     db.session.add(group5)
-#     db.session.add(group6)
-#     db.session.commit()
-
-
-        # Create and commit instances for each diagnosis
+# Create and commit instances for each diagnosis
+        print("Seeding diagnoses...")
         diagnoses = [
             Diagnosis(issue_name="Climate Change or Environmental Anxiety"),
             Diagnosis(issue_name="Major Disaster or Severe Weather Anxiety"),
@@ -47,10 +40,11 @@ def seed_data():
             Diagnosis(issue_name="Weather-Induced Physical Issues"),
         ]
 
-        db.session.add_all(diagnoses)
+        db.session.bulk_save_objects(diagnoses)
         db.session.commit()
 
-        # Create and commit instances for coping solutions
+# Create and commit instances for coping solutions
+        print("Seeding coping solutions...")
         coping_solutions = [
             CopingSolution(solution_text="Stay informed about climate issues and actions you can take."),
             CopingSolution(solution_text="Practice eco-friendly habits to reduce personal environmental impact."),
@@ -72,63 +66,47 @@ def seed_data():
             CopingSolution(solution_text="Consult healthcare professionals for addressing weather-induced physical issues."),
         ]
 
-        db.session.add_all(coping_solutions)
+        db.session.bulk_save_objects(coping_solutions)
         db.session.commit()
 
-        # Link diagnoses and coping solutions
+# Link diagnoses and coping solutions
+        print("Seeding diagnosis solutions...")
         diagnosis_solutions = [
-            DiagnosisSolution(diagnosis_id=1, solution_id=1),
-            DiagnosisSolution(diagnosis_id=1, solution_id=2),
-            DiagnosisSolution(diagnosis_id=1, solution_id=3),
-            DiagnosisSolution(diagnosis_id=2, solution_id=4),
-            DiagnosisSolution(diagnosis_id=2, solution_id=5),
-            DiagnosisSolution(diagnosis_id=2, solution_id=6),
-            DiagnosisSolution(diagnosis_id=3, solution_id=7),
-            DiagnosisSolution(diagnosis_id=3, solution_id=8),
-            DiagnosisSolution(diagnosis_id=3, solution_id=9),
-            DiagnosisSolution(diagnosis_id=4, solution_id=10),
-            DiagnosisSolution(diagnosis_id=4, solution_id=11),
-            DiagnosisSolution(diagnosis_id=4, solution_id=12),
-            DiagnosisSolution(diagnosis_id=5, solution_id=13),
-            DiagnosisSolution(diagnosis_id=5, solution_id=14),
-            DiagnosisSolution(diagnosis_id=5, solution_id=15),
-            DiagnosisSolution(diagnosis_id=6, solution_id=16),
-            DiagnosisSolution(diagnosis_id=6, solution_id=17),
-            DiagnosisSolution(diagnosis_id=6, solution_id=18),
+            DiagnosisSolution(diagnosis_id=1, solution_id=1, solution_text="Stay informed about disaster preparedness and local resources."),
+            DiagnosisSolution(diagnosis_id=1, solution_id=2, solution_text="Practice eco-friendly habits to reduce personal environmental impact."),
+            DiagnosisSolution(diagnosis_id=1, solution_id=3, solution_text="Seek professional therapy to address anxiety and fears related to climate change."),
+            DiagnosisSolution(diagnosis_id=2, solution_id=4, solution_text="Create an emergency plan for your family and home."),
+            DiagnosisSolution(diagnosis_id=2, solution_id=5, solution_text="Stay active and maintain a consistent daily routine."),
+            DiagnosisSolution(diagnosis_id=2, solution_id=6, solution_text="Consider professional therapy to address disaster-related anxiety."),
+            DiagnosisSolution(diagnosis_id=3, solution_id=7, solution_text="Monitor weather forecasts and plan activities accordingly."),
+            DiagnosisSolution(diagnosis_id=3, solution_id=8, solution_text="Engage in mood-boosting activities on gloomy days."),
+            DiagnosisSolution(diagnosis_id=3, solution_id=9, solution_text="Consider therapy to manage mood swings influenced by the weather."),
+            DiagnosisSolution(diagnosis_id=4, solution_id=10, solution_text="Use light therapy to mitigate the effects of reduced daylight."),
+            DiagnosisSolution(diagnosis_id=4, solution_id=11, solution_text="Stay active and maintain a consistent daily routine."),
+            DiagnosisSolution(diagnosis_id=4, solution_id=12, solution_text="Consult a mental health professional for SAD-specific therapies."),
+            DiagnosisSolution(diagnosis_id=5, solution_id=13, solution_text="Engage in indoor hobbies or activities during poor weather."),
+            DiagnosisSolution(diagnosis_id=5, solution_id=14, solution_text="Practice relaxation techniques to reduce stress and cabin fever."),
+            DiagnosisSolution(diagnosis_id=5, solution_id=15, solution_text="Seek therapy for managing stress and coping with weather-induced stress."),
+            DiagnosisSolution(diagnosis_id=6, solution_id=16, solution_text="Monitor your physical symptoms and seek medical advice as needed."),
+            DiagnosisSolution(diagnosis_id=6, solution_id=17, solution_text="Stay active and maintain a healthy lifestyle regardless of the weather."),
+            DiagnosisSolution(diagnosis_id=6, solution_id=18, solution_text="Consult healthcare professionals for addressing weather-induced physical issues."),
         ]
 
-        db.session.add_all(diagnosis_solutions)
+        db.session.bulk_save_objects(diagnosis_solutions)
         db.session.commit()
+
+        print("Data seeded successfully.")
 
     if __name__ == '__main__':
         seed_data()
 
 
+#in Ipython: 
+# In [2]: %run seed.py
+# In [3]: seed_data()
 
 
-
-# def update_diagnosis_solution_text():
-#     # Update solution_text in diagnosis_solutions based on coping_solutions
-#     db.session.execute(
-#         '''
-#         UPDATE diagnosis_solutions AS ds
-#         SET solution_text = cs.solution_text
-#         FROM coping_solutions AS cs
-#         WHERE ds.solution_id = cs.solution_id;
-#         '''
-#     )
-#     db.session.commit()
-
-
-
-
-
-
-
-
-
-
-
+#___________DIRECTLY INTO POSTGRESSQL
 
 # INSERT INTO groups (group_name, description) VALUES
 # ('Climate Change Anxiety', 'Group for climate change-related discussions.'),
@@ -199,3 +177,15 @@ def seed_data():
 #  SET solution_text = cs.solution_text
 #  FROM coping_solutions AS cs
 #  WHERE ds.solution_id = cs.solution_id;
+
+# def update_diagnosis_solution_text():
+#     # Update solution_text in diagnosis_solutions based on coping_solutions
+#     db.session.execute(
+#         '''
+#         UPDATE diagnosis_solutions AS ds
+#         SET solution_text = cs.solution_text
+#         FROM coping_solutions AS cs
+#         WHERE ds.solution_id = cs.solution_id;
+#         '''
+#     )
+#     db.session.commit()

@@ -37,12 +37,12 @@ app.config['SECRET_KEY'] = "JDOERR13"
 
 connect_db(app)
 app.app_context().push()
-# db.drop_all()
+db.drop_all()
 db.create_all()
 
 
 ##############################################################################
-# User signup/login/logout
+#_________________User signup/login/logout_______________________
 @app.before_request
 def add_user_to_g():
     """If we're logged in, add curr user to Flask global.""" 
@@ -118,8 +118,8 @@ def logout():
     return redirect("/")
 
 
-
-#_____________GETTING INFO FROM API_____________________________________
+##############################################################################
+#_____________GETTING INFO FROM API_________________________
 @app.route('/current', methods=['GET', 'POST'])
 def current():
     current_weather_data = None
@@ -278,7 +278,7 @@ def get_astronomy_data(location, date):
         return None
     
 
-#______On home page- Live weather updates!
+#____________On home page- Live weather updates!_________________________
 @app.route('/set_location', methods=['POST'])
 def set_location():
     location = request.form.get('location')
@@ -307,7 +307,7 @@ def set_location():
 
 
 
-
+#######################################################################
 #________HOMEPAGE & USER PROFILES___________________
 @app.route('/')
 def homepage():
@@ -507,7 +507,7 @@ def remove_friend(friend_id):
     return redirect(url_for('friends_groups'))  
 
 
-
+###############################################################################
 #_______________________Assessments__________________________________
 # Updated function to determine the diagnosis
 def determine_diagnosis(form_data):
@@ -699,6 +699,7 @@ def daily_assessment():
     return render_template('daily_assessment.html', form=form)
 
 
+###############################################################################
 #_______________________Friends & Groups______________________________________
 @app.route('/friends_groups', methods=['GET', 'POST'])
 def friends_groups():
@@ -825,7 +826,7 @@ def get_group_members(group_id):
 
 
 
-#_____GROUP POSTS_________
+#______________GROUP POSTS_________________________
 # Group creation, response creation, and post deletion routes
 @app.route('/create_group_post/<int:group_id>', methods=['POST'])
 def create_group_post(group_id):
@@ -858,6 +859,7 @@ def delete_post(post_id):
     return redirect(url_for('group', group_id=post.group_id))
 
 
+##############################################################################
 #________________WELLNESS- JOURNAL__________________________________
 # Function to calculate the top N values from a list
 def top_n_values(lst, n):

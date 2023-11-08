@@ -194,8 +194,8 @@ body {
 .card.custom-card-four {
     background-color: rgba(211, 211, 211, 0.5) !important;
     margin-left: 800px; 
-    /* position: relative; 
-    top: -130px;  */
+    position: relative; 
+    top: -80px; 
 }
 #searchResults li {
     text-align: left; 
@@ -204,6 +204,9 @@ body {
 .friends-list {
     text-align: left; 
 }
+
+
+
 
 
     .content-box {
