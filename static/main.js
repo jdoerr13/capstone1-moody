@@ -5,191 +5,61 @@
     });
 
 
-
-
-//group.html
-
-    document.addEventListener('DOMContentLoaded', function () {
-        // Function to add a post to the discussion forum
-        function addPostToDiscussion(username, content, timestamp, post_id) {
-            const post = document.createElement("div");
-            post.className = "post";
-            post.innerHTML = `<p>${username} says:</p><p>${content}</p><p>Posted on ${timestamp}</p>`;
-    
-            if (g.user && post_id === g.user.user_id) {
-                const deleteForm = document.createElement("form");
-                deleteForm.method = "post";
-                deleteForm.action = `/delete_post/${post_id}`;
-    
-                const deleteButton = document.createElement("button");
-                deleteButton.type = "submit";
-                deleteButton.className = "delete-post-button";
-                deleteButton.textContent = "Delete";
-    
-                deleteForm.appendChild(deleteButton);
-    
-                post.appendChild(deleteForm);
-                post.innerHTML += '<p>My Post</p>';
-            }
-    
-            document.getElementById("discussion").appendChild(post);
-        }
-    
-        // Function to create a new post
-        async function createNewPost(content) {
-            try {
-                const groupId = window.location.pathname.match(/\/group\/(\d+)/);
-                if (groupId) {
-                    const response = await fetch(`/create_group_post/${groupId[1]}`, {
-                        method: "POST",
-                        body: new URLSearchParams({ post_content: content }),
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-                    });
-    
-                    if (response.ok) {
-                        const postData = await response.json();
-                        addPostToDiscussion(postData.username, postData.content, postData.timestamp, postData.post_id);
-                        document.getElementById("post-content").value = "";
-                    }
-                } else {
-                    console.error("Group ID not found in the URL.");
-                }
-            } catch (error) {
-                console.error("Error creating a new post:", error);
-            }
-        }
-    
-        // Check if local storage has posts and display them
-        const storedPosts = JSON.parse(localStorage.getItem("discussionPosts")) || [];
-        storedPosts.forEach((post) => {
-            addPostToDiscussion(post.username, post.content, post.timestamp, post.userId);
-        });
-    
-        document.getElementById("post-form").addEventListener("submit", async function (event) {
-            event.preventDefault();
-            const content = document.getElementById("post-content").value;
-            if (content) {
-                await createNewPost(content);
-            }
-        });
-        
-        // JavaScript code to fetch and display group members
-        const seeGroupMembersButton = document.getElementById("seeGroupMembersButton");
-    
-        seeGroupMembersButton.addEventListener("click", async () => {
-            fetchAndDisplayGroupMembers();
-        });
-    });
-
-  // JavaScript code to fetch and display group members
-document.addEventListener('DOMContentLoaded', function () {
-    const seeGroupMembersButton = document.getElementById("seeGroupMembersButton");
-    
-    // Function to fetch and display group members
-    async function fetchAndDisplayGroupMembers() {
-        const groupMembers = document.getElementById("groupMembers");
-        const groupId = seeGroupMembersButton.getAttribute("data-group-id"); // Get the group_id from the button's data attribute
-
-        // Make a request to the server to get group members
-        try {
-            const response = await fetch(`/get_group_members/${groupId}`, {
-                method: 'GET',
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-
-                if (data.length > 0) {
-                    groupMembers.innerHTML = '<h3>Group Members:</h3>';
-                    const ul = document.createElement("ul");
-
-                    data.forEach(member => {
-                        const li = document.createElement("li");
-                        li.textContent = member.username;
-                        ul.appendChild(li);
-                    });
-
-                    groupMembers.appendChild(ul);
-                } else {
-                    groupMembers.innerHTML = '<p>No group members found.</p>';
-                }
-
-                groupMembers.style.display = "block";
-            } else {
-                console.error('Failed to fetch group members:', response.statusText);
-                groupMembers.innerHTML = '<p>Failed to fetch group members.</p>';
-                groupMembers.style.display = "block";
-            }
-        } catch (error) {
-            console.error('Error fetching group members:', error);
-            groupMembers.innerHTML = '<p>Failed to fetch group members.</p>';
-            groupMembers.style.display = "block";
-        }
-    }
-
-    seeGroupMembersButton.addEventListener("click", () => {
-        fetchAndDisplayGroupMembers();
-    });
-});
-
-
 //wellness.html
 
+    document.addEventListener('DOMContentLoaded', function () {
+        const goalsList = document.getElementById('goalsList');
+        const newGoalInput = document.getElementById('newGoal');
+        const addGoalButton = document.getElementById('addGoal');
+        const deleteCompletedGoalsButton = document.getElementById('deleteCompletedGoals');
 
-
-document.addEventListener('DOMContentLoaded', function () {
-    const goalsList = document.getElementById('goalsList');
-    const newGoalInput = document.getElementById('newGoal');
-    const addGoalButton = document.getElementById('addGoal');
-    const deleteCompletedGoalsButton = document.getElementById('deleteCompletedGoals');
-
-    addGoalButton.addEventListener('click', function () {
-        const newGoalText = newGoalInput.value.trim();
-        if (newGoalText) {
-            addGoal(newGoalText);
-            newGoalInput.value = '';
-        }
-    });
-
-    deleteCompletedGoalsButton.addEventListener('click', function () {
-        deleteCompletedGoals();
-    });
-
-    function addGoal(goalText) {
-        const listItem = document.createElement('li');
-
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-
-        const goalLabel = document.createElement('label');
-        goalLabel.textContent = goalText;
-
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', function () {
-            deleteGoal(listItem);
-        });
-
-        listItem.appendChild(checkbox);
-        listItem.appendChild(goalLabel);
-        listItem.appendChild(deleteButton);
-
-        goalsList.appendChild(listItem);
-    }
-
-    function deleteCompletedGoals() {
-        const checkboxes = document.querySelectorAll('#goalsList input[type="checkbox"]');
-        checkboxes.forEach(function (checkbox) {
-            if (checkbox.checked) {
-                const listItem = checkbox.parentElement;
-                deleteGoal(listItem);
+        addGoalButton.addEventListener('click', function () {
+            const newGoalText = newGoalInput.value.trim();
+            if (newGoalText) {
+                addGoal(newGoalText);
+                newGoalInput.value = '';
             }
         });
-    }
-    function deleteGoal(listItem) {
-        goalsList.removeChild(listItem);
-    }
-});
+
+        deleteCompletedGoalsButton.addEventListener('click', function () {
+            deleteCompletedGoals();
+        });
+
+        function addGoal(goalText) {
+            const listItem = document.createElement('li');
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+
+            const goalLabel = document.createElement('label');
+            goalLabel.textContent = goalText;
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.addEventListener('click', function () {
+                deleteGoal(listItem);
+            });
+
+            listItem.appendChild(checkbox);
+            listItem.appendChild(goalLabel);
+            listItem.appendChild(deleteButton);
+
+            goalsList.appendChild(listItem);
+        }
+
+        function deleteCompletedGoals() {
+            const checkboxes = document.querySelectorAll('#goalsList input[type="checkbox"]');
+            checkboxes.forEach(function (checkbox) {
+                if (checkbox.checked) {
+                    const listItem = checkbox.parentElement;
+                    deleteGoal(listItem);
+                }
+            });
+        }
+        function deleteGoal(listItem) {
+            goalsList.removeChild(listItem);
+        }
+    });
 
 
 
@@ -300,29 +170,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-// Toggle mood history:
-document.addEventListener('DOMContentLoaded', function () {
-    const moodHistory = document.getElementById('moodHistory');
-    const toggleButton = document.getElementById('toggleMoodHistory');
-    const averageMoodData = document.getElementById('averageMoodData');
+    // Toggle mood history:
+    document.addEventListener('DOMContentLoaded', function () {
+        const moodHistory = document.getElementById('moodHistory');
+        const toggleButton = document.getElementById('toggleMoodHistory');
+        const averageMoodData = document.getElementById('averageMoodData');
 
-    // Hide the mood history initially
-    moodHistory.style.display = 'none';
-    averageMoodData.style.display = 'none'; // Hide the average data
+        // Hide the mood history initially
+        moodHistory.style.display = 'none';
+        averageMoodData.style.display = 'none'; // Hide the average data
 
-    // Toggle mood history when the button is clicked
-    toggleButton.addEventListener('click', function () {
-        if (moodHistory.style.display === 'none') {
-            moodHistory.style.display = 'block';
-            averageMoodData.style.display = 'block'; // Show the average data
-            toggleButton.textContent = 'Hide Mood History';
-        } else {
-            moodHistory.style.display = 'none';
-            averageMoodData.style.display = 'none'; // Hide the average data
-            toggleButton.textContent = 'Show Mood History';
-        }
+        // Toggle mood history when the button is clicked
+        toggleButton.addEventListener('click', function () {
+            if (moodHistory.style.display === 'none') {
+                moodHistory.style.display = 'block';
+                averageMoodData.style.display = 'block'; // Show the average data
+                toggleButton.textContent = 'Hide Mood History';
+            } else {
+                moodHistory.style.display = 'none';
+                averageMoodData.style.display = 'none'; // Hide the average data
+                toggleButton.textContent = 'Show Mood History';
+            }
+        });
     });
-});
     
 
     document.addEventListener('DOMContentLoaded', async function () {
@@ -343,20 +213,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-async function updateWeatherData() {
-    const options = {
-        method: 'GET',
-        url: 'https://weatherapi-com.p.rapidapi.com/forecast.json',
-        params: {
-            q: userLocation,
-            days: '3',
-            units: 'imperial', // imperial for Fahrenheit
-        },
-        headers: {
-            'X-RapidAPI-Key': 'eb3fa9d2eamsh622acd4eaa00bf3p19fc73jsn647406a37c4e',
-            'X-RapidAPI-Host': 'weatherapi-com.p.rapidapi.com',
-        },
-    };
+    async function updateWeatherData() {
+        const options = {
+            method: 'GET',
+            url: 'https://weatherapi-com.p.rapidapi.com/forecast.json',
+            params: {
+                q: userLocation,
+                days: '3',
+                units: 'imperial', // imperial for Fahrenheit
+            },
+            headers: {
+                'X-RapidAPI-Key': 'eb3fa9d2eamsh622acd4eaa00bf3p19fc73jsn647406a37c4e',
+                'X-RapidAPI-Host': 'weatherapi-com.p.rapidapi.com',
+            },
+        };
 
     try { //store the response
         const response = await axios.request(options);//pause execution of async function until this promise is fulfilled- extracts resolved value
@@ -402,17 +272,145 @@ async function updateWeatherData() {
         document.getElementById('toggleView').addEventListener('click', toggleView);
     });
 
+//group.html
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Function to add a post to the discussion forum
+        function addPostToDiscussion(username, content, timestamp, post_id) {
+            const post = document.createElement("div");
+            post.className = "post";
+            post.innerHTML = `<p>${username} says:</p><p>${content}</p><p>Posted on ${timestamp}</p>`;
+    
+            if (g.user && post_id === g.user.user_id) {
+                const deleteForm = document.createElement("form");
+                deleteForm.method = "post";
+                deleteForm.action = `/delete_post/${post_id}`;
+    
+                const deleteButton = document.createElement("button");
+                deleteButton.type = "submit";
+                deleteButton.className = "delete-post-button";
+                deleteButton.textContent = "Delete";
+    
+                deleteForm.appendChild(deleteButton);
+    
+                post.appendChild(deleteForm);
+                post.innerHTML += '<p>My Post</p>';
+            }
+    
+            document.getElementById("discussion").appendChild(post);
+        }
+    
+        // Function to create a new post
+        async function createNewPost(content) {
+            try {
+                const groupId = window.location.pathname.match(/\/group\/(\d+)/);
+                if (groupId) {
+                    const response = await fetch(`/create_group_post/${groupId[1]}`, {
+                        method: "POST",
+                        body: new URLSearchParams({ post_content: content }),
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                    });
+    
+                    if (response.ok) {
+                        const postData = await response.json();
+                        addPostToDiscussion(postData.username, postData.content, postData.timestamp, postData.post_id);
+                        document.getElementById("post-content").value = "";
+                    }
+                } else {
+                    console.error("Group ID not found in the URL.");
+                }
+            } catch (error) {
+                console.error("Error creating a new post:", error);
+            }
+        }
+    
+        // Check if local storage has posts and display them
+        const storedPosts = JSON.parse(localStorage.getItem("discussionPosts")) || [];
+        storedPosts.forEach((post) => {
+            addPostToDiscussion(post.username, post.content, post.timestamp, post.userId);
+        });
+    
+        document.getElementById("post-form").addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const content = document.getElementById("post-content").value;
+            if (content) {
+                await createNewPost(content);
+            }
+        });
+        
+        // JavaScript code to fetch and display group members
+        const seeGroupMembersButton = document.getElementById("seeGroupMembersButton");
+    
+        seeGroupMembersButton.addEventListener("click", async () => {
+            fetchAndDisplayGroupMembers();
+        });
+    });
+
+  // JavaScript code to fetch and display group members
+    document.addEventListener('DOMContentLoaded', function () {
+        const seeGroupMembersButton = document.getElementById("seeGroupMembersButton");
+        
+        // Function to fetch and display group members
+        async function fetchAndDisplayGroupMembers() {
+            const groupMembers = document.getElementById("groupMembers");
+            const groupId = seeGroupMembersButton.getAttribute("data-group-id"); // Get the group_id from the button's data attribute
+
+            // Make a request to the server to get group members
+            try {
+                const response = await fetch(`/get_group_members/${groupId}`, {
+                    method: 'GET',
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data.length > 0) {
+                        groupMembers.innerHTML = '<h3>Group Members:</h3>';
+                        const ul = document.createElement("ul");
+
+                        data.forEach(member => {
+                            const li = document.createElement("li");
+                            li.textContent = member.username;
+                            ul.appendChild(li);
+                        });
+
+                        groupMembers.appendChild(ul);
+                    } else {
+                        groupMembers.innerHTML = '<p>No group members found.</p>';
+                    }
+
+                    groupMembers.style.display = "block";
+                } else {
+                    console.error('Failed to fetch group members:', response.statusText);
+                    groupMembers.innerHTML = '<p>Failed to fetch group members.</p>';
+                    groupMembers.style.display = "block";
+                }
+            } catch (error) {
+                console.error('Error fetching group members:', error);
+                groupMembers.innerHTML = '<p>Failed to fetch group members.</p>';
+                groupMembers.style.display = "block";
+            }
+        }
+
+        seeGroupMembersButton.addEventListener("click", () => {
+            fetchAndDisplayGroupMembers();
+        });
+    });
+
+
+
+
 //diagnosis_history.html
 
-// show/hide the diagnosis information
-document.getElementById('show-diagnosis-button').addEventListener('click', function () {
-    let diagnosisInfo = document.getElementById('diagnosis-info');
-    if (diagnosisInfo.style.display === 'none' || diagnosisInfo.style.display === '') {
-        diagnosisInfo.style.display = 'block';
-    } else {
-        diagnosisInfo.style.display = 'none';
-    }
-});
+    // show/hide the diagnosis information
+    document.getElementById('show-diagnosis-button').addEventListener('click', function () {
+        let diagnosisInfo = document.getElementById('diagnosis-info');
+        if (diagnosisInfo.style.display === 'none' || diagnosisInfo.style.display === '') {
+            diagnosisInfo.style.display = 'block';
+        } else {
+            diagnosisInfo.style.display = 'none';
+        }
+    });
 
 //edit_journal.html
 
@@ -442,32 +440,32 @@ document.getElementById('show-diagnosis-button').addEventListener('click', funct
 
 //home.html
  
-$(document).ready(function() {
-    // Attach a click event handler to all "leave group" buttons
-    $('.leave-group-button').click(function() {
-        let groupId = $(this).data('group-id');
+    $(document).ready(function() {
+        // Attach a click event handler to all "leave group" buttons
+        $('.leave-group-button').click(function() {
+            let groupId = $(this).data('group-id');
 
-        // Make an AJAX request to the server to leave the group
-        $.post('/leave_group/' + groupId, function(data) {
-            if (data.success) {
-                // Remove the group element from the "my groups" list
-                $(`.group[data-group-id="${groupId}"]`).remove();
-            }
+            // Make an AJAX request to the server to leave the group
+            $.post('/leave_group/' + groupId, function(data) {
+                if (data.success) {
+                    // Remove the group element from the "my groups" list
+                    $(`.group[data-group-id="${groupId}"]`).remove();
+                }
+            });
         });
     });
-});
 
-// JavaScript to toggle "Works Cited" content
-const worksCitedButton = document.getElementById("worksCitedButton");
-const worksCitedContent = document.getElementById("worksCitedContent");
+    // JavaScript to toggle "Works Cited" content
+    const worksCitedButton = document.getElementById("worksCitedButton");
+    const worksCitedContent = document.getElementById("worksCitedContent");
 
-worksCitedButton.addEventListener("click", () => {
-    if (worksCitedContent.style.display === "none") {
-        worksCitedContent.style.display = "block";
-    } else {
-        worksCitedContent.style.display = "none";
-    }
-});
+    worksCitedButton.addEventListener("click", () => {
+        if (worksCitedContent.style.display === "none") {
+            worksCitedContent.style.display = "block";
+        } else {
+            worksCitedContent.style.display = "none";
+        }
+    });
 
 
 //friends_groups.html
@@ -486,38 +484,38 @@ worksCitedButton.addEventListener("click", () => {
         }
     });
 
-// Send friend request using AJAX
-document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.send-friend-request').forEach(function (sendButton) {
-        sendButton.addEventListener('click', function (event) {
-            event.preventDefault();
-            const userId = this.getAttribute('data-user-id');
+    // Send friend request using AJAX
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.send-friend-request').forEach(function (sendButton) {
+            sendButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                const userId = this.getAttribute('data-user-id');
 
-            // Send a POST request to send a friend request
-            fetch(`/send_friend_request/${userId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Update the UI or show a success message
-                    alert('Friend request sent successfully.');
-                } else {
-                    // Handle errors or show an error message
-                    alert(data.message); // Display the error message from the JSON response
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while sending the friend request.');
+                // Send a POST request to send a friend request
+                fetch(`/send_friend_request/${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update the UI or show a success message
+                        alert('Friend request sent successfully.');
+                    } else {
+                        // Handle errors or show an error message
+                        alert(data.message); // Display the error message from the JSON response
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while sending the friend request.');
+                });
             });
         });
     });
-});
 
 
     //Accept friend request:
