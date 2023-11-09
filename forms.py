@@ -274,7 +274,7 @@ class DailyAssessmentForm(FlaskForm):
                                            ('hot', 'Hot'),
                                            ('cold', 'Cold')
                                        ],
-                                       widget=ListWidget(prefix_label=False), option_widget=CheckboxInput())
+                                       widget=ListWidget(prefix_label=False), option_widget=CheckboxInput(), validators=[InputRequired("Please complete the form.")])
 
     mood_today = SelectMultipleField('2. How are you feeling today? (Select all that apply)', choices=[
         ('happy', 'Happy'),
@@ -288,7 +288,7 @@ class DailyAssessmentForm(FlaskForm):
         ('confident', 'Confident'),
         ('relaxed', 'Relaxed'),
         ('stressed', 'Stressed')
-    ])
+    ], validators=[InputRequired("Please complete the form.")])
     
     stress_level = SelectMultipleField('3. On a scale of 1-10, how would you rate your stress level today?', choices=[
             (1, '1 - Very low'),
@@ -301,7 +301,7 @@ class DailyAssessmentForm(FlaskForm):
             (8, '8'),
             (9, '9'),
             (10, '10 - Very high')
-        ], coerce=int)  # Specify coerce=int to ensure integer values
+        ], coerce=int, validators=[InputRequired("Please complete the form.")])  
 
     positive_affect_rating = SelectMultipleField('4. How is your mood today on a scale from 1-10? where 1 means you are feeling very low/sad, and 10 means you are feeling very happy/positive.', choices=[
             (1, '1 - Very low'),
@@ -314,7 +314,7 @@ class DailyAssessmentForm(FlaskForm):
             (8, '8 - Feeling Good!'),
             (9, '9 - Great!'),
             (10, '10 - Very happy and/or Excited')
-        ], coerce=int)  # Specify coerce=int to ensure integer values
+        ], coerce=int, validators=[InputRequired("Please complete the form.")])  # Specify coerce=int to ensure integer values
 
 
 

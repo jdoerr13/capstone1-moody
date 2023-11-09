@@ -75,33 +75,40 @@
 
 
 
+
 <script>
+    let g = {};
+
     document.addEventListener('DOMContentLoaded', function () {
         // Function to add a post to the discussion forum
-        function addPostToDiscussion(username, content, timestamp, post_id) {
+        function addPostToDiscussion(username, content, timestamp, post_id, user_id) {
             const post = document.createElement("div");
             post.className = "post";
             post.innerHTML = `<p>${username} says:</p><p>${content}</p><p>Posted on ${timestamp}</p>`;
-    
-            if (g.user && post_id === g.user.user_id) {
-                const deleteForm = document.createElement("form");
-                deleteForm.method = "post";
-                deleteForm.action = `/delete_post/${post_id}`;
-    
-                const deleteButton = document.createElement("button");
-                deleteButton.type = "submit";
-                deleteButton.className = "delete-post-button";
-                deleteButton.textContent = "Delete";
-    
-                deleteForm.appendChild(deleteButton);
-    
-                post.appendChild(deleteForm);
-                post.innerHTML += '<p>My Post</p>';
-            }
-    
-            document.getElementById("discussion").appendChild(post);
+
+            if (g.user && user_id === g.user.user_id) {
+    const deleteForm = document.createElement("form");
+    deleteForm.method = "post";
+    deleteForm.action = `/delete_post/${post_id}`;
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "submit";
+    deleteButton.className = "delete-post-button";
+    deleteButton.textContent = "Delete";
+
+    deleteForm.appendChild(deleteButton);
+    post.appendChild(deleteForm);
+
+    // Add "My Post" without overwriting the existing content
+    const myPostText = document.createElement("p");
+    myPostText.textContent = "My Post";
+    post.appendChild(myPostText);
+}
+
+document.getElementById("discussion").appendChild(post);
+
         }
-    
+
         // Function to create a new post
         async function createNewPost(content) {
             try {
@@ -112,11 +119,13 @@
                         body: new URLSearchParams({ post_content: content }),
                         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
                     });
-    
+
                     if (response.ok) {
                         const postData = await response.json();
-                        addPostToDiscussion(postData.username, postData.content, postData.timestamp, postData.post_id);
+                        addPostToDiscussion(postData.username, postData.content, postData.timestamp, postData.post_id, postData.user_id);
                         document.getElementById("post-content").value = "";
+                    } else {
+                        console.error("Failed to create a new post:", response.statusText);
                     }
                 } else {
                     console.error("Group ID not found in the URL.");
@@ -125,13 +134,13 @@
                 console.error("Error creating a new post:", error);
             }
         }
-    
+
         // Check if local storage has posts and display them
         const storedPosts = JSON.parse(localStorage.getItem("discussionPosts")) || [];
         storedPosts.forEach((post) => {
-            addPostToDiscussion(post.username, post.content, post.timestamp, post.userId);
+            addPostToDiscussion(post.username, post.content, post.timestamp, post.user_id);
         });
-    
+
         document.getElementById("post-form").addEventListener("submit", async function (event) {
             event.preventDefault();
             const content = document.getElementById("post-content").value;
@@ -139,65 +148,54 @@
                 await createNewPost(content);
             }
         });
-        
+
         // JavaScript code to fetch and display group members
         const seeGroupMembersButton = document.getElementById("seeGroupMembersButton");
-    
+
         seeGroupMembersButton.addEventListener("click", async () => {
             fetchAndDisplayGroupMembers();
         });
-    });
 
-  // JavaScript code to fetch and display group members
-document.addEventListener('DOMContentLoaded', function () {
-    const seeGroupMembersButton = document.getElementById("seeGroupMembersButton");
-    
-    // Function to fetch and display group members
-    async function fetchAndDisplayGroupMembers() {
-        const groupMembers = document.getElementById("groupMembers");
-        const groupId = seeGroupMembersButton.getAttribute("data-group-id"); // Get the group_id from the button's data attribute
+        // Function to fetch and display group members
+        async function fetchAndDisplayGroupMembers() {
+            const groupMembers = document.getElementById("groupMembers");
+            const groupId = seeGroupMembersButton.getAttribute("data-group-id");
 
-        // Make a request to the server to get group members
-        try {
-            const response = await fetch(`/get_group_members/${groupId}`, {
-                method: 'GET',
-            });
+            try {
+                const response = await fetch(`/get_group_members/${groupId}`, {
+                    method: 'GET',
+                });
 
-            if (response.ok) {
-                const data = await response.json();
+                if (response.ok) {
+                    const data = await response.json();
 
-                if (data.length > 0) {
-                    groupMembers.innerHTML = '<h3>Group Members:</h3>';
-                    const ul = document.createElement("ul");
+                    if (data.length > 0) {
+                        groupMembers.innerHTML = '<h3>Group Members:</h3>';
+                        const ul = document.createElement("ul");
 
-                    data.forEach(member => {
-                        const li = document.createElement("li");
-                        li.textContent = member.username;
-                        ul.appendChild(li);
-                    });
+                        data.forEach(member => {
+                            const li = document.createElement("li");
+                            li.textContent = member.username;
+                            ul.appendChild(li);
+                        });
 
-                    groupMembers.appendChild(ul);
+                        groupMembers.appendChild(ul);
+                    } else {
+                        groupMembers.innerHTML = '<p>No group members found.</p>';
+                    }
+
+                    groupMembers.style.display = "block";
                 } else {
-                    groupMembers.innerHTML = '<p>No group members found.</p>';
+                    console.error('Failed to fetch group members:', response.statusText);
+                    groupMembers.innerHTML = '<p>Failed to fetch group members.</p>';
+                    groupMembers.style.display = "block";
                 }
-
-                groupMembers.style.display = "block";
-            } else {
-                console.error('Failed to fetch group members:', response.statusText);
+            } catch (error) {
+                console.error('Error fetching group members:', error);
                 groupMembers.innerHTML = '<p>Failed to fetch group members.</p>';
                 groupMembers.style.display = "block";
             }
-        } catch (error) {
-            console.error('Error fetching group members:', error);
-            groupMembers.innerHTML = '<p>Failed to fetch group members.</p>';
-            groupMembers.style.display = "block";
         }
-    }
-
-    seeGroupMembersButton.addEventListener("click", () => {
-        fetchAndDisplayGroupMembers();
     });
-});
-
 </script>
 {% endblock %}

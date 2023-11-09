@@ -37,7 +37,7 @@ app.config['SECRET_KEY'] = "JDOERR13"
 
 connect_db(app)
 app.app_context().push()
-db.drop_all()
+# db.drop_all()
 db.create_all()
 
 
@@ -678,10 +678,11 @@ def daily_assessment():
 
     if request.method == 'POST' and form.validate_on_submit():
         # Convert selected values to integers
-        stress_level = int(form.stress_level.data[0])  # Assuming it's a single integer choice
-        positive_affect_rating = int(form.positive_affect_rating.data[0])  # Assuming it's a single integer choice
+        stress_level = int(form.stress_level.data[0]) if form.stress_level.data else 0  # Set a default value (e.g., 0) if the list is empty
+        positive_affect_rating = int(form.positive_affect_rating.data[0]) if form.positive_affect_rating.data else 0
+ 
 
-        # Create the assessment object and insert it into the database
+        #  the assessment object and insert it into the database
         assessment = DailyAssessment(
             user_id=g.user.user_id,
             date=datetime.now().date(),
@@ -789,10 +790,11 @@ def group(group_id):
         post_content = request.form.get('post_content')
 
         if post_content:
-            current_user_id = 1  # Replace with your logic to get the current user's ID
+            current_user_id = g.user.user_id
             new_post = GroupPost(user_id=current_user_id, group=group, post_content=post_content)
             db.session.add(new_post)
             db.session.commit()
+
             
             return jsonify({
                 'username': new_post.user.username,

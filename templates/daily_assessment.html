@@ -3,7 +3,7 @@
 {% block content %}
     <title>Daily Assessment</title>
     <h1>Daily Assessment</h1>
-    <form method="POST">
+    <form method="POST" onsubmit="return validateForm();">
         {{ form.hidden_tag() }}
         
         <div class="form-group">
@@ -14,6 +14,9 @@
                     <label class="form-check-label" for="{{ form.weather_today.id ~ '_' ~ loop.index0 }}">{{ choice[1] }}</label>
                 </div>
             {% endfor %}
+            {% for error in form.stress_level.errors %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endfor %}
         </div>
         
         <div class="form-group">
@@ -24,6 +27,9 @@
                     <label class="form-check-label" for="{{ form.mood_today.id ~ '_' ~ loop.index0 }}">{{ choice[1] }}</label>
                 </div>
             {% endfor %}
+            {% for error in form.stress_level.errors %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endfor %}
         </div>
 
         <div class="form-group">
@@ -34,6 +40,9 @@
                     <label class="form-check-label" for="{{ form.stress_level.id ~ '_' ~ loop.index0 }}">{{ choice[1] }}</label>
                 </div>
             {% endfor %}
+            {% for error in form.stress_level.errors %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endfor %}
         </div>
         
         <div class="form-group">
@@ -44,10 +53,14 @@
                     <label class="form-check-label" for="{{ form.positive_affect_rating.id ~ '_' ~ loop.index0 }}">{{ choice[1] }}</label>
                 </div>
             {% endfor %}
+            {% for error in form.stress_level.errors %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endfor %}
         </div>
-
+       
         <button type="submit" class="btn btn-primary">Submit</button>
         <a href="{{ url_for('wellness') }}" class="btn btn-outline-secondary">Cancel</a>
     </form>
 </body>
 {% endblock %}
+
