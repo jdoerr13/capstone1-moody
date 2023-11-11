@@ -40,6 +40,9 @@ app.app_context().push()
 # db.drop_all()
 db.create_all()
 
+  
+
+
 
 ##############################################################################
 #_________________User signup/login/logout_______________________
@@ -782,6 +785,7 @@ def leave_group(group_id):
     return jsonify(success=False, message='Failed to leave the group')
 
 
+
 @app.route('/group/<int:group_id>', methods=['GET', 'POST'])
 def group(group_id):
     group = Group.query.get(group_id)
@@ -838,7 +842,17 @@ def create_group_post(group_id):
             new_post = GroupPost(post_content=post_content, group_id=group_id, user_id=g.user.user_id)
             db.session.add(new_post)
             db.session.commit()
-    return redirect(url_for('group', group_id=group_id))
+
+            # Return JSON response
+            return jsonify({
+                'username': g.user.username,
+                'content': new_post.post_content,
+                'timestamp': new_post.timestamp,
+                'post_id': new_post.id,
+                'user_id': new_post.user_id
+            })
+
+    return jsonify({'error': 'Failed to create a new post'}), 500
 
 
 @app.route('/create_response/<int:group_id>/<int:post_id>', methods=['POST'])

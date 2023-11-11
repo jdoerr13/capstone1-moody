@@ -1,6 +1,6 @@
 import os
 from app import app, db  
-from models import Group, Diagnosis, CopingSolution, DiagnosisSolution
+from models import Group, Diagnosis, CopingSolution, DiagnosisSolution, Diagnosis
 
 # db.drop_all()
 # db.create_all()
@@ -9,10 +9,14 @@ def seed_data():
     with app.app_context():
 
         print("Clearing old data...")
+        DiagnosisSolution.query.filter(DiagnosisSolution.diagnosis_id.in_(range(1, 7))).delete(synchronize_session=False)
         Group.query.delete()
         Diagnosis.query.delete()
         CopingSolution.query.delete()
-        DiagnosisSolution.query.delete()
+        # DiagnosisSolution.query.delete()
+        Diagnosis.query.delete()
+
+
 
 # Create and commit instances for each group
         print("Seeding groups...")
@@ -32,12 +36,12 @@ def seed_data():
 # Create and commit instances for each diagnosis
         print("Seeding diagnoses...")
         diagnoses = [
-            Diagnosis(issue_name="Climate Change or Environmental Anxiety"),
-            Diagnosis(issue_name="Major Disaster or Severe Weather Anxiety"),
-            Diagnosis(issue_name="Weather-Induced Mood Swings (Moody)"),
-            Diagnosis(issue_name="Seasonal Affective Disorder (SAD)"),
-            Diagnosis(issue_name="General Weather Stress or Cabin Fever"),
-            Diagnosis(issue_name="Weather-Induced Physical Issues"),
+            Diagnosis(issue_id=1, issue_name="Climate Change or Environmental Anxiety"),
+            Diagnosis(issue_id=2, issue_name="Major Disaster or Severe Weather Anxiety"),
+            Diagnosis(issue_id=3, issue_name="Weather-Induced Mood Swings (Moody)"),
+            Diagnosis(issue_id=4, issue_name="Seasonal Affective Disorder (SAD)"),
+            Diagnosis(issue_id=5, issue_name="General Weather Stress or Cabin Fever"),
+            Diagnosis(issue_id=6, issue_name="Weather-Induced Physical Issues"),
         ]
 
         db.session.bulk_save_objects(diagnoses)
@@ -46,24 +50,24 @@ def seed_data():
 # Create and commit instances for coping solutions
         print("Seeding coping solutions...")
         coping_solutions = [
-            CopingSolution(solution_text="Stay informed about climate issues and actions you can take."),
-            CopingSolution(solution_text="Practice eco-friendly habits to reduce personal environmental impact."),
-            CopingSolution(solution_text="Seek professional therapy to address anxiety and fears related to climate change."),
-            CopingSolution(solution_text="Create an emergency plan for your family and home."),
-            CopingSolution(solution_text="Stay informed about disaster preparedness and local resources."),
-            CopingSolution(solution_text="Consider professional therapy to address disaster-related anxiety."),
-            CopingSolution(solution_text="Monitor weather forecasts and plan activities accordingly."),
-            CopingSolution(solution_text="Engage in mood-boosting activities on gloomy days."),
-            CopingSolution(solution_text="Consider therapy to manage mood swings influenced by the weather."),
-            CopingSolution(solution_text="Use light therapy to mitigate the effects of reduced daylight."),
-            CopingSolution(solution_text="Stay active and maintain a consistent daily routine."),
-            CopingSolution(solution_text="Consult a mental health professional for SAD-specific therapies."),
-            CopingSolution(solution_text="Engage in indoor hobbies or activities during poor weather."),
-            CopingSolution(solution_text="Practice relaxation techniques to reduce stress and cabin fever."),
-            CopingSolution(solution_text="Seek therapy for managing stress and coping with weather-induced stress."),
-            CopingSolution(solution_text="Monitor your physical symptoms and seek medical advice as needed."),
-            CopingSolution(solution_text="Stay active and maintain a healthy lifestyle regardless of the weather."),
-            CopingSolution(solution_text="Consult healthcare professionals for addressing weather-induced physical issues."),
+            CopingSolution(solution_id=1, solution_text="Stay informed about climate issues and actions you can take."),
+            CopingSolution(solution_id=2, solution_text="Practice eco-friendly habits to reduce personal environmental impact."),
+            CopingSolution(solution_id=3, solution_text="Seek professional therapy to address anxiety and fears related to climate change."),
+            CopingSolution(solution_id=4, solution_text="Create an emergency plan for your family and home."),
+            CopingSolution(solution_id=5, solution_text="Stay informed about disaster preparedness and local resources."),
+            CopingSolution(solution_id=6, solution_text="Consider professional therapy to address disaster-related anxiety."),
+            CopingSolution(solution_id=7, solution_text="Monitor weather forecasts and plan activities accordingly."),
+            CopingSolution(solution_id=8, solution_text="Engage in mood-boosting activities on gloomy days."),
+            CopingSolution(solution_id=9, solution_text="Consider therapy to manage mood swings influenced by the weather."),
+            CopingSolution(solution_id=10, solution_text="Use light therapy to mitigate the effects of reduced daylight."),
+            CopingSolution(solution_id=11, solution_text="Stay active and maintain a consistent daily routine."),
+            CopingSolution(solution_id=12, solution_text="Consult a mental health professional for SAD-specific therapies."),
+            CopingSolution(solution_id=13, solution_text="Engage in indoor hobbies or activities during poor weather."),
+            CopingSolution(solution_id=14, solution_text="Practice relaxation techniques to reduce stress and cabin fever."),
+            CopingSolution(solution_id=15, solution_text="Seek therapy for managing stress and coping with weather-induced stress."),
+            CopingSolution(solution_id=16, solution_text="Monitor your physical symptoms and seek medical advice as needed."),
+            CopingSolution(solution_id=17, solution_text="Stay active and maintain a healthy lifestyle regardless of the weather."),
+            CopingSolution(solution_id=18, solution_text="Consult healthcare professionals for addressing weather-induced physical issues."),
         ]
 
         db.session.bulk_save_objects(coping_solutions)
@@ -97,10 +101,19 @@ def seed_data():
 
         print("Data seeded successfully.")
 
-    if __name__ == '__main__':
-        seed_data()
+        # def delete_diagnoses():
+        #     with app.app_context():
+        # # Delete diagnosis_solutions records referencing diagnosis
+        #         DiagnosisSolution.query.filter(DiagnosisSolution.diagnosis_id.in_(range(1, 7))).delete(synchronize_session=False)
 
+        # # Now, delete diagnoses
+        #         Diagnosis.query.delete()
+        #         db.session.commit()
 
+        # if __name__ == '__main__':
+        #     seed_data()
+
+seed_data()
 #in Ipython: 
 # In [2]: %run seed.py
 # In [3]: seed_data()

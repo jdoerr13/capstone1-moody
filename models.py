@@ -114,7 +114,7 @@ class DiagnosisSolution(db.Model):
     __tablename__ = 'diagnosis_solutions'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'))  # Add this line
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id')) 
     diagnosis_id = db.Column(db.Integer, db.ForeignKey('diagnosis.issue_id'))
     solution_id = db.Column(db.Integer, db.ForeignKey('coping_solutions.solution_id'))
     solution_text = db.Column(db.Text)
@@ -124,7 +124,6 @@ class DiagnosisSolution(db.Model):
     solution = db.relationship('CopingSolution', back_populates='diagnoses')
 
 
-# Define Diagnosis
 class Diagnosis(db.Model):
     __tablename__ = 'diagnosis'
 
@@ -132,7 +131,8 @@ class Diagnosis(db.Model):
     issue_name = db.Column(db.String(255), nullable=False)
 
     solutions = db.relationship('DiagnosisSolution', back_populates='diagnosis')
-    user_associations = db.relationship('UserDiagnosisAssociation', back_populates='diagnosis')
+    user_associations = db.relationship('UserDiagnosisAssociation', back_populates='diagnosis', cascade='all, delete-orphan')
+
 
 # Define CopingSolution
 class CopingSolution(db.Model):

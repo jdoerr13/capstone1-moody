@@ -26,8 +26,7 @@
     display: flex;
     align-items: center;
     font-family: 'Marker Felt', cursive;
-    font-weight: 900; /* Adjust font weight as needed */
-
+    font-weight: 900; 
     font-size: 66px;
 }
 
@@ -112,6 +111,7 @@ nav form.navbar-form, .navbar-form {
 
 .onboarding .navbar-header {
     margin: 0 auto;
+    text-align: center;
 }
 
 .onboarding .navbar-brand {
@@ -140,8 +140,12 @@ nav form.navbar-form, .navbar-form {
 }
 
 @media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 18px; /* Adjust font size for smaller screens */
+    }
     .full-width .user-stats .stat {
         display: none;
+        
     }
 }
 
@@ -206,6 +210,9 @@ body {
 }
 
 
+@media (max-width: 767px) {
+    /* Styles for small screens */
+}
 
 
 
