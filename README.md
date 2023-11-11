@@ -1,5 +1,7 @@
 Moody: Elevate Your Emotional Well-Being with Weather Awareness
 
+websit: https://capstone-1-moody.onrender.com
+
 Moody is a user-friendly platform designed to empower users to better understand and manage their emotional well-being. The goal is to provide a space for tracking daily moods, correlating mood fluctuations with weather conditions, and offering historical insights and coping solutions. Moody aims to support users in improving their mood and fostering a positive online community.
 
 Features:
