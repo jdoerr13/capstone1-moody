@@ -34,11 +34,11 @@ To access the complete list of dependencies, please refer to the requirements.tx
 
 Please follow these steps to run the application on your machine:
 
-python3 -m venv venv
-source venv/bin/activate
-pip3 install -r requirements.txt
-Python3 seed.py
-flask run
+1. python3 -m venv venv
+2. source venv/bin/activate
+3. pip3 install -r requirements.txt
+4. Python3 seed.py
+5. flask run
 
 For more information, check out the website articles & Works Cited section on the homepage.
 
