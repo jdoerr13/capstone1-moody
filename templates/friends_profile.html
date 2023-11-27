@@ -7,19 +7,25 @@
         <div class="content-box">
             <div class="row">
                 <div class="col-md-6">
-                    <h1 class="welcome-message">{{ user.username }}'s Profile:</h1>
+
+               
+                    <h1 class="welcome-message center">{{ user.username }}'s Profile:</h1>
+                
                 </div>
                 <div class="col-md-6 text-right">
                     <div class="form-group">
-                        {% if image_url %}
-                            <img src="{{ image_url }}" alt="Profile Picture" class="profile-icon img-fluid">
+                        {% if user.image_url %}
+                        <img src="{{ url_for('uploaded_file', filename=user.image_url) }}" alt="User Image" class="profile-icon">
                         {% else %}
-                            <img src="{{ url_for('static', filename='uploads/example.png') }}" alt="Default Profile Picture" class="profile-icon img-fluid">
+                            <img src="{{ url_for('static', filename='uploads/example.png') }}" alt="Default Profile Picture" class="profile-icon">
                         {% endif %}
                     </div>
                 </div>
             </div>
+         
             <h3>Home Location: {{ location }}</h3>
+          
+        
         </div>
 
 

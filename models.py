@@ -1,6 +1,11 @@
 from datetime import datetime
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
+from flask import app, request
+import os
+from PIL import Image
+from werkzeug.utils import secure_filename
+
 
 # Create a SQLAlchemy instance
 db = SQLAlchemy()
@@ -46,7 +51,8 @@ class User(db.Model):
     email = db.Column(db.String(120), nullable=False, unique=True)  
     bio = db.Column(db.Text)
     location = db.Column(db.String(255))
-    image_url = db.Column(db.String(255))
+    image_url = db.Column(db.String(512))
+
     password = db.Column(db.String(120), nullable=False)
     registration_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 

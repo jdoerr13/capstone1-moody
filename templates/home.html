@@ -19,7 +19,7 @@
                 <h1 class="welcome-message">Welcome, {{ user.username }}!</h1>
                 <div class="form-group">
                     {% if user.image_url %}
-                        <img src="{{ url_for('get_image', user_id=user.user_id) }}" alt="User Image">
+                    <img src="{{ url_for('uploaded_file', filename=user.image_url) }}" alt="User Image" class="profile-icon">
                     {% else %}
                         <img src="{{ url_for('static', filename='uploads/example.png') }}" alt="Default Profile Picture" class="profile-icon">
                     {% endif %}

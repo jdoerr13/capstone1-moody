@@ -247,8 +247,11 @@ body {
         max-width: 400% !important; 
     }
 
+ 
+
     .header h1 {
         font-size: 36px;
+        text-align: center;
     }
 
     .header p {
@@ -273,6 +276,12 @@ body {
             -1px 1px 0 #000,  
             1px 1px 0 #000;   
     }
+
+    .welcome-message center {
+        text-align: left !important;
+        margin-right: 70px !important; /* Adjust the value as needed */
+    }
+
     .profile-icon {
         text-align: left; 
     }

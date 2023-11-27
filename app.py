@@ -13,6 +13,7 @@ from flask_migrate import Migrate
 from statistics import mean, mode
 from werkzeug.utils import secure_filename
 from sqlalchemy import update
+from PIL import Image
 # from flask_wtf.csrf import CSRFProtect
 
 CURR_USER_KEY = "curr_user"
@@ -363,39 +364,32 @@ def edit_profile():
     form = ProfileEditForm(obj=user)  # Pass the user object to the form
 
     if form.validate_on_submit():
-        if user:
-            # Handle the image upload
+        # Check if a new image is uploaded
+        if 'image_url' in request.files:
             uploaded_image = form.image_url.data
             if uploaded_image:
-                # Secure the filename
                 filename = secure_filename(uploaded_image.filename)
                 unique_filename = str(uuid.uuid4()) + filename
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
                 uploaded_image.save(file_path)
-                
-                # Update the user's profile with the image path, not FileStorage
+    
+    
                 user.image_url = unique_filename
 
-            # Update other profile data
-            form.populate_obj(user)  # Populate the user object with form data
+        # form.populate_obj(user)# don't use this unless only using
+        user.bio = form.bio.data
+        user.location = form.location.data
+        # Commit the changes to the database
+        db.session.commit()
 
-            # Commit the changes to the database
-            db.session.commit()
-
-            flash('Your profile has been updated.', 'success')
-            return redirect(url_for('homepage'))
-        else:
-            flash('User not found.', 'error')
+        flash('Your profile has been updated.', 'success')
+        return redirect(url_for('homepage'))
 
     return render_template('edit_profile.html', form=form, user=user)
 
-
-# Route to serve uploaded files
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
-
 
 #_______Friends_________
 @app.route('/friends_profile/<int:user_id>')

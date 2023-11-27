@@ -8,6 +8,7 @@ from wtforms.widgets import ListWidget, CheckboxInput
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.file import FileField, FileAllowed
+from PIL import Image
 
 
 bcrypt = Bcrypt()
