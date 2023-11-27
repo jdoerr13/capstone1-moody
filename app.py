@@ -13,7 +13,6 @@ from flask_migrate import Migrate
 from statistics import mean, mode
 from werkzeug.utils import secure_filename
 from sqlalchemy import update
-from PIL import Image
 # from flask_wtf.csrf import CSRFProtect
 
 CURR_USER_KEY = "curr_user"

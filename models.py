@@ -1,11 +1,6 @@
 from datetime import datetime
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
-from flask import app, request
-import os
-from PIL import Image
-from werkzeug.utils import secure_filename
-
 
 # Create a SQLAlchemy instance
 db = SQLAlchemy()
