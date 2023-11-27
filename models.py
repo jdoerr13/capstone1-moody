@@ -244,9 +244,6 @@ class Weather(db.Model):
     user_history = db.relationship('UserHistory', uselist=False, back_populates='weather')
 
 
-
-
-
 def connect_db(app):
     """Connect this database to the provided Flask app.
 
