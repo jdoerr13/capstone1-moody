@@ -192,7 +192,9 @@ class Group(db.Model):
     members = db.relationship(
         'User',
         secondary=user_group_association,
-        back_populates='groups'
+        back_populates='groups',
+        single_parent=True,  # Add this line
+        cascade='all, delete-orphan'
     )
     def __init__(self, group_name, description):
         self.group_name = group_name
