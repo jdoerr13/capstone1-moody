@@ -4,6 +4,11 @@
     <h1>Greetings New Friend</h1>
     <h4>New to Moody?</h4>
     <p>Sign up now to meet other moodies and get your own customized mood journal!</p>
-    <a href="/signup" class="btn btn-primary">Sign up</a>
+    <a href="{{ url_for('signup') }}" class="btn btn-primary">Sign up</a>
+    <form action="{{ url_for('demo_login') }}" method="get" style="margin-top: 1em;">
+      <button type="submit" class="btn btn-secondary">Demo / Guest Login</button>
+    </form>
+    {# Or as a link: #}
+    {# <a href="{{ url_for('demo_login') }}" class="btn btn-secondary" style="margin-top: 1em;">Try as Guest / Demo</a> #}
   </div>
 {% endblock %}

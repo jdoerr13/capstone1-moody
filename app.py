@@ -118,6 +118,16 @@ def logout():
 
     return redirect("/")
 
+@app.route('/demo_login')
+def demo_login():
+    demo_user = User.query.filter_by(username="demo").first()
+    if demo_user:
+        do_login(demo_user)
+        flash("You are now using the demo account!", "info")
+        return redirect('/')
+    else:
+        flash("Demo user not set up. Please contact support.", "danger")
+        return redirect(url_for('login'))
 
 ##############################################################################
 #_____________GETTING INFO FROM API_________________________
