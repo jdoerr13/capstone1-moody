@@ -1,236 +1,206 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <title>Home Page</title>
+<title>Home Page</title>
 
-    <header class="container mt-4">
-        <div class="row">
-            <div class="col-md-6">
-                <h1 class="bubbly-text">Moody</h1>
-                {% if location %}
-                    <h3 class="user-location">Your Home Location: {{ location }}</h3>
-                {% else %}
-                    <h3 class="user-location">*Don't forget to update your location in "edit profile".</h3>
-                {% endif %}
-                <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Edit Profile</a>
-            </div>
+<header class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <h1 class="bubbly-text">Moody</h1>
+            {% if location %}
+                <h3 class="user-location">Your Home Location: {{ location }}</h3>
+            {% else %}
+                <h3 class="user-location">*Don't forget to update your location in "edit profile".</h3>
+            {% endif %}
+            <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Edit Profile</a>
+        </div>
 
-            <div class="col-md-6 text-right">
-                <h1 class="welcome-message">Welcome, {{ user.username }}!</h1>
-                <div class="form-group">
-                    {% if user.image_url %}
+        <div class="col-md-6 text-right">
+            <h1 class="welcome-message">Welcome, {{ user.username }}!</h1>
+            <div class="form-group">
+                {% if user.image_url %}
                     <img src="{{ url_for('uploaded_file', filename=user.image_url) }}" alt="User Image" class="profile-icon">
-                    {% else %}
-                        <img src="{{ url_for('static', filename='uploads/example.png') }}" alt="Default Profile Picture" class="profile-icon">
-                    {% endif %}
-                </div>
+                {% else %}
+                    <img src="{{ url_for('static', filename='uploads/example.png') }}" alt="Default Profile Picture" class="profile-icon">
+                {% endif %}
             </div>
         </div>
-    </header>
+    </div>
+</header>
 
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-md-6">
-                {% if current_weather_data %}
-                    <div class="content-box">
-                        <h2>Current Weather for {{ current_weather_data['location']['name'] }}, {{ current_weather_data['location']['region'] }}, {{ current_weather_data['location']['country'] }}</h2>
-                        <h4>Current Time: {{ current_weather_data['location']['localtime'] }}</h4>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h4>Temperature:</h4>
-                                <p>{{ current_weather_data['current']['temp_f'] }}°F</p>
-                                <p>{{ current_weather_data['current']['temp_c'] }}°C</p>
-                            </div>
-                            <div class="col-md-6">
-                                <h4>Feels Like:</h4>
-                                <p>{{ current_weather_data['current']['feelslike_f'] }}°F</p>
-                                <p>{{ current_weather_data['current']['feelslike_c'] }}°C</p>
-                            </div>
-                            <div class="text-center">
-                                <p>{{ current_weather_data['current']['condition']['text'] }}</p>
-                                <img src="{{ current_weather_data['current']['condition']['icon'] }}" alt="{{ current_weather_data['current']['condition']['text'] }}" class="img-fluid">
-                            </div>
-                        </div>
-                    
-
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            {% if current_weather_data %}
+                <div class="content-box">
+                    <h2>Current Weather for {{ current_weather_data['location']['name'] }}, {{ current_weather_data['location']['region'] }}, {{ current_weather_data['location']['country'] }}</h2>
+                    <h4>Current Time: {{ current_weather_data['location']['localtime'] }}</h4>
                     <div class="row">
-                        {% if forecast_data %}
-                            {% for day in forecast_data.forecast.forecastday %}
-                                <div class="col-md-4 mb-4">
-                                    <div class="card custom-card">
-                                        <div class="card-body">
-                                            <h5 class="card-title">{{ day.date }}</h5>
-                                            <p class="card-text">Condition: {{ day.day.condition.text }}</p>
-                                            <p class="card-text">Temperature: {{ day.day.avgtemp_c }}°C ({{ day.day.avgtemp_f }}°F)</p>
-                                            <p class="card-text">Feels Like: {{ day.day.avgtemp_c }}°C ({{ day.day.avgtemp_f }}°F)</p>
-                                            <p class="card-text">Humidity: {{ day.day.avghumidity }}%</p>
-                                            <p class="card-text">UV Index: {{ day.day.uv }}</p>
-                                        </div>
+                        <div class="col-md-6">
+                            <h4>Temperature:</h4>
+                            <p>{{ current_weather_data['current']['temp_f'] }}°F</p>
+                            <p>{{ current_weather_data['current']['temp_c'] }}°C</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>Feels Like:</h4>
+                            <p>{{ current_weather_data['current']['feelslike_f'] }}°F</p>
+                            <p>{{ current_weather_data['current']['feelslike_c'] }}°C</p>
+                        </div>
+                        <div class="text-center">
+                            <p>{{ current_weather_data['current']['condition']['text'] }}</p>
+                            <img src="{{ current_weather_data['current']['condition']['icon'] }}" alt="{{ current_weather_data['current']['condition']['text'] }}" class="img-fluid">
+                        </div>
+                    </div>
+
+                    {% if mood_prediction %}
+                    <div class="mt-3 p-3 border rounded bg-light text-center">
+                        <h4 class="text-primary">AI Mood Forecast</h4>
+                        <p>Based on today’s weather, you may feel: <strong>{{ mood_prediction }}</strong></p>
+                    </div>
+                    {% endif %}
+
+                    {% if forecast_data %}
+                    <h3 class="mt-4">7-Day Weather Forecast</h3>
+                    <div class="row">
+                        {% for day in forecast_data %}
+                            <div class="col-md-4 mb-4">
+                                <div class="card custom-card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ day.date }}</h5>
+                                        <p class="card-text">Condition: {{ day.condition or "N/A" }}</p>
+                                        <p class="card-text">Temperature: {{ day.avgtemp_f }}°F / {{ day.avgtemp_c }}°C</p>
+                                        <p class="card-text">Feels Like: {{ day.avgtemp_f }}°F / {{ day.avgtemp_c }}°C</p>
+                                        <p class="card-text">
+                                            Humidity: {% if day.avghumidity != "N/A" %}{{ day.avghumidity }}%{% else %}N/A{% endif %}
+                                        </p>
+                                        <p class="card-text">
+                                            UV Index: {% if day.uv != "N/A" %}{{ day.uv }}{% else %}N/A{% endif %}
+                                        </p>
                                     </div>
                                 </div>
-                            {% endfor %}
-                        {% else %}
-                            <p>No forecast data available.</p>
-                        {% endif %}
-                    </div>
-                {% else %}
-                    <div class="content-box">
-                        <p>No weather data available for the current location.</p>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-
-            <div class="col-md-6 text-right">
-                <div class="content-box">
-                    <h3>Moody Daily on: {{ today_date }}</h3>
-                    <div class="card custom-card-two">
-                        {% if latest_assessment %}
-                            <p>Today's weather is {{ latest_assessment.weather_today }}!</p>
-                            <p>You are feeling {{ latest_assessment.mood_today }}.</p>
-                            <p>Your stress level is at a {{ latest_assessment.stress_level }}.</p>
-                            <p>Your current mood level is at a {{ latest_assessment.positive_affect_rating }}!</p>
-                        {% else %}
-                            <p>Today's weather is ?</p>
-                            <p>You are feeling ??</p>
-                            <p>Your stress level is at a ???</p>
-                            <p>Your current mood level is at a ????</p>
-                        {% endif %}
-                    </div>
-                    <a href="{{ url_for('daily_assessment') }}" class="btn btn-primary">Log Your Daily Mood</a>
-                </div>
-
-                <div class="content-box">
-                    <h3>Your Wellness Companion & Moody Journal</h3>
-                    <ul>
-                        {% for history_item in user_history %}
-                            <li>{{ history_item.date }} - {{ history_item.activity }}</li>
-                        {% endfor %}
-                    </ul>
-                    <a href="{{ url_for('wellness') }}" class="btn btn-primary">Wellness Page</a>
-                    <a href="{{ url_for('mood_symptom') }}" class="btn btn-primary">Take Mood Assessment</a>
-                    <a href="{{ url_for('diagnosis_history') }}" class="btn btn-primary">Diagnosis History</a>
-                </div>
-
-                <div class="content-box">
-                    <h3>Weather Information</h3>
-                    <a href="/current" class="btn btn-primary">Current Weather</a>
-                    <a href="/forecast" class="btn btn-primary">Weather Forecast</a>
-                    <a href="/history" class="btn btn-primary">Historical Weather</a>
-                </div>
-
-                <div class="col-md-6 text-right">
-                    <div class="content-box">
-                        <h3>AstroMoodology</h3>
-                        <a href="/astronomy" class="btn btn-primary">Astronomy Data</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container mt-4">
-        <div class="row">
-            <div class="content-box">
-                <h3>Groups & Your Friends (Moodies)</h3>
-                <a href="{{ url_for('friends_groups') }}" class="btn btn-primary">Friends & Groups</a>
-                <ul>
-                    <div class="card custom-card-three">
-                        <h4>My Groups:</h4>
-                        {% for group in user_groups %}
-                            <div class="group" data-group-id="{{ group.group_id }}">
-                                <h5><a href="{{ url_for('group', group_id=group.group_id) }}" class="group-link">{{ group.group_name }}</a></h5>
-                                <button class="btn-dark-grey leave-group-button" data-group-id="{{ group.group_id }}">Leave Group</button>
                             </div>
                         {% endfor %}
                     </div>
-                </ul>
+                    {% else %}
+                        <div class="content-box">
+                            <p>No forecast data available.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6 text-right">
+            <div class="content-box">
+                <h3>Moody Daily on: {{ today_date }}</h3>
+                <div class="card custom-card-two">
+                    {% if latest_assessment %}
+                        <p>Today's weather is {{ latest_assessment.weather_today }}!</p>
+                        <p>You are feeling {{ latest_assessment.mood_today }}.</p>
+                        <p>Your stress level is at a {{ latest_assessment.stress_level }}.</p>
+                        <p>Your current mood level is at a {{ latest_assessment.positive_affect_rating }}!</p>
+                    {% else %}
+                        <p>Today's weather is ?</p>
+                        <p>You are feeling ??</p>
+                        <p>Your stress level is at a ???</p>
+                        <p>Your current mood level is at a ????</p>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('daily_assessment') }}" class="btn btn-primary">Log Your Daily Mood</a>
+            </div>
+
+            <div class="content-box">
+                <h3>Your Wellness Companion & Moody Journal</h3>
                 <ul>
-                    <div class="card custom-card-four">
-                        <h4>My Friends:</h4>
-                        {% for friend in g.user.friends %}
-                            <a href="{{ url_for('friends_profile', user_id=friend.user_id) }}">{{ friend.username }}</a>
-                        {% endfor %}
-                    </div>
+                    {% for history_item in user_history %}
+                        <li>{{ history_item.date }} - {{ history_item.activity }}</li>
+                    {% endfor %}
                 </ul>
+                <a href="{{ url_for('wellness') }}" class="btn btn-primary">Wellness Page</a>
+                <a href="{{ url_for('mood_symptom') }}" class="btn btn-primary">Take Mood Assessment</a>
+                <a href="{{ url_for('diagnosis_history') }}" class="btn btn-primary">Diagnosis History</a>
+            </div>
+
+            <div class="content-box">
+                <h3>Weather Information</h3>
+                <a href="/current" class="btn btn-primary">Current Weather</a>
+                <a href="/forecast" class="btn btn-primary">Weather Forecast</a>
+                <a href="/history" class="btn btn-primary">Historical Weather</a>
+            </div>
+
+            <div class="content-box">
+                <h3>AstroMoodology</h3>
+                <a href="/astronomy" class="btn btn-primary">Astronomy Data</a>
             </div>
         </div>
     </div>
+</div>
 
+<div class="container mt-4">
+    <div class="row">
+        <div class="content-box">
+            <h3>Groups & Your Friends (Moodies)</h3>
+            <a href="{{ url_for('friends_groups') }}" class="btn btn-primary">Friends & Groups</a>
+            <ul>
+                <div class="card custom-card-three">
+                    <h4>My Groups:</h4>
+                    {% for group in user_groups %}
+                        <div class="group" data-group-id="{{ group.group_id }}">
+                            <h5><a href="{{ url_for('group', group_id=group.group_id) }}" class="group-link">{{ group.group_name }}</a></h5>
+                            <button class="btn-dark-grey leave-group-button" data-group-id="{{ group.group_id }}">Leave Group</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </ul>
+            <ul>
+                <div class="card custom-card-four">
+                    <h4>My Friends:</h4>
+                    {% for friend in g.user.friends %}
+                        <a href="{{ url_for('friends_profile', user_id=friend.user_id) }}">{{ friend.username }}</a>
+                    {% endfor %}
+                </div>
+            </ul>
+        </div>
+    </div>
+</div>
 
- <!-- Works Cited Section -->
- <div class="container mt-6">
+<!-- Works Cited Section -->
+<div class="container mt-6">
     <div class="row">
         <div class="content-box mx-auto" style="max-width: 400px;">
             <button id="worksCitedButton" class="btn btn-primary">Works Cited</button>
-
-            <!-- "Works Cited" content (initially hidden) -->
             <div id="worksCitedContent" class="container mx-auto" style="display: none; text-align: center;">
-      
-    <!-- Citation for "cornerstone.lib.mnsu.edu" -->
-<p>
-    <strong>The Impact of Weather Conditions on Mood Variability in
-        Geographically Relocated Versus Non-Relocated Individuals </strong><br>
-    Author: Jamie M. Scott<br>
-    Publication Date: 2007<br>
-    URL: <a href="https://cornerstone.lib.mnsu.edu/cgi/viewcontent.cgi?article=1099&context=jur">https://cornerstone.lib.mnsu.edu/cgi/viewcontent.cgi?article=1099&context=jur</a>
-</p>
-
-<!-- Citation for "health.clevelandclinic.org" -->
-<p>
-    <strong>Climate Anxiety: How to Manage It</strong><br>
-    Author: TBD <br>
-    Publication Date: July 6, 2023 <br>
-    URL: <a href="https://health.clevelandclinic.org/climate-anxiety/">https://health.clevelandclinic.org/climate-anxiety/</a>
-</p>
-
-<!-- Citation for "researchgate.net" -->
-<p>
-    <strong>Extreme Weather-Related Events: Implications for Mental Health and Well-Being</strong><br>
-    Author: David M. Simpson; Inka Weissbecker; Sandra Sephton
-;     <br>
-    Publication Date: June 2011<br>
-    URL: <a href="https://www.researchgate.net/publication/226741943_Extreme_Weather-Related_Events_Implications_for_Mental_Health_and_Well-Being">https://www.researchgate.net/publication/226741943_Extreme_Weather-Related_Events_Implications_for_Mental_Health_and_Well-Being</a>
-</p>
-<p>
-    <strong>Psychology Information Provided by ChatGPT (AI Language Model)</strong><br>
-    Author: ChatGPT (AI Language Model)<br>
-    Publication Date: 10-01-2023<br>
-    URL: [URL of the Service or Platform, if applicable]
-</p>
-</div>
-</div>
-</div>
+                <p><strong>The Impact of Weather Conditions on Mood Variability in Geographically Relocated Versus Non-Relocated Individuals</strong><br>
+                Author: Jamie M. Scott<br>
+                <a href="https://cornerstone.lib.mnsu.edu/cgi/viewcontent.cgi?article=1099&context=jur">View Study</a></p>
+                <p><strong>Climate Anxiety: How to Manage It</strong><br>
+                <a href="https://health.clevelandclinic.org/climate-anxiety/">Cleveland Clinic Article</a></p>
+                <p><strong>Extreme Weather-Related Events: Mental Health Implications</strong><br>
+                <a href="https://www.researchgate.net/publication/226741943_Extreme_Weather-Related_Events_Implications_for_Mental_Health_and_Well-Being">ResearchGate</a></p>
+                <p><strong>AI Psychology Explanations</strong><br>
+                Author: ChatGPT AI<br>
+                Publication Date: 10-01-2023</p>
+            </div>
+        </div>
+    </div>
 </div>
 
-    <script>
-        $(document).ready(function() {
-            // Attach a click event handler to all "leave group" buttons
-            $('.leave-group-button').click(function() {
-                let groupId = $(this).data('group-id');
-
-                // Make an AJAX request to the server to leave the group
-                $.post('/leave_group/' + groupId, function(data) {
-                    if (data.success) {
-                        // Remove the group element from the "my groups" list
-                        $(`.group[data-group-id="${groupId}"]`).remove();
-                    }
-                });
+<script>
+    $(document).ready(function () {
+        $('.leave-group-button').click(function () {
+            let groupId = $(this).data('group-id');
+            $.post('/leave_group/' + groupId, function (data) {
+                if (data.success) {
+                    $(`.group[data-group-id="${groupId}"]`).remove();
+                }
             });
         });
-    </script>
-       <!-- toggle "Works Cited" content -->
-       <script>
+
         const worksCitedButton = document.getElementById("worksCitedButton");
         const worksCitedContent = document.getElementById("worksCitedContent");
-
         worksCitedButton.addEventListener("click", () => {
-            if (worksCitedContent.style.display === "none") {
-                worksCitedContent.style.display = "block";
-            } else {
-                worksCitedContent.style.display = "none";
-            }
+            worksCitedContent.style.display = worksCitedContent.style.display === "none" ? "block" : "none";
         });
-    </script>
+    });
+</script>
 {% endblock %}
-

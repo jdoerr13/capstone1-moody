@@ -12,12 +12,27 @@ from flask_bcrypt import Bcrypt
 from flask_migrate import Migrate
 from statistics import mean, mode
 from werkzeug.utils import secure_filename
+from utils.mood_predictor import predict_mood_from_weather
 from sqlalchemy import update
+from datetime import datetime, timedelta
+from meteostat import Point, Daily
+from geopy.geocoders import Nominatim
+from datetime import datetime
+
 # from flask_wtf.csrf import CSRFProtect
 
 CURR_USER_KEY = "curr_user"
 # # # Initialize Flask-Migrate- USED WITH ANY UPDATE TO THE MODELS FOR DB MOODY
 # migrate = Migrate(app, db)
+
+
+app = Flask(__name__)
+
+@app.template_filter('datetimeformat')
+def datetimeformat(value, format='%B %d'):
+    """Convert string datetime to formatted date."""
+    dt = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+    return dt.strftime(format)
 
 app = Flask(__name__)
 
@@ -167,40 +182,45 @@ def get_current_weather(location):
         return None
     
 
-@app.route('/forecast', methods=['GET', 'POST'])
+
+
+
+API_KEY = os.getenv("OPENWEATHER_API_KEY") or "8abaef3552576b437483fe132d8fa8d9"
+
+@app.route("/forecast", methods=["GET", "POST"])
 def forecast():
     forecast_data = None
-    selected_date = None
+    default_city = "New York" if g.user and g.user.username == "demo" else ""
 
-    if request.method == 'POST':
-        location = request.form.get('location')
-        # selected_date = request.form.get('date')  # Get the selected date
-        forecast_data = get_weather_forecast(location)
+    if request.method == "POST":
+        location = request.form.get("location")
 
-    return render_template('api/forecast.html', forecast_data=forecast_data, selected_date=selected_date, user=g.user)
+        try:
+            geolocator = Nominatim(user_agent="moody_app")
+            geo = geolocator.geocode(location)
+
+            if not geo:
+                flash("Could not find the specified location.")
+                return render_template("api/forecast.html", forecast_data=None, default_city=default_city)
+
+            lat, lon = geo.latitude, geo.longitude
+
+            url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=imperial"
+            res = requests.get(url)
+            data = res.json()
+
+            if data.get("cod") != "200":
+                flash(f"Error: {data.get('message', 'Unable to fetch forecast')}")
+                return render_template("api/forecast.html", forecast_data=None, default_city=default_city)
+
+            forecast_data = data
+
+        except Exception as e:
+            flash(f"Error fetching forecast: {str(e)}")
+
+    return render_template("api/forecast.html", forecast_data=forecast_data, default_city=default_city)
 
 
-def get_weather_forecast(location):
-    url = "https://weatherapi-com.p.rapidapi.com/forecast.json"
-    querystring = {"q": location, "days": "3"}
-    headers = {
-        "X-RapidAPI-Key": "eb3fa9d2eamsh622acd4eaa00bf3p19fc73jsn647406a37c4e",
-        "X-RapidAPI-Host": "weatherapi-com.p.rapidapi.com"
-    }
-
-    try:
-        response = requests.get(url, headers=headers, params=querystring)
-
-        if response.status_code == 200:
-            return response.json()
-        else:
-            flash(f"Failed to fetch weather forecast for {location}. Please try again later.", 'error')
-            return None
-    except Exception as e:
-        print("Error:", str(e))  # Add this line for debugging
-        flash(f"An error occurred while fetching weather forecast for {location}. Please try again later.", 'error')
-        return None
-    
 
 @app.route('/history', methods=['GET', 'POST'])
 def history():
@@ -316,33 +336,90 @@ def set_location():
 
     return redirect(url_for('homepage'))
 
+def get_weather_forecast(location):
+    if location.lower() == "new york":
+        lat, lon = 40.7128, -74.0060
+    else:
+        raise ValueError("Only New York supported for demo")
 
+    start = datetime.today()
+    end = start + timedelta(days=7)
+    location_point = Point(lat, lon)
+    data = Daily(location_point, start, end).fetch().reset_index()
+
+    forecast = {
+        "location": {
+            "name": "New York",
+            "region": "NY",
+            "country": "USA",
+            "localtime": datetime.now().strftime("%Y-%m-%d %H:%M")
+        },
+        "forecast": {
+            "forecastday": []
+        }
+    }
+
+    for _, row in data.iterrows():
+        forecast["forecast"]["forecastday"].append({
+            "date": row["time"].strftime("%Y-%m-%d"),
+            "day": {
+                "condition": {
+                    "text": "Data not available from Meteostat",
+                    "icon": ""
+                },
+                "avgtemp_c": round((row["tavg"] if row["tavg"] is not None else 0), 1),
+                "avgtemp_f": round((row["tavg"] * 9/5 + 32) if row["tavg"] is not None else 0, 1),
+                "avghumidity": row["rhum"] if "rhum" in row else "N/A",
+                "uv": "N/A"
+            }
+        })
+
+    return forecast
 
 #######################################################################
 #________HOMEPAGE & USER PROFILES___________________
 @app.route('/')
 def homepage():
     forecast_data = None
+    current_weather_data = None
+    mood_prediction = None
 
     if g.user:
         user_history = UserHistory.query.filter_by(user_id=g.user.user_id).all()
         user_groups = g.user.groups
         form = ProfileEditForm(request.form)
         today_date = date.today()
-        location = g.user.location
-        current_weather_data = None
         user_profile = User.query.filter_by(user_id=g.user.user_id).first()
         image_url = user_profile.image_url if user_profile else None
 
-        # If the user has a location, fetch the current weather data
-        if location:
-            current_weather_data = get_current_weather(location)
-            forecast_data = get_weather_forecast(location)
+        # Default to "New York" for demo user with no location
+        if g.user.username == "demo" and not g.user.location:
+            location = "New York"
+        else:
+            location = g.user.location
 
+    if location:
+        current_weather_data = get_current_weather(location)
+        raw_forecast = get_weather_forecast(location)
 
-        # Retrieve the latest daily assessment for the user
+        forecast_data = []
+        if raw_forecast and "forecast" in raw_forecast:
+            for day in raw_forecast["forecast"]["forecastday"]:
+                forecast_data.append({
+                    "date": day["date"],
+                    "condition": day["day"]["condition"]["text"],
+                    "avgtemp_f": day["day"]["avgtemp_f"],
+                    "avgtemp_c": day["day"]["avgtemp_c"],
+                    "avghumidity": day["day"].get("avghumidity", "N/A"),
+                    "uv": day["day"].get("uv", "N/A")
+                })
+
+            if current_weather_data:
+                weather_text = current_weather_data['current']['condition']['text']
+                temperature = current_weather_data['current']['temp_f']
+                mood_prediction = predict_mood_from_weather(weather_text, temperature)
+
         latest_assessment = DailyAssessment.query.filter_by(user_id=g.user.user_id).order_by(DailyAssessment.date.desc()).first()
-      
 
         return render_template(
             'home.html',
@@ -355,10 +432,13 @@ def homepage():
             current_weather_data=current_weather_data,
             latest_assessment=latest_assessment,
             forecast_data=forecast_data,
-            image_url=image_url 
+            image_url=image_url,
+            mood_prediction=mood_prediction
         )
-    else:
-        return render_template('home-anon.html')
+
+    return render_template('home-anon.html')
+
+
     
 
 @app.route('/edit_profile', methods=['GET', 'POST'])

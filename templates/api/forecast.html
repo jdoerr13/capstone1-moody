@@ -1,53 +1,49 @@
 {% extends 'base.html' %}
-
 {% block content %}
-    <title>Weather Forecast</title>
-</head>
-<body>
-    <div class="container mt-5">
-        <h1 class="mb-4">Weather Forecast</h1>
+<div class="container mt-5">
+    <h1 class="mb-4">Weather Forecast</h1>
 
-        <form method="POST">
-            <div class="form-group">
-                <label for="location">Enter Location:</label>
-                <input type="text" class="form-control" id="location" name="location" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Get Forecast</button>
-        </form>
-        <a href="{{ url_for('current') }}" class="btn btn-primary mt-3">Get Current Weather</a>
-        {% if forecast_data %}
-            <div class="mt-4">
-                <h2>Weather Forecast:</h2>
-                <p>Location: {{ forecast_data.location.name }}, {{ forecast_data.location.region }}, {{ forecast_data.location.country }}</p>
-                <p>Local Time: {{ forecast_data.location.localtime }}</p>
-                <div class="row">
-                    {% for day in forecast_data.forecast.forecastday %}
-                        <div class="col-md-4 mb-4">
-                            <div class="card custom-card">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ day.date }}</h5>
-                                    <p class="card-text">Condition: {{ day.day.condition.text }}</p>
-                                    <p class="card-text">Temperature: {{ day.day.avgtemp_c }}°C ({{ day.day.avgtemp_f }}°F)</p>
-                                    <p class="card-text">Feels Like: {{ day.day.avgtemp_c }}°C ({{ day.day.avgtemp_f }}°F)</p>
-                                    <p class="card-text">Humidity: {{ day.day.avghumidity }}%</p>
-                                    <p class="card-text">UV Index: {{ day.day.uv }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
+    <form method="POST">
+        <div class="form-group">
+            <label for="location">Enter Location:</label>
+            <input type="text" class="form-control" id="location" name="location" value="{{ city or '' }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Get Forecast</button>
+    </form>
+
+    {% if forecast_data %}
+    <div class="mt-4">
+      <h2>5-Day Forecast for {{ forecast_data['city']['name'] }}, {{ forecast_data['city']['country'] }}</h2>
+      <div class="row">
+        {% for item in forecast_data['list'] %}
+          {% if "12:00:00" in item['dt_txt'] %}
+            <div class="col-md-4 mb-4">
+              <div class="card custom-card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ item['dt_txt'].split(' ')[0] }}</h5>
+                  <p class="card-text">
+                    Temp: {{ item['main']['temp'] }}°F / {{ ((item['main']['temp'] - 32) * 5 / 9) | round(1) }}°C
+                  </p>
+                  <p class="card-text">Condition: {{ item['weather'][0]['description'] }}</p>
+                  <p class="card-text">Humidity: {{ item['main']['humidity'] }}%</p>
                 </div>
+              </div>
             </div>
-        {% endif %}
-
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <ul class="mt-4">
-                    {% for message in messages %}
-                        <li class="alert alert-danger">{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
+          {% endif %}
+        {% endfor %}
+      </div>
     </div>
+  {% endif %}
+  
 
-    {% endblock %}
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="mt-4">
+                {% for message in messages %}
+                    <li class="alert alert-danger">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</div>
+{% endblock %}
