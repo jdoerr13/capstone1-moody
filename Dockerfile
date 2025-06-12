@@ -1,7 +1,6 @@
 # syntax=docker/dockerfile:1
 
 ARG PYTHON_VERSION=3.11.6
-
 FROM python:${PYTHON_VERSION}-slim
 
 LABEL fly_launch_runtime="flask"
@@ -15,4 +14,5 @@ COPY . .
 
 EXPOSE 8080
 
-CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0", "--port=8080"]
+# ✅ Use gunicorn to run the app in production
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app"]
