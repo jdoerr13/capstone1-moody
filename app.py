@@ -17,9 +17,12 @@ from sqlalchemy import update
 from datetime import datetime, timedelta
 from meteostat import Point, Daily
 from geopy.geocoders import Nominatim
-from datetime import datetime
-
+from utils.mood_weather_analysis import generate_weather_mood_insights
 # from flask_wtf.csrf import CSRFProtect
+from urllib.parse import quote
+import traceback
+import pandas as pd
+
 
 CURR_USER_KEY = "curr_user"
 # # # Initialize Flask-Migrate- USED WITH ANY UPDATE TO THE MODELS FOR DB MOODY
@@ -33,8 +36,6 @@ def datetimeformat(value, format='%B %d'):
     """Convert string datetime to formatted date."""
     dt = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
     return dt.strftime(format)
-
-app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = (
     os.environ.get('DATABASE_URL', 'postgresql:///moody'))
@@ -57,6 +58,11 @@ db.create_all()
 
   
 
+
+@app.route('/insights')
+def mood_weather_insights():
+    plot_paths = generate_weather_mood_insights()
+    return render_template("api/insights.html", plot_paths=plot_paths)
 ##############################################################################
 #_________________User signup/login/logout_______________________
 @app.before_request
@@ -224,6 +230,8 @@ def forecast():
 
 @app.route('/history', methods=['GET', 'POST'])
 def history():
+    historical_weather_data = None  # Initialize outside POST check
+
     if request.method == 'POST':
         location = request.form.get('location')
         date = request.form.get('date')
@@ -237,39 +245,52 @@ def history():
         else:
             flash("Please enter both location and date.", 'error')
 
-    return render_template('api/history.html', historical_weather_data=None, user=g.user)
+    return render_template('api/history.html', historical_weather_data=historical_weather_data, user=g.user)
+
 
 
 def get_historical_weather(location, date):
     try:
-        formatted_date = datetime.strptime(date, '%Y-%m-%d').strftime('%Y-%m-%d')
-    except ValueError:
-        flash("Invalid date format. Please use YYYY-MM-DD format.", 'error')
-        return None
+        # Convert date string to datetime object
+        target_date = datetime.strptime(date, '%Y-%m-%d')
 
-    url = "https://weatherapi-com.p.rapidapi.com/history.json"
-    querystring = {
-        "q": location,
-        "dt": formatted_date,  # Use the formatted date
-        "lang": "en"
-    }
+        # Geocode location
+        geolocator = Nominatim(user_agent="moody_app")
+        geo = geolocator.geocode(location)
 
-    headers = {
-        "X-RapidAPI-Key": "eb3fa9d2eamsh622acd4eaa00bf3p19fc73jsn647406a37c4e",
-        "X-RapidAPI-Host": "weatherapi-com.p.rapidapi.com"
-    }
-
-    try:
-        response = requests.get(url, headers=headers, params=querystring)
-
-        if response.status_code == 200:
-            return response.json()
-        else:
-            flash(f"Failed to fetch historical weather data for {location}. Please try again later.", 'error')
+        if not geo:
+            flash("Location not found. Please enter a valid city.", 'error')
             return None
+
+        lat, lon = geo.latitude, geo.longitude
+
+        # Create Meteostat Point
+        location_point = Point(lat, lon)
+
+        # Fetch historical data for just one day
+        data = Daily(location_point, target_date, target_date).fetch()
+
+        if data.empty:
+            flash("No data found for the given date/location.", 'error')
+            return None
+
+        row = data.iloc[0]
+        historical = {
+            "location": location.title(),
+            "date": date,
+            "temperature_f": round(row["tavg"] * 9 / 5 + 32, 1) if not pd.isna(row["tavg"]) else "N/A",
+            "temperature_c": round(row["tavg"], 1) if not pd.isna(row["tavg"]) else "N/A",
+            "humidity": row["rhum"] if "rhum" in row and not pd.isna(row["rhum"]) else "N/A",
+            "precipitation_mm": row["prcp"] if not pd.isna(row["prcp"]) else "N/A",
+            "wind_speed_kph": row["wspd"] * 3.6 if not pd.isna(row["wspd"]) else "N/A",
+        }
+
+        return historical
+
     except Exception as e:
-        logging.error("An error occurred:", exc_info=True)  # Log the exception
-        flash(f"An error occurred while fetching historical weather data for {location}.", 'error')
+        print("Error occurred in get_historical_weather:")
+        traceback.print_exc()
+        flash("An error occurred while retrieving historical data.", 'error')
         return None
 
 
@@ -314,129 +335,118 @@ def get_astronomy_data(location, date):
 def set_location():
     location = request.form.get('location')
 
-    # Check if a location is provided
     if location:
-        # Automatically fetch weather data for the user's location
-        current_weather_data = get_current_weather(location)
-        forecast_data = get_weather_forecast(location)
+        try:
+            current_weather_data = get_current_weather(location)
+            forecast_data = get_weather_forecast(location)
 
-        if current_weather_data and forecast_data:
-            # Update the existing user's location and weather data
-            if g.user:
-                g.user.location = location
-                g.user.current_weather = current_weather_data
-                db.session.commit()
-                flash('Location and weather data updated successfully!', 'success')
+            if current_weather_data and forecast_data:
+                if g.user:
+                    g.user.location = location
+                    db.session.commit()
+                    flash('Location and weather data updated successfully!', 'success')
+                else:
+                    flash('User not found. Please log in.', 'error')
             else:
-                flash('User not found. Please log in.', 'error')
-        else:
-            flash('Failed to retrieve weather data for the given location.', 'error')
+                flash('Failed to retrieve weather data for the given location.', 'error')
+
+        except ValueError as ve:
+            flash(str(ve), 'error')
+        except Exception as e:
+            flash(f'Unexpected error: {e}', 'error')
     else:
         flash('Please provide a location to update.', 'error')
 
     return redirect(url_for('homepage'))
 
+
 def get_weather_forecast(location):
-    if location.lower() == "new york":
-        lat, lon = 40.7128, -74.0060
-    else:
+    API_KEY = os.getenv("OPENWEATHER_API_KEY") or "8abaef3552576b437483fe132d8fa8d9"
+
+    # Restrict location only for demo user
+    if g.user and g.user.username == "demo" and location.lower() != "new york":
         raise ValueError("Only New York supported for demo")
 
-    start = datetime.today()
-    end = start + timedelta(days=7)
-    location_point = Point(lat, lon)
-    data = Daily(location_point, start, end).fetch().reset_index()
+    try:
+        # Get latitude and longitude using geopy
+        geolocator = Nominatim(user_agent="moody_app")
+        loc = geolocator.geocode(location)
+        if not loc:
+            raise ValueError("Location not found. Please enter a valid city name.")
 
-    forecast = {
-        "location": {
-            "name": "New York",
-            "region": "NY",
-            "country": "USA",
-            "localtime": datetime.now().strftime("%Y-%m-%d %H:%M")
-        },
-        "forecast": {
-            "forecastday": []
-        }
-    }
+        lat, lon = loc.latitude, loc.longitude
 
-    for _, row in data.iterrows():
-        forecast["forecast"]["forecastday"].append({
-            "date": row["time"].strftime("%Y-%m-%d"),
-            "day": {
-                "condition": {
-                    "text": "Data not available from Meteostat",
-                    "icon": ""
-                },
-                "avgtemp_c": round((row["tavg"] if row["tavg"] is not None else 0), 1),
-                "avgtemp_f": round((row["tavg"] * 9/5 + 32) if row["tavg"] is not None else 0, 1),
-                "avghumidity": row["rhum"] if "rhum" in row else "N/A",
-                "uv": "N/A"
-            }
-        })
+        # Call OpenWeatherMap 5-day forecast API
+        url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={API_KEY}&units=imperial"
+        res = requests.get(url)
+        data = res.json()
 
-    return forecast
+        if data.get("cod") != "200":
+            raise ValueError(data.get("message", "Unable to fetch forecast"))
+
+        return data
+
+    except Exception as e:
+        print(f"Forecast error: {e}")
+        return None
+
 
 #######################################################################
 #________HOMEPAGE & USER PROFILES___________________
-@app.route('/')
+@app.route("/")
 def homepage():
     forecast_data = None
     current_weather_data = None
     mood_prediction = None
+    image_url = None
+    user_history = []
+    user_groups = []
+    latest_assessment = None
+    today_date = date.today()
+    location = None
 
     if g.user:
-        user_history = UserHistory.query.filter_by(user_id=g.user.user_id).all()
-        user_groups = g.user.groups
+        user = g.user
+        user_profile = User.query.filter_by(user_id=user.user_id).first()
+        user_history = UserHistory.query.filter_by(user_id=user.user_id).all()
+        user_groups = user.groups
         form = ProfileEditForm(request.form)
-        today_date = date.today()
-        user_profile = User.query.filter_by(user_id=g.user.user_id).first()
         image_url = user_profile.image_url if user_profile else None
+        location = user.location
 
-        # Default to "New York" for demo user with no location
-        if g.user.username == "demo" and not g.user.location:
+        # Default location if demo user with no location
+        if user.username == "demo" and not location:
             location = "New York"
-        else:
-            location = g.user.location
 
-    if location:
-        current_weather_data = get_current_weather(location)
-        raw_forecast = get_weather_forecast(location)
-
-        forecast_data = []
-        if raw_forecast and "forecast" in raw_forecast:
-            for day in raw_forecast["forecast"]["forecastday"]:
-                forecast_data.append({
-                    "date": day["date"],
-                    "condition": day["day"]["condition"]["text"],
-                    "avgtemp_f": day["day"]["avgtemp_f"],
-                    "avgtemp_c": day["day"]["avgtemp_c"],
-                    "avghumidity": day["day"].get("avghumidity", "N/A"),
-                    "uv": day["day"].get("uv", "N/A")
-                })
+        if location:
+            current_weather_data = get_current_weather(location)
+            forecast_data = get_weather_forecast(location)
 
             if current_weather_data:
                 weather_text = current_weather_data['current']['condition']['text']
                 temperature = current_weather_data['current']['temp_f']
                 mood_prediction = predict_mood_from_weather(weather_text, temperature)
 
-        latest_assessment = DailyAssessment.query.filter_by(user_id=g.user.user_id).order_by(DailyAssessment.date.desc()).first()
+        latest_assessment = DailyAssessment.query.filter_by(user_id=user.user_id).order_by(DailyAssessment.date.desc()).first()
 
         return render_template(
             'home.html',
             today_date=today_date,
-            user_history=user_history,
-            user_groups=user_groups,
-            user=g.user,
+            user=user,
             form=form,
             location=location,
             current_weather_data=current_weather_data,
-            latest_assessment=latest_assessment,
             forecast_data=forecast_data,
+            mood_prediction=mood_prediction,
             image_url=image_url,
-            mood_prediction=mood_prediction
+            latest_assessment=latest_assessment,
+            user_history=user_history,
+            user_groups=user_groups,
         )
 
-    return render_template('home-anon.html')
+    # Not logged in
+    return render_template("home-anon.html")
+
 
 
     
@@ -477,6 +487,10 @@ def edit_profile():
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
+
+
 
 #_______Friends_________
 @app.route('/friends_profile/<int:user_id>')

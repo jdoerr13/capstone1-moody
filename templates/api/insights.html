@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Mood & Weather Insight Charts</h2>
+    <p>This page shows correlations between weather variables and average mood scores based on historical data.</p>
+
+    <div class="row">
+        {% for path in plot_paths %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <img src="{{ url_for('static', filename=path.split('static/')[-1]) }}" class="card-img-top" alt="Mood Insight Plot">
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

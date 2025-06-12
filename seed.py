@@ -1,9 +1,14 @@
 import os
 from app import app, db  
-from models import Group, Diagnosis, CopingSolution, DiagnosisSolution, Diagnosis
+from models import Group, Diagnosis, CopingSolution, DiagnosisSolution, Diagnosis, User
+from flask_bcrypt import Bcrypt
+from datetime import datetime
 
-# db.drop_all()
-# db.create_all()
+bcrypt = Bcrypt(app)
+
+db.drop_all()
+db.create_all()
+
 
 def seed_data():
     with app.app_context():
@@ -99,21 +104,39 @@ def seed_data():
         db.session.bulk_save_objects(diagnosis_solutions)
         db.session.commit()
 
+        print("Ensuring demo user exists...")
+
+        demo_user = User.query.filter_by(username="demo").first()
+        if not demo_user:
+            hashed_pwd = bcrypt.generate_password_hash("password123").decode('utf-8')
+            demo_user = User(
+                username="demo",
+                email="demo@example.com",
+                password=hashed_pwd,
+                registration_date=datetime.utcnow()
+            )
+            db.session.add(demo_user)
+            db.session.commit()
+            print("✅ Demo user created.")
+        else:
+            print("Demo user already exists.")
+
         print("Data seeded successfully.")
 
-        # def delete_diagnoses():
-        #     with app.app_context():
-        # # Delete diagnosis_solutions records referencing diagnosis
-        #         DiagnosisSolution.query.filter(DiagnosisSolution.diagnosis_id.in_(range(1, 7))).delete(synchronize_session=False)
 
-        # # Now, delete diagnoses
-        #         Diagnosis.query.delete()
-        #         db.session.commit()
 
-        # if __name__ == '__main__':
-        #     seed_data()
+
+
 
 seed_data()
+
+
+
+
+
+
+
+
 #in Ipython: 
 # In [2]: %run seed.py
 # In [3]: seed_data()

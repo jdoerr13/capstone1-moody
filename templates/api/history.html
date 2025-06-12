@@ -1,15 +1,10 @@
 {% extends 'base.html' %}
-
 {% block content %}
-    <title>Historical Weather</title>
-</head>
-<body>
     <div class="container">
         <h1 class="mt-5">Get Historical Weather</h1>
-        <h4><i>*This data is limited per my current API subscription</i></h4>
+        <h4><i>*Powered by Meteostat (Free Weather API)</i></h4>
 
-        <form id="historical-weather-form" method="post" action="/history">
-
+        <form method="post" action="/history">
             <div class="mb-3">
                 <label for="location" class="form-label">Enter Location (City, State):</label>
                 <input type="text" id="location" name="location" class="form-control" required>
@@ -21,21 +16,26 @@
             <button type="submit" class="btn btn-primary">Get Historical Weather</button>
         </form>
 
-        <div id="historical-weather-data" class="mt-4">
-            {% if historical_weather_data %}
-                <h2>Historical Weather:</h2>
-                <pre>{{ historical_weather_data | tojson(indent=4) }}</pre>
-            {% endif %}
+        {% if historical_weather_data %}
+        <div class="mt-4 card p-3">
+            <h3>Historical Weather for {{ historical_weather_data.location }} on {{ historical_weather_data.date }}</h3>
+            <ul>
+                <li><strong>Temperature:</strong> {{ historical_weather_data.temperature_f }} °F ({{ historical_weather_data.temperature_c }} °C)</li>
+                <li><strong>Humidity:</strong> {{ historical_weather_data.humidity }}%</li>
+                <li><strong>Precipitation:</strong> {{ historical_weather_data.precipitation_mm }} mm</li>
+                <li><strong>Wind Speed:</strong> {{ historical_weather_data.wind_speed_kph }} km/h</li>
+            </ul>
         </div>
-    </div>
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-        <ul class="mt-4">
-            {% for message in messages %}
-                <li class="alert alert-danger">{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-{% endwith %}
+        {% endif %}
 
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="mt-4">
+                {% for message in messages %}
+                    <li class="alert alert-danger">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% endwith %}
+    </div>
 {% endblock %}
