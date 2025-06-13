@@ -107,36 +107,6 @@ nav form.navbar-form, .navbar-form {
 
 
 
-@media (max-width: 768px) {
-    .navbar-brand {
-        font-size: 18px; /* Adjust font size for smaller screens */
-    }
-
-    .full-width .user-stats .stat {
-        display: none;
-    }
-
-    /* 🔧 Add this block for mobile dropdown fix */
-    .navbar-collapse {
-        background-color: rgba(255, 255, 255, 0.95); /* or use your gradient */
-        padding: 1rem;
-        z-index: 9999;
-    }
-
-    .navbar-nav .nav-link {
-        color: #333 !important;
-    }
-
-    /* Optional: right-align the mobile menu if it's on the left */
-    .navbar-collapse {
-        text-align: right;
-    }
-}
-
-
-
-
-
 .user-location {
     color: #657786;
 }
@@ -192,45 +162,85 @@ body {
 }
 
 
-@media (max-width: 767px) {
+@media (max-width: 768px) {
     .navbar-brand {
-        font-size: 24px;
+      font-size: 18px;
     }
-
+  
+    .full-width .user-stats .stat {
+      display: none;
+    }
+  
+    .navbar-collapse {
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 1rem;
+      z-index: 9999;
+      text-align: right;
+    }
+  
+    .navbar-nav .nav-link {
+      color: #333 !important;
+      font-size: 18px;
+      padding: 0.5rem 1rem;
+    }
+  
+    .navbar-toggler {
+      margin-left: auto;
+      border: none;
+    }
+  
     .welcome-message {
-        font-size: 24px;
-        text-align: center;
+      font-size: 24px;
+      text-align: center;
     }
-
+  
     .profile-icon {
-        width: 100px;
-        height: auto;
-        float: none;
-        display: block;
-        margin: 0 auto 20px auto;
+      width: 100px;
+      height: auto;
+      float: none;
+      display: block;
+      margin: 0 auto 20px auto;
     }
-
+  
     .card.custom-card-three,
     .card.custom-card-four,
     .card.custom-card-two {
-        margin: 10px;
+      margin: 10px;
     }
-
+  
+    header {
+      font-size: 18px;
+      padding: 10px;
+      text-align: center;
+    }
+  
+    .bubbly-text {
+      font-size: 48px;
+    }
+  
+    .bubbly-text2 {
+      font-size: 28px;
+    }
     header {
         font-size: 18px;
         padding: 10px;
-        text-align: center;
-    }
-
-    .bubbly-text {
-        font-size: 48px;
-    }
-
-    .bubbly-text2 {
+        text-align: center !important;
+        margin: 0 auto !important;
+        display: block;
+        width: 100%;
+      }
+      .header h1 {
         font-size: 28px;
-    }
-}
-
+        text-align: center;
+        margin: 0 auto;
+      }
+      .welcome-message {
+        text-align: center !important;
+        margin: 0 auto !important;
+        font-size: 24px;
+      }
+  }
+  
 
 
 
