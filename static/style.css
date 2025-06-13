@@ -105,15 +105,37 @@ nav form.navbar-form, .navbar-form {
     background-color: #fff;
 }
 
+
+
 @media (max-width: 768px) {
     .navbar-brand {
         font-size: 18px; /* Adjust font size for smaller screens */
     }
+
     .full-width .user-stats .stat {
         display: none;
-        
+    }
+
+    /* 🔧 Add this block for mobile dropdown fix */
+    .navbar-collapse {
+        background-color: rgba(255, 255, 255, 0.95); /* or use your gradient */
+        padding: 1rem;
+        z-index: 9999;
+    }
+
+    .navbar-nav .nav-link {
+        color: #333 !important;
+    }
+
+    /* Optional: right-align the mobile menu if it's on the left */
+    .navbar-collapse {
+        text-align: right;
     }
 }
+
+
+
+
 
 .user-location {
     color: #657786;
@@ -263,7 +285,7 @@ body {
     .welcome-message {
         font-size: 48px;
         font-weight: bold;
-        color: #7d2eba; 
+        color: #bdb8c1; 
         margin-bottom: 20px;
         text-align: right;
         text-shadow:
