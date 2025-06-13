@@ -440,6 +440,7 @@ def homepage():
     forecast_data = None
     current_weather_data = None
     mood_prediction = None
+    mood_interpretation = None
     predicted_mood_score = None
     image_url = None
     user_history = []
