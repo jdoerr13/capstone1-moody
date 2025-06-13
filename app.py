@@ -437,18 +437,20 @@ def get_weather_forecast(location):
 
 @app.route("/")
 def homepage():
-    forecast_data = None
+    today_date = date.today()
+    user = None
+    form = None
+    location = None
     current_weather_data = None
+    forecast_data = None
     mood_prediction = None
-    mood_interpretation = None
-    predicted_mood_score = None
     image_url = None
+    latest_assessment = None
     user_history = []
     user_groups = []
-    latest_assessment = None
-    today_date = date.today()
-    location = None
-
+    predicted_mood_score = None
+    mood_interpretation = "No mood data available"
+    
     if g.user:
         user = g.user
         user_profile = User.query.filter_by(user_id=user.user_id).first()
