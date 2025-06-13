@@ -12,12 +12,13 @@ from flask_bcrypt import Bcrypt
 from flask_migrate import Migrate
 from statistics import mean, mode
 from werkzeug.utils import secure_filename
-from utils.mood_predictor import predict_mood_from_weather
 from sqlalchemy import update
 from datetime import datetime, timedelta
 from meteostat import Point, Daily
 from geopy.geocoders import Nominatim
 from utils.mood_weather_analysis import generate_weather_mood_insights
+from utils.mood_predictor import predict_mood_score, interpret_mood_score
+
 # from flask_wtf.csrf import CSRFProtect
 from urllib.parse import quote
 import traceback
@@ -45,17 +46,17 @@ app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png', 'gif'}
 # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
-app.config['SECRET_KEY'] = "JDOERR13"
+app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", "dev-key")
 # toolbar = DebugToolbarExtension(app)
 # app.debug = True
 
 # csrf = CSRFProtect(app)
 
 connect_db(app)
-app.app_context().push()
-# db.drop_all()
-db.create_all()
 
+if os.environ.get("FLASK_ENV") == "development":
+    with app.app_context():
+        db.create_all()
   
 
 
@@ -63,6 +64,9 @@ db.create_all()
 def mood_weather_insights():
     plot_paths = generate_weather_mood_insights()
     return render_template("api/insights.html", plot_paths=plot_paths)
+
+
+
 ##############################################################################
 #_________________User signup/login/logout_______________________
 @app.before_request
@@ -155,16 +159,30 @@ def demo_login():
 @app.route('/current', methods=['GET', 'POST'])
 def current():
     current_weather_data = None
+    predicted_mood_score = None
+    mood_interpretation = None
 
     if request.method == 'POST':
         location = request.form.get('location')
         current_weather_data = get_current_weather(location)
 
-    # If no location has been submitted, set current_weather_data to None
-    if not current_weather_data:
-        current_weather_data = None
+        if current_weather_data:
+            try:
+                temp_f = current_weather_data['current']['temp_f']
+                pressure = current_weather_data['current']['pressure_mb']
+                predicted_mood_score = predict_mood_score(temp_f, pressure)
+                mood_interpretation = interpret_mood_score(predicted_mood_score, temperature_f=temp_f, air_pressure_hpa=pressure)
 
-    return render_template('api/current.html', current_weather_data=current_weather_data, user=g.user)
+            except Exception as e:
+                print("Prediction error:", e)
+
+    return render_template(
+        'api/current.html',
+        current_weather_data=current_weather_data,
+        predicted_mood_score=predicted_mood_score,
+        mood_interpretation=mood_interpretation,
+        user=g.user
+    )
 
 
 def get_current_weather(location):
@@ -196,6 +214,8 @@ API_KEY = os.getenv("OPENWEATHER_API_KEY") or "8abaef3552576b437483fe132d8fa8d9"
 @app.route("/forecast", methods=["GET", "POST"])
 def forecast():
     forecast_data = None
+    forecast_predictions = []
+    forecast_items = []
     default_city = "New York" if g.user and g.user.username == "demo" else ""
 
     if request.method == "POST":
@@ -207,7 +227,7 @@ def forecast():
 
             if not geo:
                 flash("Could not find the specified location.")
-                return render_template("api/forecast.html", forecast_data=None, default_city=default_city)
+                return render_template("api/forecast.html", forecast_data=None, zipped_forecast=[], default_city=default_city)
 
             lat, lon = geo.latitude, geo.longitude
 
@@ -217,14 +237,35 @@ def forecast():
 
             if data.get("cod") != "200":
                 flash(f"Error: {data.get('message', 'Unable to fetch forecast')}")
-                return render_template("api/forecast.html", forecast_data=None, default_city=default_city)
+                return render_template("api/forecast.html", forecast_data=None, zipped_forecast=[], default_city=default_city)
 
             forecast_data = data
+
+            for item in data.get("list", []):
+                if "12:00:00" in item["dt_txt"]:
+                    temp = item["main"]["temp"]
+                    pressure = item["main"]["pressure"]
+                    score = predict_mood_score(temp, pressure)
+                    interpretation = interpret_mood_score(score, temperature_f=temp, air_pressure_hpa=pressure)
+
+
+                    forecast_items.append(item)
+                    forecast_predictions.append({
+                        "score": score,
+                        "interpretation": interpretation
+                    })
 
         except Exception as e:
             flash(f"Error fetching forecast: {str(e)}")
 
-    return render_template("api/forecast.html", forecast_data=forecast_data, default_city=default_city)
+    zipped_forecast = zip(forecast_items, forecast_predictions)
+
+    return render_template(
+        "api/forecast.html",
+        forecast_data=forecast_data,
+        zipped_forecast=zipped_forecast,
+        default_city=default_city
+    )
 
 
 
@@ -393,11 +434,13 @@ def get_weather_forecast(location):
 
 #######################################################################
 #________HOMEPAGE & USER PROFILES___________________
+
 @app.route("/")
 def homepage():
     forecast_data = None
     current_weather_data = None
     mood_prediction = None
+    predicted_mood_score = None
     image_url = None
     user_history = []
     user_groups = []
@@ -425,7 +468,15 @@ def homepage():
             if current_weather_data:
                 weather_text = current_weather_data['current']['condition']['text']
                 temperature = current_weather_data['current']['temp_f']
-                mood_prediction = predict_mood_from_weather(weather_text, temperature)
+                pressure = current_weather_data['current']['pressure_mb']
+
+                # (Optional) Basic text-based rule prediction
+                # mood_prediction = predict_mood_from_weather(weather_text, temperature)
+
+                # ML-based prediction
+                predicted_mood_score = predict_mood_score(temperature, pressure)
+                mood_interpretation = interpret_mood_score(predicted_mood_score, temperature_f=temperature, air_pressure_hpa=pressure)
+
 
         latest_assessment = DailyAssessment.query.filter_by(user_id=user.user_id).order_by(DailyAssessment.date.desc()).first()
 
@@ -442,6 +493,8 @@ def homepage():
             latest_assessment=latest_assessment,
             user_history=user_history,
             user_groups=user_groups,
+            predicted_mood_score=predicted_mood_score,
+            mood_interpretation=mood_interpretation,
         )
 
     # Not logged in
@@ -457,28 +510,25 @@ def edit_profile():
         flash('You must be logged in to edit your profile.', 'warning')
         return redirect(url_for('login'))
 
-    user = g.user  # Get the current user
-    form = ProfileEditForm(obj=user)  # Pass the user object to the form
+    user = g.user
+    form = ProfileEditForm(obj=user)
 
     if form.validate_on_submit():
-        # Check if a new image is uploaded
-        if 'image_url' in request.files:
-            uploaded_image = form.image_url.data
-            if uploaded_image:
-                filename = secure_filename(uploaded_image.filename)
-                unique_filename = str(uuid.uuid4()) + filename
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-                uploaded_image.save(file_path)
-    
-    
-                user.image_url = unique_filename
+        # ✅ Correctly access the uploaded file
+        uploaded_image = request.files.get("image_url")
+        if uploaded_image and uploaded_image.filename != "":
+            filename = secure_filename(uploaded_image.filename)
+            unique_filename = str(uuid.uuid4()) + "_" + filename
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            uploaded_image.save(file_path)
 
-        # form.populate_obj(user)# don't use this unless only using
+            user.image_url = unique_filename
+
+        # Update other fields
         user.bio = form.bio.data
         user.location = form.location.data
-        # Commit the changes to the database
-        db.session.commit()
 
+        db.session.commit()
         flash('Your profile has been updated.', 'success')
         return redirect(url_for('homepage'))
 

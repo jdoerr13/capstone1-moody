@@ -267,7 +267,7 @@ body {
     .welcome-message {
         font-size: 48px;
         font-weight: bold;
-        color: #5984b0; 
+        color: #7d2eba; 
         margin-bottom: 20px;
         text-align: right;
         text-shadow:
@@ -302,6 +302,19 @@ body {
         font-weight: 500;
         font-size: 90px;
         background-image: linear-gradient(135deg, #2e2e30, #8f85b9);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: bubble 0.3s infinite alternate;
+        
+    }
+
+    .bubbly-text2 {
+        display: inline-block;
+        font-family: 'Marker Felt', cursive;
+        font-weight: 90;
+        font-size: 50px;
+        background-image: linear-gradient(135deg, #2e2e30, #5f45c6);
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;

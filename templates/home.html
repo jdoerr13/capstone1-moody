@@ -30,10 +30,6 @@
 
 
 
-
-
-
-
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-6">
@@ -42,6 +38,10 @@
                     <h2>Current Weather for {{ current_weather_data['location']['name'] }}, {{ current_weather_data['location']['region'] }}, {{ current_weather_data['location']['country'] }}</h2>
                     <h4>Current Time: {{ current_weather_data['location']['localtime'] }}</h4>
                     <div class="row">
+                        <div class="text-center">
+                            <p>{{ current_weather_data['current']['condition']['text'] }}</p>
+                            <img src="{{ current_weather_data['current']['condition']['icon'] }}" alt="{{ current_weather_data['current']['condition']['text'] }}" class="img-fluid">
+                        </div>
                         <div class="col-md-6">
                             <h4>Temperature:</h4>
                             <p>{{ current_weather_data['current']['temp_f'] }}°F</p>
@@ -52,20 +52,19 @@
                             <p>{{ current_weather_data['current']['feelslike_f'] }}°F</p>
                             <p>{{ current_weather_data['current']['feelslike_c'] }}°C</p>
                         </div>
-                        <div class="text-center">
-                            <p>{{ current_weather_data['current']['condition']['text'] }}</p>
-                            <img src="{{ current_weather_data['current']['condition']['icon'] }}" alt="{{ current_weather_data['current']['condition']['text'] }}" class="img-fluid">
+                        <div class="col-md-6">
+                            <h4>Air Pressure:</h4>
+                            <p>{{ current_weather_data['current']['pressure_mb'] }} hPa</p>
                         </div>
+                        <div class="col-md-6">
+                            <h4>Humidity:</h4>
+                            <p>{{ current_weather_data['current']['humidity'] }}%</p>           
+                        </div>
+                     
                     </div>
 
 
-                    {% if mood_prediction %}
-                    <div class="mt-3 p-3 border rounded bg-light text-center">
-                        <h4 class="text-primary">AI Mood Forecast</h4>
-                        <p>Based on today’s weather, you may feel: <strong>{{ mood_prediction }}</strong></p>
-                    </div>
-                    {% endif %}
-
+        
 
                     {% if forecast_data and forecast_data['list'] %}
                     <div class="container mt-5">
@@ -106,8 +105,36 @@
 
 
 
+
+            <div class="col-md-6 text-right">
+                <div class="content-box">
+                    <h4 class="bubbly-text2">AI Mood Forecast</h4>
             
-        <div class="col-md-6 text-right">
+                    {% if predicted_mood_score is not none %}
+                        <div class="card custom-card-two">
+                            <h4>Predicted Mood Score:</h4>
+                            <p>{{ predicted_mood_score | round(2) }}</p>
+                            <p><strong>Analysis:</strong><br>{{ mood_interpretation | safe }}</p>
+                        </div>
+                    {% else %}
+                        <div class="card custom-card-two">
+                            <p>No mood prediction available.</p>
+                        </div>
+                    {% endif %}
+                    <button id="whyButton" class="btn btn-sm btn-secondary mt-2">Why?</button>
+<div id="whyContent" class="mt-3" style="display: none;">
+    <p><strong>🔬 How This Works:</strong></p>
+    <ul>
+        <li><strong>Temperature (°F):</strong> Your mood score is influenced by how comfortable the temperature is. Temperatures between 65°F and 75°F tend to align with more positive mood entries in our dataset. Extremes (very hot or very cold) slightly lower mood.</li>
+        <li><strong>Air Pressure (hPa):</strong> Higher air pressure (e.g. 1015–1030 hPa) tends to be associated with clearer weather and slightly higher mood scores. Lower pressure often comes with storms or fatigue-like symptoms.</li>
+        <li><strong>Model Interpretation:</strong> This score was generated using a linear regression model trained on historical mood data linked with daily weather. It’s purely data-driven, not rule-based.</li>
+        <li><a href="/insights">📊 View Mood/Weather Datasets & Graphs</a></li>
+    </ul>
+</div>
+
+                </div>
+
+
             <div class="content-box">
                 <h3>Moody Daily on: {{ today_date }}</h3>
                 <div class="card custom-card-two">
@@ -184,44 +211,76 @@
 <!-- Works Cited Section -->
 <div class="container mt-6">
     <div class="row">
-        <div class="content-box mx-auto" style="max-width: 400px;">
-            <button id="worksCitedButton" class="btn btn-primary">Works Cited</button>
-            <div id="worksCitedContent" class="container mx-auto" style="display: none; text-align: center;">
-                <p><strong>The Impact of Weather Conditions on Mood Variability in Geographically Relocated Versus Non-Relocated Individuals</strong><br>
-                Author: Jamie M. Scott<br>
-                <a href="https://cornerstone.lib.mnsu.edu/cgi/viewcontent.cgi?article=1099&context=jur">View Study</a></p>
-                <p><strong>Climate Anxiety: How to Manage It</strong><br>
-                <a href="https://health.clevelandclinic.org/climate-anxiety/">Cleveland Clinic Article</a></p>
-                <p><strong>Extreme Weather-Related Events: Mental Health Implications</strong><br>
-                <a href="https://www.researchgate.net/publication/226741943_Extreme_Weather-Related_Events_Implications_for_Mental_Health_and_Well-Being">ResearchGate</a></p>
-                <p><strong>AI Psychology Explanations</strong><br>
-                Author: ChatGPT AI<br>
-                Publication Date: 10-01-2023</p>
-                Denissen et al. (2008) — "The effects of weather on daily mood: A multilevel approach"
+      <div class="content-box mx-auto" style="max-width: 400px;">
+        <button id="worksCitedButton" class="btn btn-primary">Works Cited</button>
+        <div id="worksCitedContent" class="container mx-auto" style="display: none; text-align: center;">
+          
+          <p><strong>The Impact of Weather Conditions on Mood Variability in Geographically Relocated Versus Non-Relocated Individuals</strong><br>
+          Author: Jamie M. Scott<br>
+          <a href="https://cornerstone.lib.mnsu.edu/cgi/viewcontent.cgi?article=1099&context=jur">View Study</a></p>
+  
+          <p><strong>Climate Anxiety: How to Manage It</strong><br>
+          <a href="https://health.clevelandclinic.org/climate-anxiety/">Cleveland Clinic Article</a></p>
+  
+          <p><strong>Extreme Weather-Related Events: Mental Health Implications</strong><br>
+          <a href="https://www.researchgate.net/publication/226741943_Extreme_Weather-Related_Events_Implications_for_Mental_Health_and_Well-Being">ResearchGate</a></p>
+  
+          <p><strong>AI Psychology Explanations</strong><br>
+          Author: ChatGPT AI<br>
+          Publication Date: 10-01-2023</p>
+  
+          <p><strong>Denissen et al. (2008) – The Effects of Weather on Daily Mood: A Multilevel Approach</strong><br>
+          Study of 1,233 participants over 30 days; measured mood on multiple axes (Positive Affect, Negative Affect, Tiredness). Found temperature, sunlight, and pressure had mild but statistically significant correlations with mood.<br>
+          📄 Source: <a href="https://www.researchgate.net/publication/24206002_The_Effects_of_Weather_on_Daily_Mood_A_Multilevel_Approach">ResearchGate</a></p>
+  
+          <p><strong>Baylis et al. (2020) – Weather Impacts Expressed Sentiment</strong><br>
+          Analyzed 3.5 billion social media posts from 2009–2016 across the U.S.; found worse mood with low temperatures, high precipitation, and low solar radiation.<br>
+          📄 Source: <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0226605">PLOS Journals</a></p>
+  
+          <p><strong>Li et al. (2014) – Twitter Mood Predicts Weather Trends</strong><br>
+          Used two years of Twitter data to analyze mood-weather associations; showed increased negative sentiment with extreme weather conditions (cold, storms).<br>
+          📄 Source: <a href="https://arxiv.org/abs/1405.4640">Nature / arXiv</a></p>
+  
+<!-- 
+          1. Temperature & Mood
+          Reference: Cao et al. (2019), "Impacts of temperature on mood: Evidence from social media"
+          
+          Finding: Mood tends to decline at extremes (very cold <40°F or very hot >85°F), peaking around 65–70°F.
+          
+          Simulated behavior: A parabolic trend—highest mood scores around 68°F and lower toward the extremes.
+          
+          2. Air Pressure & Mood
+          Reference: Tarumi et al. (2019), "Relationship between barometric pressure and depressive symptoms"
+          
+          Finding: Low air pressure (e.g., during storm systems) is linked to worsened mood and fatigue.
+          
+          Simulated behavior: Slight positive correlation between pressure and mood, e.g., lower mood around 990 hPa and higher mood around 1020–1030 hPa.
+          
+          3. Humidity
+          Reference: Denissen et al. (2008), "The effects of weather on daily mood"
+          
+          Finding: High humidity (>80%) correlates with lower energy and mood.
+          
+          Simulated behavior: Mild inverse relationship—mood slightly dips as humidity rises above ~75%.
+          
+          4. Wind Speed
+          Reference: Keller et al. (2005), "A warm heart and a clear head: The contingent effects of weather on mood and cognition"
+          
+          Finding: Wind speed can increase irritability and decrease mood.
+          
+          Simulated behavior: Slight drop in mood score as wind increases past ~10 mph. -->
 
-<!-- Study of 1,233 participants over 30 days
 
-Measured mood on multiple axes (Positive Affect, Negative Affect, Tiredness)
 
-Found temperature, sunlight, and pressure had mild but statistically significant correlations with mood
 
-📄 Source: ResearchGate – Denissen et al.
 
-Baylis et al. (2020) — "Weather impacts expressed sentiment"
 
-Analyzed 3.5 billion social media posts from 2009–2016 across the U.S.
 
-Found worse mood with low temperatures, high precipitation, and low solar radiation
 
-📄 Source: PLOS Journals – Baylis et al.
-
-Li et al. (2014) — "Twitter mood predicts weather trends"
-
-Used two years of Twitter data to analyze mood-weather associations
-
-Showed increased negative sentiment with extreme weather conditions (cold, storms)
-
-📄 Source: Nature / Arxiv – Li et al. -->
+        </div>
+      </div>
+    </div>
+  </div>
 
 
             </div>
@@ -247,4 +306,23 @@ Showed increased negative sentiment with extreme weather conditions (cold, storm
         });
     });
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const whyButton = document.getElementById("whyButton");
+        const whyContent = document.getElementById("whyContent");
+
+        if (whyButton && whyContent) {
+            whyButton.addEventListener("click", function () {
+                if (whyContent.style.display === "none") {
+                    whyContent.style.display = "block";
+                    whyButton.textContent = "Hide";
+                } else {
+                    whyContent.style.display = "none";
+                    whyButton.textContent = "Why?";
+                }
+            });
+        }
+    });
+</script>
+
 {% endblock %}

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container mt-5">
-    <h2 class="mb-4">Mood & Weather Insight Charts</h2>
+    <h1 class="mb-4">Mood & Weather Insight Charts</h1>
     <p>This page shows correlations between weather variables and average mood scores based on historical data.</p>
 
     <div class="row">
@@ -12,6 +12,11 @@
             </div>
         </div>
         {% endfor %}
+         <h3>Here are the real-data scatter plots showing relationships between weather variables and mood scores:</h3>
+         <p>
+* Temperature shows a mild positive trend: warmer days might slightly elevate mood.<br>
+* Humidity and wind speed appear more scattered with no clear pattern, which aligns with existing studies showing inconsistent mood correlations.<br>
+* Air pressure shows a subtle downward trend in mood as pressure rises—also consistent with some studies linking pressure changes to mood shifts.</p>
     </div>
 </div>
 {% endblock %}

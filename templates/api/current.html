@@ -37,18 +37,37 @@
                     <p>{{ current_weather_data['current']['feelslike_f'] }}°F</p>
                     <p>{{ current_weather_data['current']['feelslike_c'] }}°C</p>
                 </div>
+                <div class="col-md-6">
+                    <h4>Air Pressure:</h4>
+                    <p>{{ current_weather_data['current']['pressure_mb'] }} hPa</p>
+                </div>
+                <div class="col-md-6">
+                    <h4>Current Condition:</h4>
+                    <p>{{ current_weather_data['current']['condition']['text'] }}</p>
+                    <img src="{{ current_weather_data['current']['condition']['icon'] }}" alt="{{ current_weather_data['current']['condition']['text'] }}" class="img-fluid">
+                    
+                </div>
+                <div class="col-md-6"> 
+                    <h4>Humidity:</h4>
+                    <p>{{ current_weather_data['current']['humidity'] }}%</p>
+                </div>
+                <div class="col-md-6"> 
+                    <h4>UV Index:</h4>
+                    <p>{{ current_weather_data['current']['uv'] }}</p>
+                </div>
             </div>
-            <h4>Current Condition:</h4>
-            <p>{{ current_weather_data['current']['condition']['text'] }}</p>
-            <img src="{{ current_weather_data['current']['condition']['icon'] }}" alt="{{ current_weather_data['current']['condition']['text'] }}" class="img-fluid">
-            
-            <!-- Add Humidity and UV Index -->
-            <h4>Humidity:</h4>
-            <p>{{ current_weather_data['current']['humidity'] }}%</p>
 
-            <h4>UV Index:</h4>
-            <p>{{ current_weather_data['current']['uv'] }}</p>
-           
+            
+          
+
+                            {% if predicted_mood_score is not none %}
+                <div class="card custom-card-two mt-4">
+                    <h4>Predicted Mood Score:</h4>
+                    <p>{{ predicted_mood_score | round(2) }}</p>
+                    <p><strong>Analysis:</strong><br>{{ mood_interpretation | safe }}</p>
+                </div>
+                {% endif %}
+                        
         
             
             <!-- Button to show full JSON data -->

@@ -6,43 +6,45 @@
     <form method="POST">
         <div class="form-group">
             <label for="location">Enter Location:</label>
-            <input type="text" class="form-control" id="location" name="location" value="{{ city or '' }}" required>
+            <input type="text" class="form-control" id="location" name="location" value="{{ default_city or '' }}" required>
         </div>
         <button type="submit" class="btn btn-primary">Get Forecast</button>
     </form>
 
     {% if forecast_data %}
     <div class="mt-4">
-      <h2>5-Day Forecast for {{ forecast_data['city']['name'] }}, {{ forecast_data['city']['country'] }}</h2>
-      <div class="row">
-        {% for item in forecast_data['list'] %}
-          {% if "12:00:00" in item['dt_txt'] %}
+        <h2>5-Day Forecast for {{ forecast_data['city']['name'] }}, {{ forecast_data['city']['country'] }}</h2>
+        <div class="row">
+            {% for item, prediction in zipped_forecast %}
             <div class="col-md-4 mb-4">
-              <div class="card custom-card">
-                <div class="card-body">
-                    <h5 class="card-title">{{ item['dt_txt'].split(' ')[0] }}</h5>
-                  <p class="card-text">
-                    Temp: {{ item['main']['temp'] }}°F / {{ ((item['main']['temp'] - 32) * 5 / 9) | round(1) }}°C
-                  </p>
-                  <p class="card-text">Condition: {{ item['weather'][0]['description'] }}</p>
-                  <p class="card-text">Humidity: {{ item['main']['humidity'] }}%</p>
+                <div class="card custom-card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ item['dt_txt'].split(' ')[0] }}</h5>
+                        <p class="card-text">
+                            Temp: {{ item['main']['temp'] }}°F / {{ ((item['main']['temp'] - 32) * 5 / 9) | round(1) }}°C
+                        </p>
+                        <p class="card-text">Condition: {{ item['weather'][0]['description'] }}</p>
+                        <p class="card-text">Humidity: {{ item['main']['humidity'] }}%</p>
+
+                        <div class="mt-2">
+                            <h5>🧠 Mood Score: {{ prediction.score | round(2) }}</h5>
+                            <p><strong>Why:</strong> {{ prediction.interpretation }}</p>
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
-          {% endif %}
-        {% endfor %}
-      </div>
+            {% endfor %}
+        </div>
     </div>
-  {% endif %}
-  
+    {% endif %}
 
     {% with messages = get_flashed_messages() %}
         {% if messages %}
-            <ul class="mt-4">
-                {% for message in messages %}
-                    <li class="alert alert-danger">{{ message }}</li>
-                {% endfor %}
-            </ul>
+        <ul class="mt-4">
+            {% for message in messages %}
+            <li class="alert alert-danger">{{ message }}</li>
+            {% endfor %}
+        </ul>
         {% endif %}
     {% endwith %}
 </div>

@@ -15,9 +15,15 @@
               <label for="profile_picture">Choose Profile Picture</label>
               <input type="file" name="image_url" id="profile_picture" accept="image/*">
 
+              {% elif field.name == 'location' and user.username == 'demo' %}
+              <p class="text-warning">
+                ⚠️ Can't update location in demo mode. Please use the <a href="{{ url_for('current') }}">Current Weather</a> page instead.
+              </p>
+              {{ field(class="form-control", value=user[field.name], readonly=true) }}
             {% elif field.name != 'current_password' %}
               {{ field(placeholder=field.label.text, class="form-control", value=user[field.name]) }}
             {% endif %}
+            
 
             {% for error in field.errors %}
               <span class="text-danger">{{ error }}</span>
