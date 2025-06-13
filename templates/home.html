@@ -182,31 +182,45 @@
 
 <div class="container mt-4">
     <div class="row">
-        <div class="content-box">
-            <h3>Groups & Your Friends (Moodies)</h3>
-            <a href="{{ url_for('friends_groups') }}" class="btn btn-primary">Friends & Groups</a>
-            <ul>
-                <div class="card custom-card-three">
-                    <h4>My Groups:</h4>
-                    {% for group in user_groups %}
-                        <div class="group" data-group-id="{{ group.group_id }}">
-                            <h5><a href="{{ url_for('group', group_id=group.group_id) }}" class="group-link">{{ group.group_name }}</a></h5>
-                            <button class="btn-dark-grey leave-group-button" data-group-id="{{ group.group_id }}">Leave Group</button>
-                        </div>
-                    {% endfor %}
+      <div class="content-box">
+        <h3>Groups & Your Friends (Moodies)</h3>
+        <a href="{{ url_for('friends_groups') }}" class="btn btn-primary mb-3">Friends & Groups</a>
+  
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <div class="card custom-card p-3">
+              <h4 class="mb-2">My Groups:</h4>
+              {% for group in user_groups %}
+                <div class="group mb-2" data-group-id="{{ group.group_id }}">
+                  <h5 class="mb-1">
+                    <a href="{{ url_for('group', group_id=group.group_id) }}" class="group-link">
+                      {{ group.group_name }}
+                    </a>
+                  </h5>
+                  <button class="btn btn-sm btn-dark-grey leave-group-button" data-group-id="{{ group.group_id }}">
+                    Leave Group
+                  </button>
                 </div>
-            </ul>
-            <ul>
-                <div class="card custom-card-four">
-                    <h4>My Friends:</h4>
-                    {% for friend in g.user.friends %}
-                        <a href="{{ url_for('friends_profile', user_id=friend.user_id) }}">{{ friend.username }}</a>
-                    {% endfor %}
-                </div>
-            </ul>
+              {% endfor %}
+            </div>
+          </div>
+  
+          <div class="col-md-6 mb-3">
+            <div class="card custom-card p-3">
+              <h4 class="mb-2">My Friends:</h4>
+              {% for friend in g.user.friends %}
+                <p class="mb-1">
+                  <a href="{{ url_for('friends_profile', user_id=friend.user_id) }}">{{ friend.username }}</a>
+                </p>
+              {% endfor %}
+            </div>
+          </div>
         </div>
+      </div>
     </div>
-</div>
+  </div>
+  
+  
 
 <!-- Works Cited Section -->
 <div class="container mt-6">

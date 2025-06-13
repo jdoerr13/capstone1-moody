@@ -69,40 +69,6 @@ nav form.navbar-form, .navbar-form {
     margin-left: 5px; /* Adjust the margin-left value as needed */
 }
 
-/* #search.form-control {
-    border-radius: 20px;
-    margin-bottom: 0;
-    width: 100%;
-    font-size: 13px;
-    padding-right: 40px; 
-    box-sizing: border-box;
-  }
-  
-  #search.form-control + .input-group-append {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    padding: 0;
-    color: #66757f;
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-  }
-  
-  #search.form-control + .input-group-append:hover {
-    color: #1c94e0;
-  }
-  
-  #search.form-control:active,
-  #search.form-control:focus {
-    box-shadow: none;
-    border: 2px solid #007bff;
-  } */
-
-/* on "onboarding" pages (signup & login), the navbar is different: no search box, the logo is centered, and it has a background color. */
 
 .onboarding > .navbar {
     background-image: url("/static/images/nav-bg.png");
@@ -154,7 +120,6 @@ nav form.navbar-form, .navbar-form {
 }
 
 
-
 /* home.html */
 
 .profile-icon {
@@ -191,15 +156,10 @@ body {
     margin-left: 90px; 
     margin-right: 90px; 
 }
-.card.custom-card-three {
-    background-color: rgba(211, 211, 211, 0.5) !important;
-    margin-right: 800px; 
-}
+.card.custom-card-three,
 .card.custom-card-four {
-    background-color: rgba(211, 211, 211, 0.5) !important;
-    margin-left: 800px; 
-    position: relative; 
-    top: -80px; 
+    margin: 0 auto;
+    float: none;
 }
 #searchResults li {
     text-align: left; 
@@ -211,8 +171,44 @@ body {
 
 
 @media (max-width: 767px) {
-    /* Styles for small screens */
+    .navbar-brand {
+        font-size: 24px;
+    }
+
+    .welcome-message {
+        font-size: 24px;
+        text-align: center;
+    }
+
+    .profile-icon {
+        width: 100px;
+        height: auto;
+        float: none;
+        display: block;
+        margin: 0 auto 20px auto;
+    }
+
+    .card.custom-card-three,
+    .card.custom-card-four,
+    .card.custom-card-two {
+        margin: 10px;
+    }
+
+    header {
+        font-size: 18px;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .bubbly-text {
+        font-size: 48px;
+    }
+
+    .bubbly-text2 {
+        font-size: 28px;
+    }
 }
+
 
 
 
